@@ -14,7 +14,7 @@ A pure-simulation football league game. The user sets up clubs and players, then
 ## Architecture notes
 
 - Global `state` holds the league: `teams`, `players` (active), `retired` (retired and released players, kept for history), `fixtures` (current season rounds), `history` (one entry per finished season), `results` (archived matches for head to head), `trades`, `draftHistory`, `draft` (active draft or null), `hof`, `settings`.
-- `render()` rebuilds the whole view from `state`. Long lists are paged (the players list shows 50 at a time via `ps.lim`). Views: table, fixtures, players, clubs, `club:<id>`, `player:<id>`, draft, trades, history, `review:<season>`, hof, settings.
+- `render()` rebuilds the whole view from `state`. Long lists are paged (the players list shows 50 at a time via `ps.lim`). Views: table, fixtures, players, clubs, `club:<id>`, `player:<id>`, draft, trades, cup, history, `review:<season>`, hof, settings.
 - Events use delegated `data-act` click handlers and `data-*` change and input handlers at the bottom of the script.
 - `persist()` marks unsaved changes and writes the browser backup.
 - Formats: 5, 7 and 11 a side (`FORMATS`), each with lineup shape, squad shape, match length and base goal rate.
@@ -28,6 +28,14 @@ A pure-simulation football league game. The user sets up clubs and players, then
 - AI trades: 1 for 1 swaps that fix each club's weakest position at similar value. Windows run only at the end of the season and after the draft. Players traded recently are excluded, and each pair of clubs trades once per window.
 - Awards each season: MVP (best average rating among regulars), Golden Boot, Golden Glove (keeper clean sheets), Rookie (first season, age 23 or under).
 - Hall of Fame: legacy points from apps, goals, assists, clean sheets, titles and awards. Up to two retired players per class, one class every three seasons.
+
+## Domestic cup
+
+- `state.cup` holds the current season's cup: `sched` (the league matchday index each round plays after), `rounds` (ties and byes), `cur` and `winner`. Each round is drawn when the one before it is played. The final follows the last matchday on neutral ground (home advantage set to 0 for that match).
+- Byes go to last season's top finishers. Level ties go to a shootout (`shootout()`).
+- `simCupTie()` runs `simMatch()` and then moves the apps and goals into `s.capps` and `s.cgoals`, so league stats, averages and awards only count league games. Injuries carry over.
+- `endSeason()` stores `h.cup` (`cupSummary()`), archives cup ties in `results` with `c:1`, and `ensureCup()` draws next season's cup. `ensureCup()` also runs in `render()`, so an old save gets a cup from the next season start.
+- Settings: `settings.cup` = `{on, name}`. Cup medals for players are worked out from career rows (`cupMedalsOf`), not stored.
 
 ## Season review
 
@@ -51,7 +59,6 @@ A pure-simulation football league game. The user sets up clubs and players, then
 ## Ideas not built yet
 
 - News feed with auto-written headlines.
-- Knockout cup alongside the league.
 - Second division with promotion and relegation.
 - Hidden potential and player traits.
 - Team of the season, streak records, hat-tricks, derbies.
