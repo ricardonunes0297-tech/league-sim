@@ -37,6 +37,14 @@ A pure-simulation football league game. The user sets up clubs and players, then
 - `endSeason()` stores `h.cup` (`cupSummary()`), archives cup ties in `results` with `c:1`, and `ensureCup()` draws next season's cup. `ensureCup()` also runs in `render()`, so an old save gets a cup from the next season start.
 - Settings: `settings.cup` = `{on, name}`. Cup medals for players are worked out from career rows (`cupMedalsOf`), not stored.
 
+## Managers
+
+- The user is the league commissioner and never manages a club. Every manager is AI; the commissioner can edit any manager or sack one from the manager page.
+- `state.managers` keyed by id; each club points to its manager with `t.mgr`. A manager has a style (attacking, balanced, defensive), tactics, coaching and scouting (1 to 5), a `hist` row per finished season (finish, expected finish, W/D/L, honours) and `awards` (Manager of the season, type `mos`).
+- Effects: style multiplies goals for and against in `simMatch()`, tactics adds to both sides' strength, coaching nudges growth for players aged 25 and under (`coachBonus`), scouting sets how much AI clubs misjudge prospects in the draft (`scoutView`).
+- `setExpect()` ranks clubs by squad strength when a season kicks off. `managersSeason()` runs in `endSeason()`: career rows, Manager of the season, small skill changes, sackings (two seasons running finishing a quarter of the league or more below expectation, unless they won something; `settings.sackings`), retirements, then `fillVacancies()` hires from out-of-work managers, one recently retired player with a strong legacy, and fresh names. Moves are kept in `h.mgrMoves` for the season review.
+- First appointments in an older save use fresh managers only.
+
 ## Player traits
 
 - `TRAITS` lists each trait with its plain-English description and the positions it suits. Players hold up to two in `p.tr`. `rollTraits()` gives new players 0 to 2 (about 70% get one), and `TRAIT_CLASH` stops opposites pairing up.
@@ -74,7 +82,6 @@ A pure-simulation football league game. The user sets up clubs and players, then
 - News feed with auto-written headlines.
 - Second division with promotion and relegation.
 - Hidden potential.
-- Managers (to be discussed: styles, skills, hiring and firing, ex-players becoming managers).
 - Sim several seasons at once.
 
 ## Installable app
