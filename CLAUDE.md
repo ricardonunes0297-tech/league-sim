@@ -51,6 +51,11 @@ A pure-simulation football league game. The user sets up clubs and players, then
 - `cabinetHTML()` shows awards as tiles grouped by type (player and manager pages).
 - Custom awards live in `settings.customAwards` ({id, name, short, stat, pos, age, off}). `syncCustom()` (called in `render`) adds each one to `AWARDS`, `TROPHY_DEF` and `TROPHY_L` under the key `x<id>`, so every page that shows awards works with them. `decideAwards` ranks them with `caRank()` (stats in `CA_STATS`) and they appear on awards night with nominees. Removing an award that has been won only sets `off`, so history keeps its name and trophy.
 
+## Rafter banners
+
+- The club header shows a banner per league title and cup win (`bannersHTML`, `pxBanner`), in the home kit colours (trim falls back to black or white when the colours are too close), with the season number.
+- Up to 8 hang at full size. Beyond that they fold into slim banners (`pxBanner(...,true)`) that open on hover or keyboard focus. Each banner is a flex item that can shrink, so very long rows overlap to fit any width.
+
 ## Awards night
 
 - When a season ends (`settings.awardsNight`, on by default) a full-screen overlay (`#an`) reveals the awards one at a time: Rookie, Golden Glove, Golden Boot, Team of the season, Manager of the season, MVP, cup final, champions. Built by `anSteps(h)`, drawn by `anRender()`; Space or Enter reveals and moves on, Escape skips to the season review.

@@ -270,6 +270,21 @@ tr.sel td{background:color-mix(in srgb,var(--flood) 20%,transparent)}
 .h2hbar{display:flex;height:10px;border-radius:5px;overflow:hidden;margin-top:12px;background:var(--line)}
 .empty{color:var(--muted);padding:30px;text-align:center;border:2px dashed var(--line);border-radius:10px}
 .hist{margin-bottom:16px}
+.clubhead>div:last-child{min-width:0;flex:1}
+.rafters{display:flex;align-items:flex-start;flex-wrap:nowrap;margin:10px 0 6px;padding:0 0 6px;max-width:100%;outline:none}
+.rafters .bnr{flex:0 1 auto;min-width:12px;display:block;margin-right:4px;filter:drop-shadow(0 3px 2px rgba(0,0,0,.25));transition:margin .2s ease}
+.rafters .bnr img{display:block}
+.rafters.tight .bnr{margin-right:2px}
+.rafters.tight .bnr .fl{display:none}
+.rafters .bnr:hover{flex-shrink:0;margin-right:4px;position:relative;z-index:2}
+.rafters.tight .bnr:hover .sl{display:none}
+.rafters.tight .bnr:hover .fl{display:block;animation:bnopen .18s ease-out}
+.rafters.tight:focus{overflow-x:auto}
+.rafters.tight:focus .bnr{flex-shrink:0}
+.rafters.tight:focus .sl{display:none}
+.rafters.tight:focus .fl{display:block}
+@keyframes bnopen{from{clip-path:inset(0 25% 0 25%)}to{clip-path:inset(0)}}
+@media (prefers-reduced-motion:reduce){.rafters .bnr{transition:none}.rafters .bnr .fl{animation:none!important}}
 .cab{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:10px}
 .cabt{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 6px 10px;border-radius:8px;background:color-mix(in srgb,var(--turf) 92%,#000);border:3px solid color-mix(in srgb,var(--turf) 60%,#fff);box-shadow:inset 0 -4px 0 rgba(0,0,0,.25);color:var(--chalk);text-align:center}
 .cabt b{font:700 .9rem var(--hd);letter-spacing:.03em;text-transform:uppercase}
@@ -919,7 +934,7 @@ function viewClub(id){
   const t=team(id);if(!t){view="clubs";return viewClubs()}
   const ti=titles(id),tabs=[["squad","Squad"],["hist","History"],["legends","Legends"],["h2h","Head to head"],["badge","Badge"],["kit","Kits"],["ground","Ground"]];
   const body=clubTab==="legends"?legendsHTML(t):clubTab==="h2h"?h2hHTML(t.id):clubTab==="hist"?clubHistoryPanel(t):clubTab==="badge"?badgeEditor(t):clubTab==="kit"?kitEditor(t):clubTab==="ground"?groundEditor(t):squadPanel(t);
-  return `<div class="clubhead">${badge(t,84)}<span class="hdkit">${kitSvg(t.kit.home,false,58)}</span><div><h1 style="margin:0">${esc(t.name)}</h1><p style="margin:.4em 0 0">${ti.length?`${trophies(id,44,true)} <span class="muted">Season ${ti.join(", ")}</span>`:`<span class="muted">No titles yet</span>`}${cupsOf(id).length?` ${cupTrophies(id,44,true)} <span class="muted">Season ${cupsOf(id).join(", ")}</span>`:""}</p><p class="muted" style="margin:.2em 0 0">${esc(t.ground.name)}${t.ground.cap?`, capacity ${capText(t.ground.cap)}`:""}. Average ability ${avgRating(t)}</p>${mgrOf(t)?`<p style="margin:.3em 0 0"><span class="muted">Manager:</span> ${mgrLink(mgrOf(t))} <span class="muted">${STYLES[mgrOf(t).style]}. Tactics ${mgrOf(t).tac}, coaching ${mgrOf(t).coa}, scouting ${mgrOf(t).sco}</span></p>`:""}${(()=>{const rv=rivalOf(id),o=clubRuns()[id],cur=o&&(o.curw>1?runText(o.curw,"w"):o.curl>1?runText(o.curl,"l"):o.curu>2?runText(o.curu,"u"):"");return (rv?`<p style="margin:.3em 0 0"><span class="muted">Rivals:</span> <button class="linkbtn inl" data-act="club" data-id="${rv.a===id?rv.b:rv.a}">${esc(team(rv.a===id?rv.b:rv.a).name)}</button> <b class="derby">${esc(rv.name)}</b></p>`:"")+(cur?`<p class="muted" style="margin:.2em 0 0">On a run of ${cur}. Best ever: ${runText(o.w.n,"w")}, ${runText(o.u.n,"u")}.</p>`:o&&o.w.n?`<p class="muted" style="margin:.2em 0 0">Best ever: ${runText(o.w.n,"w")}, ${runText(o.u.n,"u")}.</p>`:"")})()}</div></div>
+  return `<div class="clubhead">${badge(t,84)}<span class="hdkit">${kitSvg(t.kit.home,false,58)}</span><div><h1 style="margin:0">${esc(t.name)}</h1>${bannersHTML(t)}<p class="muted" style="margin:.2em 0 0">${esc(t.ground.name)}${t.ground.cap?`, capacity ${capText(t.ground.cap)}`:""}. Average ability ${avgRating(t)}</p>${mgrOf(t)?`<p style="margin:.3em 0 0"><span class="muted">Manager:</span> ${mgrLink(mgrOf(t))} <span class="muted">${STYLES[mgrOf(t).style]}. Tactics ${mgrOf(t).tac}, coaching ${mgrOf(t).coa}, scouting ${mgrOf(t).sco}</span></p>`:""}${(()=>{const rv=rivalOf(id),o=clubRuns()[id],cur=o&&(o.curw>1?runText(o.curw,"w"):o.curl>1?runText(o.curl,"l"):o.curu>2?runText(o.curu,"u"):"");return (rv?`<p style="margin:.3em 0 0"><span class="muted">Rivals:</span> <button class="linkbtn inl" data-act="club" data-id="${rv.a===id?rv.b:rv.a}">${esc(team(rv.a===id?rv.b:rv.a).name)}</button> <b class="derby">${esc(rv.name)}</b></p>`:"")+(cur?`<p class="muted" style="margin:.2em 0 0">On a run of ${cur}. Best ever: ${runText(o.w.n,"w")}, ${runText(o.u.n,"u")}.</p>`:o&&o.w.n?`<p class="muted" style="margin:.2em 0 0">Best ever: ${runText(o.w.n,"w")}, ${runText(o.u.n,"u")}.</p>`:"")})()}</div></div>
   <div class="chips tabs" role="tablist">${tabs.map(([k,l])=>`<button class="chip ${clubTab===k?"on":""}" role="tab" aria-selected="${clubTab===k}" data-act="ctab" data-v="${k}">${l}</button>`).join("")}</div>${body}`;
 }
 function squadPanel(t){
@@ -1231,6 +1246,36 @@ function anRender(){
 }
 function anAdvance(){if(!_an)return;if(!_an.shown)_an.shown=true;else if(_an.i<_an.steps.length-1){_an.i++;_an.shown=false}else return anClose();anRender()}
 document.addEventListener("keydown",e=>{if(!_an||$("#an").hidden)return;if(e.key==="Escape"){e.preventDefault();anClose()}else if(e.key===" "||e.key==="Enter"){e.preventDefault();anAdvance()}});
+/* ---------- rafter banners for titles and cups ---------- */
+const BN_ICON={league:["...g...","..ggg..","ggggggg",".ggggg.","..ggg..",".gg.gg.","g.....g"],cup:["g.ggg.g","ggggggg",".ggggg.","..ggg..","...g...","..ggg..",".ggggg."]};
+// slim: the narrow version used when a club has too many banners to hang side by side
+function pxBanner(t,kind,season,slim){
+  const k=t.kit&&t.kit.home||{},bg=k.a||"#2a5d3c",key=["bn",bg,k.b,kind,season,slim?1:0].join("|");if(PXC.cache.has(key))return PXC.cache.get(key);
+  const W=slim?18:34,H=50,g=Grid(W,H),x0=slim?1:2,x1=W-3+(slim?1:0),bot=44,c=lum(bg)>.45;
+  let tr=k.b||"#fff";if(Math.abs(lum(tr)-lum(bg))<.25)tr=c?"#1B1712":"#FFFFFF";
+  const ink=kind==="cup"&&Math.abs(lum("#E2AD2E")-lum(bg))>.25?"#E2AD2E":tr;
+  // cloth with a soft fold: lighter left edge, darker right edge
+  for(let y=2;y<=bot+5;y++){const v=y>bot?y-bot:0;for(let x=x0+v;x<=x1-v;x++)g.set(x,y,x<=x0+v?lit(bg,.18):x>=x1-v-1?drk(bg,.22):bg)}
+  for(let y=4;y<=bot+1;y++){const v=y>bot?y-bot:0;g.set(x0+2+v,y,tr);g.set(x1-2-v,y,tr)}
+  for(let x=x0+2;x<=x1-2;x++){g.set(x,4,tr);g.set(x,bot-3,tr)}
+  for(let v=0;v<=4;v++){g.set(x0+2+v,bot+1+v-1,tr);g.set(x1-2-v,bot+1+v-1,tr)}
+  const ix=(W-7)>>1;BN_ICON[kind].forEach((r,y)=>[...r].forEach((ch,x)=>{if(ch==="g")g.set(ix+x,7+y,ink)}));
+  if(slim){const num=String(season),tw=num.length*4-1;drawText(g,num,Math.round((W-tw)/2),20,tr);for(let x=0;x<W;x++){g.set(x,0,"#5A4632");g.set(x,1,"#2E2219")}outlineG(g,"#0D0A06");const url=gridURL(g);PXC.cache.set(key,url);return url}
+  const word=kind==="cup"?"CUP":"LEAGUE",tw=s=>[...s].reduce((a,ch)=>a+(FONTW[ch]?6:4),0)-1;
+  drawText(g,word,Math.round((W-tw(word))/2),16,ink);drawText(g,"SEASON",Math.round((W-tw("SEASON"))/2),23,tr);
+  const num=String(season),nw=num.length*8-2,nx=Math.round((W-nw)/2);
+  [...num].forEach((d,i)=>{const f=FONT[d];for(let q=0;q<15;q++)if(f[q]==="1")for(let a=0;a<2;a++)for(let b=0;b<2;b++)g.set(nx+i*8+(q%3)*2+a,30+Math.floor(q/3)*2+b,tr)});
+  for(let x=0;x<W;x++){g.set(x,0,"#5A4632");g.set(x,1,"#2E2219")}g.set(0,0,"#B07D12");g.set(W-1,0,"#B07D12");g.set(0,1,"#7A520A");g.set(W-1,1,"#7A520A");
+  outlineG(g,"#0D0A06");const url=gridURL(g);PXC.cache.set(key,url);return url;
+}
+function bannersHTML(t){
+  const L=[...titles(t.id).map(s=>({s,k:"league"})),...cupsOf(t.id).map(s=>({s,k:"cup"}))].sort((a,b)=>a.s-b.s||(a.k==="league"?-1:1));
+  if(!L.length)return `<p style="margin:.4em 0 0"><span class="muted">No titles yet</span></p>`;
+  if(!pxCtx())return `<p style="margin:.4em 0 0">${trophies(t.id,44,true)} ${cupTrophies(t.id,44,true)}</p>`;
+  // Up to 8 hang at full size. Beyond that they fold into slim banners that open up as you move along them, and overlap if there are very many
+  const tight=L.length>8;
+  return `<div class="rafters${tight?" tight":""}" tabindex="0" aria-label="${pluralN(titles(t.id).length,"league title")} and ${pluralN(cupsOf(t.id).length,"cup win")}">${L.map(b=>`<span class="bnr" title="${b.k==="cup"?esc(cupName())+" winners":"League champions"}, season ${b.s}">${tight?`<img class="px sl" src="${pxBanner(t,b.k,b.s,true)}" width="36" height="100" alt="">`:""}<img class="px fl" src="${pxBanner(t,b.k,b.s)}" width="68" height="100" alt=""></span>`).join("")}</div>`;
+}
 /* ---------- season review ---------- */
 function viewReview(season){
   const h=state.history.find(x=>x.season===+season);if(!h)return `<div class="empty">That season has not finished yet.</div>`;
