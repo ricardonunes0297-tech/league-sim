@@ -45,6 +45,12 @@ A pure-simulation football league game. The user sets up clubs and players, then
 - `setExpect()` ranks clubs by squad strength when a season kicks off. `managersSeason()` runs in `endSeason()`: career rows, Manager of the season, small skill changes, sackings (two seasons running finishing a quarter of the league or more below expectation, unless they won something; `settings.sackings`), retirements, then `fillVacancies()` hires from out-of-work managers, one recently retired player with a strong legacy, and fresh names. Moves are kept in `h.mgrMoves` for the season review.
 - First appointments in an older save use fresh managers only.
 
+## Trophy art and custom awards
+
+- Trophies are hand-drawn maps in `TRO_MAPS` (12 shapes: champ, cup, plate, star, ball, boot, glove, medal, kicker, runner, keeper, coach). Characters: g metal, d engraving, w shine, a accent, k black. `pxTrophy()` shades each row of metal light on the left to dark on the right and adds a small plinth (rows 25 to 31). Icon mode drops the plinth. Shape, metal, plinth and accent are still set per award in the Trophy room (`settings.trophies`).
+- `cabinetHTML()` shows awards as tiles grouped by type (player and manager pages).
+- Custom awards live in `settings.customAwards` ({id, name, short, stat, pos, age, off}). `syncCustom()` (called in `render`) adds each one to `AWARDS`, `TROPHY_DEF` and `TROPHY_L` under the key `x<id>`, so every page that shows awards works with them. `decideAwards` ranks them with `caRank()` (stats in `CA_STATS`) and they appear on awards night with nominees. Removing an award that has been won only sets `off`, so history keeps its name and trophy.
+
 ## Awards night
 
 - When a season ends (`settings.awardsNight`, on by default) a full-screen overlay (`#an`) reveals the awards one at a time: Rookie, Golden Glove, Golden Boot, Team of the season, Manager of the season, MVP, cup final, champions. Built by `anSteps(h)`, drawn by `anRender()`; Space or Enter reveals and moves on, Escape skips to the season review.
