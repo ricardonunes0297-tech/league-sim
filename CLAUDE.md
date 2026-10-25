@@ -17,12 +17,13 @@ A pure-simulation football league game. The user sets up clubs and players, then
 - `render()` rebuilds the whole view from `state`. Long lists are paged (the players list shows 50 at a time via `ps.lim`). Views: table, fixtures, players, clubs, `club:<id>`, `player:<id>`, draft, trades, cup, history, `review:<season>`, hof, settings.
 - Events use delegated `data-act` click handlers and `data-*` change and input handlers at the bottom of the script.
 - `persist()` marks unsaved changes and writes the browser backup.
+- Back buttons use `navStack`: any click that opens a player, manager, club or review page pushes the previous view, sidebar nav clears it, and `backTo()` falls back to the matching list page.
 - Formats: 5, 7 and 11 a side (`FORMATS`), each with lineup shape, squad shape, match length and base goal rate.
 
 ## Simulation
 
-- `lineup()` picks the strongest available side (injured players excluded, out of position players penalised).
-- `simMatch()` uses Poisson goals from attack against defence, then assigns scorers and assisters, match ratings out of 10, player of the match, clean sheets and injuries.
+- `lineup()` picks the strongest available side (injured players excluded, out of position players penalised). If a club has too few fit players it plays short rather than field injured ones.
+- `simMatch()` uses Poisson goals from attack against defence, then assigns scorers and assisters, match ratings out of 10, player of the match, clean sheets and injuries. Injuries and their minute are rolled before goals, and `goals()` only picks players still on the pitch at each goal's minute, so an injured player never scores or assists after going off.
 - `endSeason()` archives the season (table, matchday positions, awards, results), pushes career rows, ages players, runs progression, handles retirements and youth replacements, runs the end of season trade window, inducts the Hall of Fame every third season, then opens the yearly draft.
 - Draft: lowest finisher picks first. The opening draft (new league option) is a snake draft over a big pool, with a setup stage where the pool can be edited first. AI picks fill starting positions, then bench, with small per-club positional tastes.
 - AI trades: 1 for 1 swaps that fix each club's weakest position at similar value. Windows run only at the end of the season and after the draft. Players traded recently are excluded, and each pair of clubs trades once per window.
@@ -58,7 +59,8 @@ A pure-simulation football league game. The user sets up clubs and players, then
 ## Trophy cabinet
 
 - Clubs have a Trophy cabinet tab (`clubTab="cab"`); player and manager pages have Career and Trophy cabinet tabs (`pTab`, shared by both).
-- `cabinetPanel(name, groups)` draws a wooden cabinet with a brass name plate, glass sheen and one run of shelves per group (shelves are a repeating CSS gradient, items are a fixed 120px tall so they stand on them). `clubCabinet`, `playerCabinet` (rings, cup medals, each award type) and `managerCabinet` (titles, cups, awards) build the groups.
+- `cabinetPanel(name, groups)` draws a wooden cabinet with a brass name plate, glass sheen and one run of shelves per group (shelves are a repeating CSS gradient, items are a fixed 120px tall so they stand on them). `clubCabinet` (titles, cups, plus every individual award its players and managers won while there, via `clubAwards`), `playerCabinet` (rings, cup medals, team of the season picks, each award type, Hall of Fame) and `managerCabinet` (titles, cups, awards) build the groups. Team of the season (`tots`) and Hall of Fame (`hof`) have their own trophy looks in `TROPHY_DEF`.
+- In lists (players table, plaques) `ringsHTML` and `awardsHTML` show only the latest icon plus a count (class `flat`, no hover spread) so the table fits without side scrolling. The tooltip lists them all. Big versions on the player page still spread on hover.
 - Rafter banners were tried and removed at the user's request.
 
 ## Awards night
