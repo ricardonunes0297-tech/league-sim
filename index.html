@@ -270,6 +270,29 @@ tr.sel td{background:color-mix(in srgb,var(--flood) 20%,transparent)}
 .h2hbar{display:flex;height:10px;border-radius:5px;overflow:hidden;margin-top:12px;background:var(--line)}
 .empty{color:var(--muted);padding:30px;text-align:center;border:2px dashed var(--line);border-radius:10px}
 .hist{margin-bottom:16px}
+#an{position:fixed;inset:0;z-index:60;background:repeating-linear-gradient(180deg,var(--turf) 0 80px,var(--turf2) 80px 160px);color:var(--chalk);display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto}
+#an[hidden]{display:none}
+.anbox{width:min(760px,100%);text-align:center;border:2px solid color-mix(in srgb,var(--chalk) 35%,transparent);border-radius:14px;padding:22px 22px 26px;background:rgba(0,0,0,.18)}
+.antop{display:flex;justify-content:space-between;gap:10px;color:var(--chalk-dim);font-size:.85rem}
+#an h2{font-size:clamp(2rem,6vw,3.2rem);margin:.3em 0 .2em;color:var(--flood)}
+.anbody{min-height:260px;display:flex;flex-direction:column;align-items:center;gap:10px}
+.antro{margin:4px 0}
+.anlbl{margin:6px 0 0;color:var(--chalk-dim);text-transform:uppercase;letter-spacing:.08em;font:700 .85rem var(--hd)}
+.annoms{list-style:none;padding:0;margin:0;display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.annoms li{border:1px solid color-mix(in srgb,var(--chalk) 30%,transparent);border-radius:10px;padding:8px 14px;display:flex;flex-direction:column;min-width:150px;transition:all .3s}
+.annoms li b{font-family:var(--hd);font-size:1.15rem}
+.annoms li span{color:var(--chalk-dim);font-size:.82rem}
+.annoms li.on{border-color:var(--flood);background:color-mix(in srgb,var(--flood) 22%,transparent)}
+.anwin{display:flex;align-items:center;gap:14px;text-align:left;animation:anin .5s ease both}
+.anwin b{display:block;font-family:var(--hd);font-size:clamp(1.8rem,5vw,2.6rem);line-height:1}
+.anwin span{color:var(--chalk-dim)}
+.anscore{font:700 3rem var(--hd);margin:0;animation:anin .5s ease both}
+.anscore small{display:block;font-size:1rem;color:var(--chalk-dim)}
+.anbtns{display:flex;justify-content:center;gap:10px;margin-top:20px;flex-wrap:wrap}
+.anbtns .btn{flex:none;width:auto}
+#an .tots{width:100%;animation:anin .5s ease both}
+@keyframes anin{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.anwin,.anscore,#an .tots{animation:none}.annoms li{transition:none}}
 .mschips{display:flex;flex-wrap:wrap;gap:6px}
 .mschip{background:color-mix(in srgb,var(--gold) 16%,var(--surface));border:1px solid color-mix(in srgb,var(--gold) 45%,var(--line));border-radius:999px;padding:3px 10px;font:600 .85rem var(--bd)}
 .mschip small{color:var(--muted);font-weight:500}
@@ -417,7 +440,7 @@ const FLAGS={
  UKR:`<rect width="30" height="10" fill="#0057B7"/><rect y="10" width="30" height="10" fill="#FFD700"/>`
 };
 function flag(c,w=18){const n=NAT[c];if(!n)return "";return `<svg class="flag" width="${w}" height="${Math.round(w*2/3)}" viewBox="0 0 30 20" role="img" aria-label="${n.n}"><title>${n.n}</title>${FLAGS[c]}<rect x=".25" y=".25" width="29.5" height="19.5" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".5"/></svg>`}
-const DEFAULT_SETTINGS={aiTrades:"normal",injury:100,goals:100,home:10,nations:NATIONS.map(x=>x.c),homeNation:"",homeShare:50,genW:[10,25,35,22,8],draftW:[14,34,32,15,5],draftPer:2,draftAgeMin:17,draftAgeMax:21,retireAge:33,extraPlaces:2,theme:{mode:"system",turf:"#1F4D36",accent:"#E8C547",art:"pixel"},ring:{size:30,metal:"gold",stones:"diamond",centre:"plate",panel:"club",text:"CHAMPIONS"},trophies:{},cup:{on:true,name:""},sackings:true,revealPot:false};
+const DEFAULT_SETTINGS={aiTrades:"normal",injury:100,goals:100,home:10,nations:NATIONS.map(x=>x.c),homeNation:"",homeShare:50,genW:[10,25,35,22,8],draftW:[14,34,32,15,5],draftPer:2,draftAgeMin:17,draftAgeMax:21,retireAge:33,extraPlaces:2,theme:{mode:"system",turf:"#1F4D36",accent:"#E8C547",art:"pixel"},ring:{size:30,metal:"gold",stones:"diamond",centre:"plate",panel:"club",text:"CHAMPIONS"},trophies:{},cup:{on:true,name:""},sackings:true,revealPot:false,awardsNight:true};
 function pickNation(){const S=state&&state.settings;const act=S&&S.nations&&S.nations.length?S.nations:NATIONS.map(x=>x.c);if(S&&S.homeNation&&NAT[S.homeNation]&&rand()*100<S.homeShare)return S.homeNation;return pick(act)}
 function guessNat(name){const last=String(name).split(" ").slice(-1)[0];const n=NATIONS.find(x=>x.l.includes(last));return n?n.c:pick(NATIONS).c}
 
@@ -571,7 +594,7 @@ function endSeason(){
   const h={season:state.season,champion:snap(tbl[0].id),runnerUp:snap(tbl[1].id),
     table:tbl.map(r=>({...snap(r.id),p:r.p,w:r.w,d:r.d,l:r.l,gf:r.gf,ga:r.ga,pts:r.pts})),
     topScorer:top("goals"),topAssist:top("assists"),topCS:top("cs"),retired:[]};
-  h.posHist=posByRound();h.awards=decideAwards(all);h.tots=pickTots(all);
+  h.posHist=posByRound();h.awards=decideAwards(all);h.noms=decideAwards.noms;h.tots=pickTots(all);
   const cupDone=state.cup&&state.cup.season===state.season&&state.cup.winner;if(cupDone)h.cup=cupSummary();
   for(const p of all){
     const ids=[...new Set([...(p.seasonTeams||[]),p.teamId])].filter(i=>team(i));
@@ -1102,6 +1125,7 @@ function managersSeason(tbl,h){
   tbl.forEach((r,i)=>{const t=team(r.id),m=mgrOf(t);if(!m)return;const pos=i+1,exp=state.expect.ranks[r.id]||pos,cup=!!(h.cup&&h.cup.winner.id===r.id);
     const row={season:state.season,teamId:r.id,team:t.name,pos,exp,w:r.w,d:r.d,l:r.l,...(pos===1?{title:1}:{}),...(cup?{cup:1}:{})};m.hist.push(row);rows.push({m,row})});
   const best=rows.map(x=>({...x,v:(x.row.exp-x.row.pos)*2+(x.row.title?3:0)+(x.row.cup?2:0)+rand()*.1})).sort((a,b)=>b.v-a.v)[0];
+  h.mosNoms=rows.map(x=>({...x,v:(x.row.exp-x.row.pos)*2+(x.row.title?3:0)+(x.row.cup?2:0)})).sort((a,b)=>b.v-a.v).slice(0,3).map(x=>({id:x.m.id,name:x.m.name,team:x.row.team,val:`${ordinal(x.row.pos)}, expected ${ordinal(x.row.exp)}`}));
   if(best){best.m.awards.push({type:"mos",season:state.season});h.mos={id:best.m.id,name:best.m.name,team:best.row.team,val:`${ordinal(best.row.pos)}, expected ${ordinal(best.row.exp)}`}}
   rows.forEach(({m,row})=>{if(row.exp-row.pos>=2&&rand()<.35)m.tac=Math.min(5,m.tac+1);if(row.pos-row.exp>=2&&rand()<.15)m.tac=Math.max(1,m.tac-1)});
   Object.values(state.managers).forEach(m=>{if(!m.retired)m.age++});
@@ -1168,13 +1192,43 @@ function growGrounds(tbl,h){tbl.forEach((r,i)=>{const t=team(r.id);if(!t)return;
 const capText=n=>n.toLocaleString("en-GB");
 // Home advantage scales a little with crowd size compared with the league average
 function crowdF(t){if(!t||!t.ground||!t.ground.cap)return 1;const avg=state.teams.reduce((a,x)=>a+(x.ground.cap||0),0)/state.teams.length||1;return clamp(.8+.4*t.ground.cap/avg,.8,1.4)}
+/* ---------- awards night: the end of season reveal ---------- */
+let _an=null;
+function anSteps(h){
+  const st=[],aw=t=>(h.awards||[]).find(a=>a.type===t);
+  ["rookie","glove","boot"].forEach(t=>{const a=aw(t);if(a)st.push({kind:"award",type:t,title:AWARDS[t].full,trophy:t,win:a,noms:(h.noms||{})[t]||[]})});
+  if(h.tots&&h.tots.length)st.push({kind:"tots",title:"Team of the season"});
+  if(h.mos)st.push({kind:"award",type:"mos",title:"Manager of the season",trophy:"mos",win:h.mos,noms:h.mosNoms||[],mgr:true});
+  const m=aw("mvp");if(m)st.push({kind:"award",type:"mvp",title:"Most valuable player",trophy:"mvp",win:m,noms:(h.noms||{}).mvp||[]});
+  if(h.cup)st.push({kind:"cup",title:`${h.cup.name} final`,trophy:"cup"});
+  st.push({kind:"champ",title:`Season ${h.season} champions`,trophy:"league"});
+  return st;
+}
+function awardsNight(season){const h=state.history.find(x=>x.season===+season);if(!h)return;_an={season:h.season,h,steps:anSteps(h),i:0,shown:false};let el=$("#an");if(!el){el=document.createElement("div");el.id="an";el.setAttribute("role","dialog");el.setAttribute("aria-modal","true");el.setAttribute("aria-label","Awards night");document.body.appendChild(el)}el.hidden=false;anRender()}
+function anClose(){const el=$("#an");if(el)el.hidden=true;if(_an){view="review:"+_an.season;_an=null;render()}}
+function anRender(){
+  const el=$("#an");if(!el||!_an)return;const {h,steps,i,shown}=_an,s=steps[i],last=i===steps.length-1;
+  const big=k=>pxCtx()?`<img class="px antro" src="${pxTrophy(k)}" width="92" alt="">`:"";
+  const win=(bdg,name,sub)=>`<div class="anwin">${bdg}<div><b>${esc(name)}</b><span>${esc(sub)}</span></div></div>`;
+  const who=(x,mgr)=>{const t=mgr?null:pl(x.id)&&team(pl(x.id).teamId);return win(t?badge(t,56):"",x.name,`${x.team}${x.val?`. ${x.val}`:""}`)};
+  let body="";
+  if(s.kind==="award")body=`${big(s.trophy)}${s.noms.length?`<p class="anlbl">${s.noms.length===1?"The only nominee":"The nominees"}</p><ul class="annoms">${s.noms.map(n=>`<li class="${shown&&n.id===s.win.id?"on":""}"><b>${esc(n.name)}</b><span>${esc(n.team)}. ${esc(n.val||"")}</span></li>`).join("")}</ul>`:""}${shown?`<p class="anlbl">The winner is</p>${who(s.win,s.mgr)}`:""}`;
+  else if(s.kind==="tots")body=shown?totsHTML(h.tots):`<p class="anlbl">The best ${h.tots.length} players of the season, picked on average rating</p>`;
+  else if(s.kind==="cup"){const f=h.cup.final,nm=id=>team(id)?team(id).name:"?";body=`${big("cup")}<p class="anlbl">${esc(nm(f.h))} v ${esc(nm(f.a))}</p>${shown?`<p class="anscore">${f.hg}–${f.ag}${f.pen?`<small>${f.pen[0]}–${f.pen[1]} on penalties</small>`:""}</p><p class="anlbl">The cup goes to</p>${win(badge(team(h.cup.winner.id)||h.cup.winner,56),h.cup.winner.name,h.cup.top?`Top cup scorer ${h.cup.top.name} with ${h.cup.top.n}`:"")}`:""}`}
+  else{const t=h.table;body=`${big("league")}<ul class="annoms">${t.slice(0,3).map((r,k)=>`<li class="${shown&&k===0?"on":""}"><b>${esc(r.name)}</b><span>${r.pts} points</span></li>`).join("")}</ul>${shown?`<p class="anlbl">Champions</p>${win(badge(team(h.champion.id)||h.champion,72),h.champion.name,`${pluralN(t[0].w,"win")}, ${pluralN(t[0].d,"draw")}, ${pluralN(t[0].l,"loss","losses")}`)}`:""}`}
+  el.innerHTML=`<div class="anbox"><div class="antop"><span>${esc(state.name)}. Season ${h.season} awards night</span><span>${i+1} of ${steps.length}</span></div><h2>${esc(s.title)}</h2><div class="anbody">${body}</div>
+  <div class="anbtns">${shown?(last?`<button class="btn go" data-act="an-close">See the season review</button>`:`<button class="btn go" data-act="an-next">Next award</button>`):`<button class="btn go" data-act="an-reveal">Reveal</button>`}${last?"":`<button class="btn ghost" data-act="an-close">Skip to the review</button>`}</div></div>`;
+  const b=el.querySelector(".anbtns .go");if(b)b.focus();
+}
+function anAdvance(){if(!_an)return;if(!_an.shown)_an.shown=true;else if(_an.i<_an.steps.length-1){_an.i++;_an.shown=false}else return anClose();anRender()}
+document.addEventListener("keydown",e=>{if(!_an||$("#an").hidden)return;if(e.key==="Escape"){e.preventDefault();anClose()}else if(e.key===" "||e.key==="Enter"){e.preventDefault();anAdvance()}});
 /* ---------- season review ---------- */
 function viewReview(season){
   const h=state.history.find(x=>x.season===+season);if(!h)return `<div class="empty">That season has not finished yet.</div>`;
   const latest=h===state.history[state.history.length-1],ch=h.table[0],gap=ch.pts-h.table[1].pts;
   const plink=(id,name)=>id&&pl(id)?`<button class="linkbtn" data-act="player" data-id="${id}">${esc(name)}</button>`:`<b>${esc(name)}</b>`;
   const lead=(l,v)=>v?`<div class="rvstat"><span class="muted">${l}</span><b>${esc(v.name)}</b><span class="muted">${esc(v.team)}, ${v.n}</span></div>`:"";
-  return `<div class="phead"><h2 style="margin:0">Season ${h.season} review</h2><div class="toolbar" style="margin:0">${pxCtx()?`<button class="btn" data-act="review-img" data-v="${h.season}">Image cards</button>`:""}${latest&&state.draft?`<button class="btn go" data-act="nav" data-v="draft">Go to the draft</button>`:`<button class="btn" data-act="nav" data-v="history">All seasons</button>`}</div></div>
+  return `<div class="phead"><h2 style="margin:0">Season ${h.season} review</h2><div class="toolbar" style="margin:0">${pxCtx()?`<button class="btn" data-act="review-img" data-v="${h.season}">Image cards</button>`:""}<button class="btn" data-act="an-open" data-v="${h.season}">Awards night</button>${latest&&state.draft?`<button class="btn go" data-act="nav" data-v="draft">Go to the draft</button>`:`<button class="btn" data-act="nav" data-v="history">All seasons</button>`}</div></div>
   <div class="banner">${pxCtx()?`<img class="px" src="${pxTrophy("league")}" width="69" alt="">`:""}${badge(team(h.champion.id)||h.champion,72)}<div class="grow"><p>Champions</p><h2>${esc(h.champion.name)}</h2><p>${pluralN(ch.w,"win")}, ${pluralN(ch.d,"draw")} and ${pluralN(ch.l,"loss","losses")} for ${pluralN(ch.pts,"point")}. ${gap?`${gap} ${gap===1?"point":"points"} clear of ${esc(h.runnerUp.name)}.`:`Level on points with ${esc(h.runnerUp.name)}, won on the tie-breaker.`}</p></div></div>
   ${h.cup?`<div class="card rvaward" style="margin-bottom:8px">${pxCtx()?`<img class="px" src="${pxTrophy("cup")}" width="46" alt="">`:""}<div><span class="muted">${esc(h.cup.name)} winners</span><b>${esc(h.cup.winner.name)}</b><span class="muted">Final: ${esc(finalLine(h.cup.final,id=>team(id)?team(id).name:"?"))}${h.cup.top?`. Top cup scorer ${esc(h.cup.top.name)} with ${h.cup.top.n}`:""}</span></div></div>`:""}
   ${h.mos&&state.managers&&state.managers[h.mos.id]?`<div class="card rvaward" style="margin-bottom:8px">${pxCtx()?`<img class="px" src="${pxTrophy("mos")}" width="46" alt="">`:""}<div><span class="muted">Manager of the season</span><button class="linkbtn" data-act="mgr" data-id="${h.mos.id}">${esc(h.mos.name)}</button><span class="muted">${esc(h.mos.team)}. Finished ${esc(h.mos.val)}</span></div></div>`:""}
@@ -1277,6 +1331,7 @@ function viewSettings(){
   ${ringCard()}
   ${trophyCard()}
   ${cupCard()}
+  <section class="card"><h3>Awards night</h3><label class="nat"><input type="checkbox" data-anight ${state.settings.awardsNight!==false?"checked":""}><span>Reveal the awards one by one when a season ends</span></label><p class="muted">You can replay any season's awards night from its review page.</p></section>
   <section class="card"><h3>Hidden potential</h3><label class="nat"><input type="checkbox" data-reveal ${state.settings.revealPot?"checked":""}><span>Show every player's exact potential</span></label><p class="muted">Off by default, so you only see a scout's estimate that narrows as players get older. Turning it on is the commissioner's peek behind the curtain.</p></section>
   <section class="card"><h3>Managers</h3><label class="nat"><input type="checkbox" data-sack ${state.settings.sackings!==false?"checked":""}><span>Boards can sack managers who fall well short two seasons running</span></label><p class="muted">You can also edit any manager, or sack one yourself, from their page.</p></section>
   <section class="card"><h3>Matches</h3>${rng("goals","Goal rate",50,200,5,"%","100% is the normal level for the format.")}${rng("home","Home advantage",0,30,1,"%")}${rng("injury","Injury rate",0,300,10,"%","0% turns injuries off. At 100% each club loses a player roughly every few matches.")}</section>
@@ -1533,14 +1588,16 @@ function awardsHTML(list,big){
 function decideAwards(all){
   const maxApps=Math.max(1,...all.map(p=>p.s.apps));
   const av=p=>avgOf(p.s)??(6+(p.s.goals+p.s.assists)/Math.max(1,p.s.apps));
-  const pickBy=(list,f)=>list.reduce((b,p)=>{const v=f(p);return !b||v>b.v?{p,v}:b},null);
+  const rank=(list,f)=>list.map(p=>({p,v:f(p)})).sort((a,b)=>b.v-a.v);
   const w=(type,r,val)=>{if(!r)return null;const p=r.p;p.awards=p.awards||[];p.awards.push({type,season:state.season});return{type,id:p.id,name:p.name,team:team(p.teamId).name,val}};
   const regulars=all.filter(p=>p.s.apps>=maxApps*.5);
-  const mvp=pickBy(regulars,p=>av(p)+(p.s.goals+p.s.assists)*.01);
-  const boot=pickBy(all.filter(p=>p.s.goals>0),p=>p.s.goals+p.s.assists*.01-p.s.apps*.0001);
-  const gks=all.filter(p=>p.pos==="GK"&&p.s.apps>0),glove=pickBy(gks,p=>p.s.cs+av(p)*.01);
-  const rk=all.filter(p=>!p.career.length&&p.age<=23&&p.s.apps>=maxApps*.4),rookie=pickBy(rk,av);
-  return [w("mvp",mvp,mvp&&`${fmtAvg(av(mvp.p))} average`),w("boot",boot,boot&&`${boot.p.s.goals} goals`),w("glove",glove,glove&&`${glove.p.s.cs} clean sheets`),w("rookie",rookie,rookie&&`${fmtAvg(av(rookie.p))} average`)].filter(Boolean);
+  const rM=rank(regulars,p=>av(p)+(p.s.goals+p.s.assists)*.01),rB=rank(all.filter(p=>p.s.goals>0),p=>p.s.goals+p.s.assists*.01-p.s.apps*.0001);
+  const rG=rank(all.filter(p=>p.pos==="GK"&&p.s.apps>0),p=>p.s.cs+av(p)*.01),rR=rank(all.filter(p=>!p.career.length&&p.age<=23&&p.s.apps>=maxApps*.4),av);
+  const vA=p=>`${fmtAvg(av(p))} average`,vB=p=>`${p.s.goals} goals`,vG=p=>`${p.s.cs} clean sheets`;
+  const nom=(r,vf)=>r.slice(0,3).map(x=>({id:x.p.id,name:x.p.name,team:team(x.p.teamId).name,val:vf(x.p)}));
+  decideAwards.noms={mvp:nom(rM,vA),boot:nom(rB,vB),glove:nom(rG,vG),rookie:nom(rR,vA)};
+  const [mvp,boot,glove,rookie]=[rM[0],rB[0],rG[0],rR[0]];
+  return [w("mvp",mvp,mvp&&vA(mvp.p)),w("boot",boot,boot&&vB(boot.p)),w("glove",glove,glove&&vG(glove.p)),w("rookie",rookie,rookie&&vA(rookie.p))].filter(Boolean);
 }
 function legacy(p){const t=statsFor(p,"all"),a=p.awards||[],cnt=k=>a.filter(x=>x.type===k).length,avg=avgOf(t);
   return Math.round(t.apps*.1+t.goals*(p.pos==="FW"?.8:1)+t.assists*.7+t.cs*(p.pos==="GK"?1.5:.5)+ringsOf(p).length*6+cupMedalsOf(p).length*3+(p.tots||[]).length*2+(t.ht||0)+cnt("mvp")*10+cnt("boot")*6+cnt("glove")*6+cnt("rookie")*2+(avg?(avg-6.5)*t.rapps*.15:0))}
@@ -1793,7 +1850,10 @@ document.addEventListener("click",async e=>{
     case "trophy-reset":delete (state.settings.trophies||{})[trophyTab];persist();break;
     case "sim-round":simRound();fxRound=null;persist();if(_msBatch.length)toast(`Milestone: ${_msBatch.map(m=>`${m.name}, ${msText(m)}`).join(". ")}.`);break;
     case "sim-season":{const all=[];while(!seasonDone()){simRound();all.push(..._msBatch)}fxRound=null;persist();if(all.length)toast(`Milestones: ${all.slice(0,3).map(m=>`${m.name}, ${msText(m)}`).join(". ")}${all.length>3?`. And ${all.length-3} more`:""}.`);break}
-    case "end-season":endSeason();fxRound=null;view="review:"+(state.season-1);break;
+    case "end-season":endSeason();fxRound=null;view="review:"+(state.season-1);if(state.settings.awardsNight!==false){render();awardsNight(state.season-1);return}break;
+    case "an-reveal":case "an-next":anAdvance();return;
+    case "an-close":anClose();return;
+    case "an-open":awardsNight(v);return;
     case "review-img":Promise.all([reviewCard(v),totsCard(v)]).then(cards=>{_rvImg=cards.filter(Boolean);if(!_rvImg.length)return;openModal(`<button class="btn sm x" data-act="close">Close</button><h2>Season ${esc(v)} image cards</h2><div class="rvcards">${_rvImg.map((r,i)=>`<figure><img class="rvimg" src="${r.url}" alt="${i?"Team of the season":"Season review"} card"><div class="toolbar"><button class="btn go" data-act="review-save" data-v="${i}">Save image</button><button class="btn" data-act="review-copy" data-v="${i}">Copy image</button></div></figure>`).join("")}</div>`)});return;
     case "review-save":{const r=_rvImg&&_rvImg[+v||0];if(!r)return;const l=document.createElement("a");l.href=r.url;l.download=r.name;document.body.appendChild(l);l.click();l.remove();toast("Image saved to your Downloads");return}
     case "review-copy":{const r=_rvImg&&_rvImg[+v||0];if(r)fetch(r.url).then(x=>x.blob()).then(bl=>navigator.clipboard.write([new ClipboardItem({"image/png":bl})])).then(()=>toast("Image copied. Paste it anywhere.")).catch(()=>toast("Copying is not available here. Use Save image instead."));return}
@@ -1845,6 +1905,7 @@ document.addEventListener("change",e=>{
   if(el.dataset.nat){const S=state.settings,c=el.dataset.nat;S.nations=el.checked?[...new Set([...S.nations,c])]:S.nations.filter(x=>x!==c);persist();render();return}
   if(el.dataset.themeK){persist();render();return}
   if(el.dataset.mf){const m=state.managers[el.dataset.id],k=el.dataset.mf;if(m){if(k==="name")m.name=el.value.trim()||m.name;else if(k==="style")m.style=el.value;else m[k]=clamp(+el.value,1,5)}persist();render();return}
+  if(el.dataset.anight!==undefined){state.settings.awardsNight=el.checked;persist();render();return}
   if(el.dataset.reveal!==undefined){state.settings.revealPot=el.checked;persist();render();return}
   if(el.dataset.sack!==undefined){state.settings.sackings=el.checked;persist();render();return}
   if(el.dataset.traitAdd){const p=pl(el.dataset.traitAdd);if(p&&el.value&&traitOk(p,el.value,p.tr||[])&&(p.tr||[]).length<2)p.tr=[...(p.tr||[]),el.value];persist();render();return}

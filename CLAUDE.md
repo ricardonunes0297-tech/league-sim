@@ -45,6 +45,12 @@ A pure-simulation football league game. The user sets up clubs and players, then
 - `setExpect()` ranks clubs by squad strength when a season kicks off. `managersSeason()` runs in `endSeason()`: career rows, Manager of the season, small skill changes, sackings (two seasons running finishing a quarter of the league or more below expectation, unless they won something; `settings.sackings`), retirements, then `fillVacancies()` hires from out-of-work managers, one recently retired player with a strong legacy, and fresh names. Moves are kept in `h.mgrMoves` for the season review.
 - First appointments in an older save use fresh managers only.
 
+## Awards night
+
+- When a season ends (`settings.awardsNight`, on by default) a full-screen overlay (`#an`) reveals the awards one at a time: Rookie, Golden Glove, Golden Boot, Team of the season, Manager of the season, MVP, cup final, champions. Built by `anSteps(h)`, drawn by `anRender()`; Space or Enter reveals and moves on, Escape skips to the season review.
+- `decideAwards` now keeps the top three for each award as nominees (`h.noms`); manager nominees go in `h.mosNoms`. Older seasons simply show no nominees.
+- Any season can be replayed from its review page with the Awards night button.
+
 ## Milestones and club identity
 
 - `checkMilestones()` runs after every match for the players who took part: career goals and appearances count league and cup together, plus assists and clean sheets (`MILESTONES`). Stored in `p.ms`; the season's list goes to `h.milestones`. Older saves record already passed milestones quietly in `migrate()` with `s:null`, so nothing floods in.
