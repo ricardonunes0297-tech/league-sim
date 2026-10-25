@@ -53,8 +53,8 @@ A pure-simulation football league game. The user sets up clubs and players, then
 
 ## Rafter banners
 
-- The club header shows a banner per league title and cup win (`bannersHTML`, `pxBanner`), in the home kit colours (trim falls back to black or white when the colours are too close), with the season number.
-- Up to 8 hang at full size. Beyond that they fold into slim banners (`pxBanner(...,true)`) that open on hover or keyboard focus. Each banner is a flex item that can shrink, so very long rows overlap to fit any width.
+- The club header shows a banner per league title and cup win (`bannersHTML`). They are plain HTML and CSS, not pixel art: kit colour fill, trim outline (`bannerCols` falls back to black or white when the colours are too close), pointed bottom via `clip-path`, a star or cup icon and the season number.
+- Up to 8 hang at full width. Beyond that they fold to slim banners that widen on hover or keyboard focus. Each banner is a flex item that can shrink, so very long rows overlap to fit any width.
 
 ## Awards night
 
