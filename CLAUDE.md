@@ -50,6 +50,11 @@ A pure-simulation football league game. The user sets up clubs and players, then
 - Trophies are hand-drawn maps in `TRO_MAPS` (12 shapes: champ, cup, plate, star, ball, boot, glove, medal, kicker, runner, keeper, coach). Characters: g metal, d engraving, w shine, a accent, k black. `pxTrophy()` shades each row of metal light on the left to dark on the right and adds a small plinth (rows 25 to 31). Icon mode drops the plinth. Shape, metal, plinth and accent are still set per award in the Trophy room (`settings.trophies`).
 - Custom awards live in `settings.customAwards` ({id, name, short, stat, pos, age, off}). `syncCustom()` (called in `render`) adds each one to `AWARDS`, `TROPHY_DEF` and `TROPHY_L` under the key `x<id>`, so every page that shows awards works with them. `decideAwards` ranks them with `caRank()` (stats in `CA_STATS`) and they appear on awards night with nominees. Removing an award that has been won only sets `off`, so history keeps its name and trophy.
 
+## Releases
+
+- Bump `APP_VERSION` in index.html with every push, so the user can confirm in Settings which version they are on. Settings also has a Check for updates button (`checkUpdates`) that clears the offline cache and service worker, then reloads.
+- sw.js is network first for the page and stores each fresh copy, even when the 4 second fallback was used. Bump `CACHE` in sw.js if its file list changes.
+
 ## Trophy cabinet
 
 - Clubs have a Trophy cabinet tab (`clubTab="cab"`); player and manager pages have Career and Trophy cabinet tabs (`pTab`, shared by both).
