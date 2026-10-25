@@ -45,6 +45,13 @@ A pure-simulation football league game. The user sets up clubs and players, then
 - `setExpect()` ranks clubs by squad strength when a season kicks off. `managersSeason()` runs in `endSeason()`: career rows, Manager of the season, small skill changes, sackings (two seasons running finishing a quarter of the league or more below expectation, unless they won something; `settings.sackings`), retirements, then `fillVacancies()` hires from out-of-work managers, one recently retired player with a strong legacy, and fresh names. Moves are kept in `h.mgrMoves` for the season review.
 - First appointments in an older save use fresh managers only.
 
+## Milestones and club identity
+
+- `checkMilestones()` runs after every match for the players who took part: career goals and appearances count league and cup together, plus assists and clean sheets (`MILESTONES`). Stored in `p.ms`; the season's list goes to `h.milestones`. Older saves record already passed milestones quietly in `migrate()` with `s:null`, so nothing floods in.
+- One-club legends: on retirement, 7+ seasons all at one club sets `p.oneClub`.
+- Club Legends tab (`legendsHTML`): most appearances and goals for the club, Hall of Famers, one-club legends, trophy-winning managers.
+- Stadiums: `ground.cap` starts by format (`CAP0`), grows 3% after a top half finish, 10% after a cup and 20% after a title (`growGrounds`, history in `ground.ups`). `crowdF()` scales home advantage a little by capacity against the league average.
+
 ## Hidden potential
 
 - `p.pot` is a hidden ceiling (`rollPot`): young players can sit far below it, players in their late twenties are close. Positive growth stops at the ceiling (a 5% chance of +1 beyond it), so busts and late gems happen.
