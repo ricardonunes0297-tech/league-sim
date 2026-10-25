@@ -33,9 +33,10 @@ A pure-simulation football league game. The user sets up clubs and players, then
 
 - The sidebar is drawn as a pitch: a chalk outline, a penalty box around the league name, one mowing stripe per menu item, the halfway line and centre circle above the sim buttons, and a penalty box around the file buttons.
 
-- Pixel art engine drawn onto canvas at low resolution and shown with `image-rendering: pixelated`: badges (`pxBadge`), kits (`pxKit`), league trophy plate (`pxPlate`), championship rings (`pxRing`), award trophies on plinths (`pxAward`), position charts (`pxChart`). A 3x5 pixel font is in `FONT`, with wide 5x5 glyphs for M, N, V and W in `FONTW`.
+- Pixel art engine drawn onto canvas at low resolution and shown with `image-rendering: pixelated`: badges (`pxBadge`), kits (`pxKit`), championship rings (`pxRing`), trophies (`pxTrophy`), position charts (`pxChart`).
+- `pxTrophy(kind, icon)` draws the league title and every award from one spec: shape (cup, plate, star, ball, boot, glove, medal), metal, plinth and accent colour. Defaults live in `TROPHY_DEF`; the user's changes in `settings.trophies[kind]`. Sprites are 23 px wide and are always shown at exactly 1x, 2x or 3x so they stay crisp. `icon` gives the topper only, used for league title counts. New competitions add a `TROPHY_DEF` entry and get a Trophy room tab for free. A 3x5 pixel font is in `FONT`, with wide 5x5 glyphs for M, N, V and W in `FONTW`.
 - A Smooth setting falls back to the earlier vector SVG art.
-- Ring designer settings: size, metal, stones, centre piece, side panel and banner text.
+- Ring designer settings: size, metal, stones, centre piece, side panel and banner text. The Trophy room card in Settings sits next to it.
 - Theme: light, dark or match device, colour presets plus custom sidebar and accent colours. 28 nations with SVG flags and name pools per nation.
 
 ## Writing style for UI text

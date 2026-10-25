@@ -370,7 +370,7 @@ const FLAGS={
  UKR:`<rect width="30" height="10" fill="#0057B7"/><rect y="10" width="30" height="10" fill="#FFD700"/>`
 };
 function flag(c,w=18){const n=NAT[c];if(!n)return "";return `<svg class="flag" width="${w}" height="${Math.round(w*2/3)}" viewBox="0 0 30 20" role="img" aria-label="${n.n}"><title>${n.n}</title>${FLAGS[c]}<rect x=".25" y=".25" width="29.5" height="19.5" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".5"/></svg>`}
-const DEFAULT_SETTINGS={aiTrades:"normal",injury:100,goals:100,home:10,nations:NATIONS.map(x=>x.c),homeNation:"",homeShare:50,genW:[10,25,35,22,8],draftW:[14,34,32,15,5],draftPer:2,draftAgeMin:17,draftAgeMax:21,retireAge:33,extraPlaces:2,theme:{mode:"system",turf:"#1F4D36",accent:"#E8C547",art:"pixel"},ring:{size:30,metal:"gold",stones:"diamond",centre:"plate",panel:"club",text:"CHAMPIONS"}};
+const DEFAULT_SETTINGS={aiTrades:"normal",injury:100,goals:100,home:10,nations:NATIONS.map(x=>x.c),homeNation:"",homeShare:50,genW:[10,25,35,22,8],draftW:[14,34,32,15,5],draftPer:2,draftAgeMin:17,draftAgeMax:21,retireAge:33,extraPlaces:2,theme:{mode:"system",turf:"#1F4D36",accent:"#E8C547",art:"pixel"},ring:{size:30,metal:"gold",stones:"diamond",centre:"plate",panel:"club",text:"CHAMPIONS"},trophies:{}};
 function pickNation(){const S=state&&state.settings;const act=S&&S.nations&&S.nations.length?S.nations:NATIONS.map(x=>x.c);if(S&&S.homeNation&&NAT[S.homeNation]&&rand()*100<S.homeShare)return S.homeNation;return pick(act)}
 function guessNat(name){const last=String(name).split(" ").slice(-1)[0];const n=NATIONS.find(x=>x.l.includes(last));return n?n.c:pick(NATIONS).c}
 
@@ -525,7 +525,7 @@ const avgRating=t=>{const r=t.players.map(pl).filter(Boolean).map(p=>p.rating);r
 function statsFor(p,scope){if(scope==="season")return p.s;return p.career.reduce((a,c)=>({apps:a.apps+c.apps,goals:a.goals+c.goals,assists:a.assists+c.assists,cs:a.cs+c.cs,rsum:(a.rsum||0)+(c.rsum||0),rapps:(a.rapps||0)+(c.rapps||0)}),{...p.s})}
 
 /* ---------- small renderers ---------- */
-const trophySvg=sz=>pxOn()?`<img class="px" src="${pxPlate()}" width="${sz}" height="${sz}" alt="">`:`<svg width="${Math.round(sz*.8)}" height="${sz}" viewBox="0 0 32 40" aria-hidden="true"><path d="M8.5 7 C2 7 1.5 17 10 19.5 M23.5 7 C30 7 30.5 17 22 19.5" fill="none" stroke="url(#gCup)" stroke-width="2.4" stroke-linecap="round"/><path d="M7.5 4 H24.5 V11.5 C24.5 18.5 20.5 23 16 23 C11.5 23 7.5 18.5 7.5 11.5 Z" fill="url(#gCup)" stroke="#7A520A" stroke-width=".6"/><rect x="6.5" y="2.6" width="19" height="2.6" rx="1.2" fill="url(#gCupH)" stroke="#7A520A" stroke-width=".5"/><path d="M14.3 23 H17.7 L18.6 28.5 H13.4 Z" fill="url(#gCup)"/><rect x="11.5" y="28" width="9" height="2.2" rx=".8" fill="url(#gCupH)"/><path d="M9.5 31 H22.5 L23.5 38.5 H8.5 Z" fill="#2A2420"/><rect x="9.2" y="33.4" width="13.6" height="1.6" fill="url(#gCup)"/><path d="M11 6.5 C11 13 12 17.5 14.2 20.5" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="1.2" stroke-linecap="round"/></svg>`;
+const trophySvg=sz=>pxOn()?`<img class="px" src="${pxTrophy("league",true)}" width="${sz<30?23:sz<56?46:69}" alt="">`:`<svg width="${Math.round(sz*.8)}" height="${sz}" viewBox="0 0 32 40" aria-hidden="true"><path d="M8.5 7 C2 7 1.5 17 10 19.5 M23.5 7 C30 7 30.5 17 22 19.5" fill="none" stroke="url(#gCup)" stroke-width="2.4" stroke-linecap="round"/><path d="M7.5 4 H24.5 V11.5 C24.5 18.5 20.5 23 16 23 C11.5 23 7.5 18.5 7.5 11.5 Z" fill="url(#gCup)" stroke="#7A520A" stroke-width=".6"/><rect x="6.5" y="2.6" width="19" height="2.6" rx="1.2" fill="url(#gCupH)" stroke="#7A520A" stroke-width=".5"/><path d="M14.3 23 H17.7 L18.6 28.5 H13.4 Z" fill="url(#gCup)"/><rect x="11.5" y="28" width="9" height="2.2" rx=".8" fill="url(#gCupH)"/><path d="M9.5 31 H22.5 L23.5 38.5 H8.5 Z" fill="#2A2420"/><rect x="9.2" y="33.4" width="13.6" height="1.6" fill="url(#gCup)"/><path d="M11 6.5 C11 13 12 17.5 14.2 20.5" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="1.2" stroke-linecap="round"/></svg>`;
 const RING_DIAS=Array.from({length:12},(_,i)=>{const a=i/12*Math.PI*2;return `<circle cx="${(16+7.3*Math.cos(a)).toFixed(2)}" cy="${(12.5+5.1*Math.sin(a)).toFixed(2)}" r="1.2" fill="url(#gDia)"/>`}).join("");
 const ringSvg=c=>`<svg width="28" height="30" viewBox="0 0 32 34" aria-hidden="true"><ellipse cx="16" cy="24.5" rx="10" ry="7.2" fill="none" stroke="url(#gRing)" stroke-width="3.4"/><ellipse cx="16" cy="24.5" rx="11.6" ry="8.8" fill="none" stroke="#5C3F06" stroke-width=".5" opacity=".5"/><path d="M9 2.5 H23 L28.5 8 V17 L23 22.5 H9 L3.5 17 V8 Z" fill="url(#gRing)" stroke="#5C3F06" stroke-width=".7"/><path d="M10.2 5 H21.8 L26 9.2 V15.8 L21.8 20 H10.2 L6 15.8 V9.2 Z" fill="#1E1608"/>${RING_DIAS}<circle cx="16" cy="12.5" r="3.4" fill="${esc(c||"#C8102E")}" stroke="url(#gDia)" stroke-width="1.2"/><circle cx="15" cy="11.4" r="1" fill="#fff" opacity=".55"/><path d="M27 1 l.6 1.5 1.5 .6 -1.5 .6 -.6 1.5 -.6 -1.5 -1.5 -.6 1.5 -.6z" fill="#fff"/></svg>`;
 function trophies(id,sz=15,big){const s=titles(id);if(!s.length)return "";return `<span class="trophy ${big?"big":""}" title="Champions in season ${s.join(", ")}" aria-label="${s.length} league ${s.length===1?"title":"titles"}">${trophySvg(sz)}<span class="tx">×${s.length}</span></span>`}
@@ -608,17 +608,7 @@ function pxKit(k,full){
     g.set(x,y,col)}
   outlineG(g);const url=gridURL(g);PXC.cache.set(key,url);return url;
 }
-function pxPlate(){
-  if(PXC.cache.has("plate"))return PXC.cache.get("plate");
-  const W=26,g=Grid(W,W),C=12.5;
-  for(let y=0;y<W;y++)for(let x=0;x<W;x++){const dx=x-C,dy=y-C,d=Math.hypot(dx,dy);if(d>11.9)continue;let col;
-    if(d>10.8)col="#EEF1F5";else if(d>9)col="#B9C1CB";else if(d>7.9)col="#D5DAE1";else if(d>6.8)col="#E2B33C";else if(d>3.3)col=(x+y)%2?"#A9B2BE":"#C4CBD4";else col="#E8BE4A";
-    const L=(-dx-dy)/(d||1);if(L>.6&&d>3.3)col=lit(col,.3);else if(L<-.6)col=drk(col,.25);g.set(x,y,col)}
-  for(let k=0;k<12;k++){const a=k/12*Math.PI*2,x=Math.round(C+9.9*Math.cos(a)),y=Math.round(C+9.9*Math.sin(a));g.set(x,y,k%2?"#2FA35A":"#D23A3A")}
-  g.set(12,11,"#FFF4C4");g.set(11,12,"#FFF4C4");g.set(8,6,"#FFFFFF");g.set(7,7,"#FFFFFF");
-  outlineG(g,"#2A2E35");const url=gridURL(g);PXC.cache.set("plate",url);return url;
-}
-const METALS={gold:["#F6D46A","#E2AD2E","#B07D12","#7A520A"],silver:["#F4F6F9","#C9D0D9","#8E98A6","#5B6470"],rose:["#F8CDB9","#E39A7C","#B4674C","#7E412D"],black:["#77777F","#45454C","#2A2A30","#131316"]};
+const METALS={gold:["#F6D46A","#E2AD2E","#B07D12","#7A520A"],bronze:["#F0C08A","#C98A4B","#93582A","#5E3517"],silver:["#F4F6F9","#C9D0D9","#8E98A6","#5B6470"],rose:["#F8CDB9","#E39A7C","#B4674C","#7E412D"],black:["#77777F","#45454C","#2A2A30","#131316"]};
 function stonePal(k,col){return k==="ruby"?["#FFD6D6","#F05050","#B81E2E","#7A0E18"]:k==="sapphire"?["#DCE8FF","#4F7DF0","#1F45B8","#132A73"]:k==="emerald"?["#D8FFE6","#3CCB78","#14894A","#0B5530"]:k==="club"?[lit(col,.7),lit(col,.3),col,drk(col,.35)]:["#FFFFFF","#D6E2F4","#93A8C8","#6F84A6"]}
 function badgeGrid(t){pxBadge(t);const c=t.crest||{};return PXC.grids.get(["b",c.shape,c.pattern,c.emblem,c.text,c.c3,t.c1,t.c2,t.short].join("|"))}
 function pxRing(col,season,teamId){
@@ -856,7 +846,7 @@ function viewHistory(){
   if(!state.history.length)return `<h2>History</h2>${recordsHTML()}<div class="empty">Finish a season to see champions, award winners and retirements here.</div>`;
   const honours=state.teams.map(t=>({t,n:titles(t.id).length})).filter(x=>x.n).sort((a,b)=>b.n-a.n);
   const fact=(l,v)=>v?`<div><span class="muted">${l}</span><b>${esc(v.name)} (${v.n})</b><span class="muted">${esc(v.team)}</span></div>`:"";
-  const awd=h=>(h.awards||[]).map(a=>`<div><span class="muted namecell">${pxCtx()?`<img class="px" src="${pxAward(a.type)}" height="40" alt="">`:""}${AWARDS[a.type].full}</span>${pl(a.id)?`<button class="linkbtn" data-act="player" data-id="${a.id}">${esc(a.name)}</button>`:`<b>${esc(a.name)}</b>`}<span class="muted">${esc(a.team)}, ${esc(a.val||"")}</span></div>`).join("");
+  const awd=h=>(h.awards||[]).map(a=>`<div><span class="muted namecell">${pxCtx()?`<img class="px" src="${pxTrophy(a.type)}" width="23" alt="">`:""}${AWARDS[a.type].full}</span>${pl(a.id)?`<button class="linkbtn" data-act="player" data-id="${a.id}">${esc(a.name)}</button>`:`<b>${esc(a.name)}</b>`}<span class="muted">${esc(a.team)}, ${esc(a.val||"")}</span></div>`).join("");
   return `<h2>History</h2>
   <div class="card" style="margin-bottom:18px"><h3 style="margin-top:0">Roll of honour</h3><table><tbody>${honours.map(x=>`<tr class="click" data-act="club" data-id="${x.t.id}"><td>${clubLabel(x.t)}</td><td class="r">${trophies(x.t.id,24)}</td></tr>`).join("")}</tbody></table></div>
   ${recordsHTML()}
@@ -876,6 +866,7 @@ function viewSettings(){
     <h4 style="font-family:var(--hd);margin:16px 0 8px">Colour presets</h4><div class="opts">${PRE.map(([n,a,b])=>`<button class="opt ${th.turf.toLowerCase()===a.toLowerCase()&&th.accent.toLowerCase()===b.toLowerCase()?"on":""}" data-act="theme-preset" data-v="${a}|${b}"><span class="pre" style="background:linear-gradient(135deg,${a} 0 62%,${b} 62% 100%)"></span><span>${n}</span></button>`).join("")}</div>
     <div class="fields" style="margin-top:14px"><label class="f">Sidebar and banners<input type="color" data-theme-k="turf" value="${esc(th.turf)}"></label><label class="f">Accent and buttons<input type="color" data-theme-k="accent" value="${esc(th.accent)}"></label></div></section>
   ${ringCard()}
+  ${trophyCard()}
   <section class="card"><h3>Matches</h3>${rng("goals","Goal rate",50,200,5,"%","100% is the normal level for the format.")}${rng("home","Home advantage",0,30,1,"%")}${rng("injury","Injury rate",0,300,10,"%","0% turns injuries off. At 100% each club loses a player roughly every few matches.")}</section>
   <section class="card"><h3>Players and nationalities</h3>
     <label class="f">Home nation<select data-set="homeNation"><option value="">None, fully mixed</option>${NATIONS.map(n=>`<option value="${n.c}" ${S.homeNation===n.c?"selected":""}>${n.n}</option>`).join("")}</select></label>
@@ -1053,55 +1044,77 @@ const fmtAvg=v=>v==null?"–":v.toFixed(2);
 function inPoly(x,y,pts){let c=false;for(let i=0,j=pts.length-1;i<pts.length;j=i++){const [xi,yi]=pts[i],[xj,yj]=pts[j];if((yi>y)!==(yj>y)&&x<(xj-xi)*(y-yi)/(yj-yi)+xi)c=!c}return c}
 const starArr=(cx,cy,R,r)=>starPts(cx,cy,R,r).split(" ").map(s=>s.split(",").map(Number));
 function mapSprite(rows,pal){const w=Math.max(...rows.map(r=>r.length)),g=Grid(w+2,rows.length+2);rows.forEach((r,y)=>[...r].forEach((ch,x)=>{if(pal[ch])g.set(x+1,y+1,pal[ch])}));return g}
-function pxAward(type){
-  const key="aw4|"+type;if(PXC.cache.has(key))return PXC.cache.get(key);
-  const W=48,H=63,m=Grid(W,H);
+/* ---------- trophies: one engine for the league title and every award ---------- */
+const TROPHY_DEF={league:{shape:"plate",metal:"silver",base:"black",accent:"#E2AD2E"},mvp:{shape:"star",metal:"gold",base:"black",accent:"#C8102E"},boot:{shape:"boot",metal:"gold",base:"black",accent:"#C8102E"},glove:{shape:"glove",metal:"gold",base:"black",accent:"#1F6FD1"},rookie:{shape:"medal",metal:"silver",base:"wood",accent:"#1F6FD1"}};
+const TROPHY_L={league:"League title",mvp:"MVP",boot:"Golden Boot",glove:"Golden Glove",rookie:"Rookie"};
+const TROPHY_OPTS={shape:[["cup","Cup"],["plate","Plate"],["star","Star"],["ball","Ball"],["boot","Boot"],["glove","Glove"],["medal","Medal"]],metal:[["gold","Gold"],["silver","Silver"],["rose","Rose gold"],["bronze","Bronze"],["black","Black"]],base:[["black","Black"],["wood","Wood"],["marble","Marble"],["none","None"]]};
+const BASES={black:["#3A322A","#1B1712","#0F0C09"],wood:["#A8724A","#7A4B2A","#4E2E18"],marble:["#FFFFFF","#E4E1DA","#B5B0A6"]};
+const trophySpec=k=>({...TROPHY_DEF[k],...(((state&&state.settings&&state.settings.trophies)||{})[k]||{})});
+function pxTrophy(k,icon){
+  const T=trophySpec(k),key=["tr",icon?1:0,T.shape,T.metal,T.base,T.accent].join("|");if(PXC.cache.has(key))return PXC.cache.get(key);
+  const W=23,m=Grid(W,32);
   const fc=(cx,cy,r,ch,clip)=>{for(let y=Math.floor(cy-r-1);y<=cy+r+1;y++)for(let x=Math.floor(cx-r-1);x<=cx+r+1;x++)if((x+.5-cx)**2+(y+.5-cy)**2<=r*r&&(!clip||clip(x,y)))m.set(x,y,ch)};
   const fr=(x0,y0,x1,y1,ch)=>{for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)m.set(x,y,ch)};
-  const fp=(pts,ch)=>{for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(inPoly(x+.5,y+.5,pts))m.set(x,y,ch)};
+  const fp=(pts,ch)=>{for(let y=0;y<32;y++)for(let x=0;x<W;x++)if(inPoly(x+.5,y+.5,pts))m.set(x,y,ch)};
   const ln=(x0,y0,x1,y1,ch,th)=>{const n=Math.max(1,Math.ceil(Math.hypot(x1-x0,y1-y0)*2));for(let i=0;i<=n;i++){const t=i/n;fc(x0+(x1-x0)*t,y0+(y1-y0)*t,th/2,ch)}};
-  const ball=(cx,cy,r)=>{fc(cx,cy,r,"g");for(let y=Math.floor(cy-r-1);y<=cy+r+1;y++)for(let x=Math.floor(cx-r-1);x<=cx+r+1;x++){const d=Math.hypot(x+.5-cx,y+.5-cy);if(d<=r&&d>r-1)m.set(x,y,"d")}const inB=(x,y)=>(x+.5-cx)**2+(y+.5-cy)**2<=(r-.6)**2;fc(cx,cy,r*.3,"k",inB);for(let k=0;k<5;k++){const a=(k*72-90)*Math.PI/180;fc(cx+Math.cos(a)*r*.82,cy+Math.sin(a)*r*.82,r*.26,"k",inB)}};
-  const text=(lines)=>{const tops=lines.length===1?[47]:[44,50];lines.forEach((s,i)=>{let x=24-Math.floor(textW(s)/2);[...s].forEach(ch=>{const f=FONTW[ch]||FONT[ch],w=gw(ch);if(f)for(let k=0;k<w*5;k++)if(f[k]==="1")m.set(x+k%w,tops[i]+Math.floor(k/w),"y");x+=w+1})})};
-  if(type==="mvp"){
-    const cx=24,cy=24,R=18;
-    for(const side of[-1,1]){let prev=null;for(let d=100;d<=232;d+=11){const a=(side<0?d:180-d)*Math.PI/180,px=cx+R*Math.cos(a),py=cy+R*Math.sin(a);if(prev)ln(prev[0],prev[1],px,py,"d",1);fc(px,py,1.7,"g");fc(px+Math.cos(a)*2.4,py+Math.sin(a)*2.4-1.2,1.4,"g");prev=[px,py]}}
-    fc(24,6,3.3,"g");fr(23,9,25,10,"g");
-    fp([[16,15],[19,11],[29,11],[32,15],[30,17],[28,15],[28,21],[20,21],[20,15],[18,17]],"g");
-    ln(17.5,16.5,15.5,22,"g",2.6);ln(30.5,16.5,32.5,21.5,"g",2.6);fc(15.3,23,1.6,"g");fc(32.7,22.5,1.6,"g");
-    fr(20,21,28,25,"g");fr(20,21,28,21,"d");fr(24,23,24,25,"d");
-    ln(21.5,26,21,36,"g",3.2);fr(18,36,23,38,"g");
-    ln(26.5,26,29.5,30.5,"g",3.2);ln(29.5,30.5,30.5,33.5,"g",2.8);fr(28,33,33,34,"g");
-    ball(32,37.6,4.2);fr(22,9,26,9,"d");
-  }else if(type==="glove"){
-    const sh=[[7,3],[41,3],[41,20],[38,30],[31,37],[24,40],[17,37],[10,30],[7,20]];fp(sh,"k");
-    const inS=(x,y)=>inPoly(x+.5,y+.5,sh);for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(inS(x,y)&&(!inS(x+1,y)||!inS(x-1,y)||!inS(x,y+1)||!inS(x,y-1)))m.set(x,y,"g");
-    [[16,7],[20,5],[24,6],[28,9]].forEach(([x,t])=>{fr(x,t+1,x+2,20,"g");fc(x+1.5,t+1.5,1.5,"g")});
-    ln(14.5,25,11.5,17,"g",3.4);fp([[14,18],[32,18],[33,28],[29,33],[18,33],[14,28]],"g");
-    fr(17,31,30,35,"g");fr(17,33,30,33,"d");ball(31,32,6.2);
-  }else if(type==="boot"){
-    ball(31,11,9);
-    for(const x of[12,18,24,30,36]){fr(x,29,x+2,40,"k");fr(x,29,x,40,"K")}
-    fp([[8,17],[16,15],[22,19],[38,25],[42,29],[41,33],[9,31],[6,27]],"g");
-    ln(8,31,41,33,"d",1.2);[[20,20],[23,21],[26,22],[29,23]].forEach(([x,y])=>{m.set(x,y,"y");m.set(x+1,y+1,"d")});
-    [12,19,27,35].forEach(x=>fr(x,33,x+1,35,"g"));fr(9,18,15,18,"d");
-  }else{
-    for(let i=0;i<3;i++)ln(5+i*3,35-i*1,19+i*3,21-i*1,i===0?"d":"g",2);
-    fp(starArr(28,15,13.5,5.6),"g");ball(28,15,0.01);fc(28,15,2.4,"y");
+  const recol=(from,to,y0,y1)=>{for(let y=y0;y<=y1;y++)for(let x=0;x<W;x++)if(m.get(x,y)===from)m.set(x,y,to)};
+  switch(T.shape){
+    case "cup":
+      for(let y=2;y<=12;y++){const t=(y-2)/10,hw=Math.round(8-5*t*t);fr(11-hw,y,11+hw,y,"g")}
+      fr(2,1,20,1,"g");fr(4,2,18,2,"d");recol("g","a",6,7);
+      for(const s of[1,-1]){const X=x=>s>0?x:22-x;ln(X(4),4,X(1.5),5.5,"g",1.6);ln(X(1.5),5.5,X(1.5),8,"g",1.6);ln(X(1.5),8,X(5),11,"g",1.6)}
+      fr(10,13,12,15,"g");fr(9,15,13,16,"g");fr(7,17,15,19,"g");break;
+    case "plate":
+      for(let y=0;y<20;y++)for(let x=0;x<W;x++){const d=Math.hypot(x+.5-11.5,y+.5-9.5);if(d>8.6)continue;m.set(x,y,d>6.6?"g":d>5.2?"a":d<1.6?"a":(x+y)%2?"d":"g")}
+      fr(10,18,12,19,"g");break;
+    case "star":
+      fp(starArr(11.5,9.5,9.6,4.1),"g");fc(11.5,9.5,1.7,"a");fr(10,17,12,19,"g");break;
+    case "ball":{
+      const cx=11.5,cy=8.5,r=7.6,inB=(x,y)=>(x+.5-cx)**2+(y+.5-cy)**2<=(r-.7)**2;fc(cx,cy,r,"g");
+      fp(starArr(cx,cy,2.9,2.3).filter((_,i)=>i%2===0),"k");for(let i=0;i<5;i++){const a=(i*72+90)*Math.PI/180;fc(cx+Math.cos(a)*r*.95,cy+Math.sin(a)*r*.95,r*.3,"k",inB);ln(cx+Math.cos(a)*2.4,cy+Math.sin(a)*2.4,cx+Math.cos(a)*r*.7,cy+Math.sin(a)*r*.7,"d",.8)}
+      fr(8,16,14,17,"g");fr(10,18,12,19,"g");break}
+    case "boot":
+      fp([[3,2],[10,2],[10,8],[17,11],[20,13],[20,16],[2,16],[2,10]],"g");fr(2,15,20,15,"d");fr(3,3,9,3,"a");
+      [[11,9],[13,10],[15,11]].forEach(([x,y])=>m.set(x,y,"y"));[4,8,14,18].forEach(x=>fr(x,16,x+1,17,"g"));fr(9,18,13,19,"g");break;
+    case "glove":
+      [[6,4],[9,2],[12,3],[15,5]].forEach(([x,t])=>{fr(x,t+1,x+1,10,"g");m.set(x,t,"g");m.set(x+1,t,"g")});
+      fp([[5,9],[18,9],[18,15],[16,17],[6,17],[5,15]],"g");ln(5.5,14,2.5,8.5,"g",2.4);
+      for(let x=7;x<=16;x+=3)m.set(x,12,"d");fr(6,17,17,19,"a");break;
+    case "medal":
+      ln(5.5,1.5,10,9,"a",3);ln(17.5,1.5,13,9,"a",3);fc(11.5,13.5,6.3,"g");
+      for(let y=6;y<21;y++)for(let x=4;x<19;x++){const d=Math.hypot(x+.5-11.5,y+.5-13.5);if(d>4.3&&d<5.3)m.set(x,y,"d")}
+      fp(starArr(11.5,13.6,3.4,1.4),"y");break;
   }
-  fr(7,40,40,41,"g");fr(6,42,41,56,"k");fr(6,42,41,42,"K");fr(8,43,39,55,"g");fr(9,44,38,54,"k");fr(4,57,43,58,"g");fr(3,59,44,62,"k");fr(3,59,44,59,"K");
-  text(type==="mvp"?["MVP"]:type==="glove"?["CLEAN","SHEETS"]:type==="boot"?["TOP","SCORER"]:["ROOKIE"]);
-  const G1="#FBE08A",G2="#E2AD2E",G3="#A87410",G4="#6E4B07",gold=c=>c==="g"||c==="y"||c==="d",g=Grid(W,H);
+  const H=icon?21:T.base==="none"?23:32;
+  if(!icon){fr(6,20,16,21,"g");if(T.base!=="none"){fr(4,22,18,31,"B");fr(8,25,14,27,"g");fr(8,27,14,27,"d")}}
+  const [G1,G2,G3,G4]=METALS[T.metal]||METALS.gold,A=T.accent||"#C8102E",BS=BASES[T.base]||BASES.black,g=Grid(W,H);
+  const metal=c=>c==="g"||c==="d"||c==="y";
   for(let y=0;y<H;y++)for(let x=0;x<W;x++){const c=m.get(x,y);if(!c)continue;let col;
-    if(c==="g"){const up=gold(m.get(x,y-1)),lf=gold(m.get(x-1,y)),dn=gold(m.get(x,y+1)),rt=gold(m.get(x+1,y));col=!up||!lf?G1:!dn||!rt?G3:((x*3+y*5)%17===0?"#F3C24F":G2)}
-    else if(c==="d")col=G4;else if(c==="y")col="#FFE88A";else if(c==="K")col="#3A322A";else col="#1B1712";g.set(x,y,col)}
+    const edge=f=>{const up=f(m.get(x,y-1)),lf=f(m.get(x-1,y)),dn=f(m.get(x,y+1)),rt=f(m.get(x+1,y));return !up||!lf?1:!dn||!rt?3:2};
+    if(c==="g"){const e=edge(metal);col=e===1?G1:e===3?G3:G2}
+    else if(c==="d")col=G4;else if(c==="y")col=lit(G1,.6);else if(c==="k")col="#1B1712";
+    else if(c==="a"){const e=edge(v=>v==="a");col=e===1?lit(A,.35):e===3?drk(A,.3):A}
+    else if(c==="B"){col=m.get(x,y-1)!=="B"?BS[0]:m.get(x+1,y)!=="B"||m.get(x,y+1)!=="B"?BS[2]:T.base==="marble"&&(x*2+y*3)%7===0?BS[2]:BS[1]}
+    g.set(x,y,col)}
   outlineG(g,"#0D0A06");const url=gridURL(g);PXC.cache.set(key,url);return url;
+}
+let trophyTab="league";
+function trophyCard(){
+  const k=trophyTab,T=trophySpec(k),custom=!!((state.settings.trophies||{})[k]);
+  const seg=o=>`<div class="seg" style="margin-bottom:8px;flex-wrap:wrap">${TROPHY_OPTS[o].map(([v,l])=>`<button class="${T[o]===v?"on":""}" data-act="trophy" data-k="${o}" data-v="${v}">${l}</button>`).join("")}</div>`;
+  return `<section class="card"><h3>Trophy room</h3><p class="muted" style="margin-top:0">Design the league trophy and each award. Changes show everywhere straight away.</p>
+  <div class="chips" style="margin-bottom:12px">${Object.keys(TROPHY_DEF).map(x=>`<button class="chip ${k===x?"on":""}" data-act="trophy-tab" data-v="${x}">${TROPHY_L[x]}</button>`).join("")}</div>
+  ${pxCtx()?`<div class="ringprev"><img class="px" src="${pxTrophy(k)}" width="92" alt="${esc(TROPHY_L[k])} trophy preview"><img class="px" src="${pxTrophy(k)}" width="23" alt="">${k==="league"?`<img class="px" src="${pxTrophy(k,true)}" width="23" alt="">`:""}</div>`:""}
+  <p class="muted" style="margin:10px 0 4px">Shape</p>${seg("shape")}<p class="muted" style="margin:6px 0 4px">Metal</p>${seg("metal")}<p class="muted" style="margin:6px 0 4px">Plinth</p>${seg("base")}
+  <label class="f" style="margin-top:6px">Accent colour<input type="color" data-tro="accent" value="${esc(T.accent)}"></label><small class="muted">Used for ribbons, bands and stones.</small>
+  ${custom?`<div class="toolbar"><button class="btn" data-act="trophy-reset">Reset ${esc(TROPHY_L[k])} to default</button></div>`:""}</section>`;
 }
 function awardsOf(p){return (p.awards||[]).slice().sort((a,b)=>a.season-b.season)}
 function awardsHTML(list,big){
   if(!list.length)return "";
   if(!pxCtx())return list.map(a=>`<span class="chip">${AWARDS[a.type].n} S${a.season}</span>`).join(" ");
-  const h=big?100:32;
-  return `<span class="rings awards" style="--ov:${big?-52:-17}px" tabindex="0" title="${list.map(a=>`${AWARDS[a.type].full}, season ${a.season}`).join("&#10;")}" aria-label="${list.length} ${list.length===1?"award":"awards"}">${list.map(a=>`<span class="ring"><img class="px" src="${pxAward(a.type)}" height="${h}" alt=""><em>${AWARDS[a.type].s} S${a.season}</em></span>`).join("")}<span class="ringn">×${list.length}</span></span>`;
+  const w=big?69:23;
+  return `<span class="rings awards" style="--ov:${big?-46:-15}px" tabindex="0" title="${list.map(a=>`${AWARDS[a.type].full}, season ${a.season}`).join("&#10;")}" aria-label="${list.length} ${list.length===1?"award":"awards"}">${list.map(a=>`<span class="ring"><img class="px" src="${pxTrophy(a.type)}" width="${w}" alt=""><em>${AWARDS[a.type].s} S${a.season}</em></span>`).join("")}<span class="ringn">×${list.length}</span></span>`;
 }
 function decideAwards(all){
   const maxApps=Math.max(1,...all.map(p=>p.s.apps));
@@ -1200,7 +1213,7 @@ function viewHof(){
   const next=Math.ceil((state.season)/3)*3,ballot=Object.values(state.retired).filter(p=>!p.hof).map(p=>({p,s:legacy(p)})).sort((a,b)=>b.s-a.s).slice(0,6);
   const plaque=p=>{const tt=statsFor(p,"all");return `<button class="plaque" data-act="player" data-id="${p.id}"><span class="namecell">${flag(p.nat,22)}<b>${esc(p.name)}</b></span><span class="muted">${p.pos}, ${esc(p.lastTeam||"")}. Seasons ${p.career[0]?p.career[0].season:"?"} to ${p.retired}</span><span class="num">${tt.apps} apps, ${tt.goals} goals, ${tt.assists} assists${p.pos==="GK"?`, ${tt.cs} clean sheets`:""}</span><span>${ringsHTML(ringsOf(p))} ${awardsHTML(awardsOf(p))}</span><span class="muted">Legacy ${legacy(p)}</span></button>`};
   const classes=[...state.hof].reverse();
-  return `<h2>Hall of Fame</h2><div class="banner"><img class="px" src="${pxCtx()?pxPlate():""}" width="64" height="64" alt=""><div class="grow"><h2>${state.hof.reduce((a,c)=>a+c.ids.length,0)} inducted</h2><p>A new class is chosen after season ${next}. Retired players need ${hofBar()} legacy points, built from appearances, goals, assists, clean sheets, titles and awards. Up to two go in each time.</p></div></div>
+  return `<h2>Hall of Fame</h2><div class="banner">${pxCtx()?`<img class="px" src="${pxTrophy("league")}" width="46" alt="">`:""}<div class="grow"><h2>${state.hof.reduce((a,c)=>a+c.ids.length,0)} inducted</h2><p>A new class is chosen after season ${next}. Retired players need ${hofBar()} legacy points, built from appearances, goals, assists, clean sheets, titles and awards. Up to two go in each time.</p></div></div>
   ${classes.length?classes.map(c=>`<div class="card hist"><h3 style="margin-top:0">Class of season ${c.season}</h3>${c.ids.length?`<div class="plaques">${c.ids.map(i=>pl(i)).filter(Boolean).map(plaque).join("")}</div>`:`<p class="muted">No retired player reached the bar this time.</p>`}</div>`).join(""):`<div class="empty">The first class is chosen after season ${next}.</div>`}
   <h3>On the ballot</h3>${ballot.length?`<div class="card"><table><tbody>${ballot.map(x=>`<tr class="click" data-act="player" data-id="${x.p.id}"><td><span class="namecell">${flag(x.p.nat)}${esc(x.p.name)}</span></td><td>${x.p.pos}</td><td class="muted">${esc(x.p.lastTeam||"")}</td><td class="r num"><b>${x.s}</b> <span class="muted">/ ${hofBar()}</span></td></tr>`).join("")}</tbody></table></div>`:`<div class="empty">No retired players yet.</div>`}`;
 }
@@ -1351,6 +1364,9 @@ document.addEventListener("click",async e=>{
     case "race":raceSeason=v;break;
     case "hl":hlTeam=hlTeam===id?null:id;break;
     case "ring":state.settings.ring[b.dataset.k]=v;persist();break;
+    case "trophy-tab":trophyTab=v;break;
+    case "trophy":{const TS=state.settings.trophies=state.settings.trophies||{};TS[trophyTab]={...trophySpec(trophyTab),[b.dataset.k]:v};persist();break}
+    case "trophy-reset":delete (state.settings.trophies||{})[trophyTab];persist();break;
     case "sim-round":simRound();fxRound=null;persist();break;
     case "sim-season":while(!seasonDone())simRound();fxRound=null;persist();break;
     case "end-season":endSeason();fxRound=null;view="draft";break;
@@ -1401,6 +1417,7 @@ document.addEventListener("change",e=>{
   if(el.dataset.setw){const S=state.settings;S[el.dataset.setw][+el.dataset.i]=clamp(parseInt(el.value)||0,0,100);persist();render();return}
   if(el.dataset.nat){const S=state.settings,c=el.dataset.nat;S.nations=el.checked?[...new Set([...S.nations,c])]:S.nations.filter(x=>x!==c);persist();render();return}
   if(el.dataset.themeK){persist();render();return}
+  if(el.dataset.tro){const TS=state.settings.trophies=state.settings.trophies||{};TS[trophyTab]={...trophySpec(trophyTab),accent:el.value};persist();render();return}
   if(el.dataset.ring){const R2=state.settings.ring;if(el.dataset.ring==="size")R2.size=clamp(+el.value,18,60);else R2.text=el.value.toUpperCase().replace(/[^A-Z0-9 ]/g,"").slice(0,10);persist();render();return}
   if(el.dataset.h2h){h2h[el.dataset.h2h]=el.value;render();return}
   if(el.dataset.tb){tb[el.dataset.tb]=el.value;tb["g"+el.dataset.tb]=[];render();return}
