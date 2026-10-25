@@ -45,6 +45,12 @@ A pure-simulation football league game. The user sets up clubs and players, then
 - `setExpect()` ranks clubs by squad strength when a season kicks off. `managersSeason()` runs in `endSeason()`: career rows, Manager of the season, small skill changes, sackings (two seasons running finishing a quarter of the league or more below expectation, unless they won something; `settings.sackings`), retirements, then `fillVacancies()` hires from out-of-work managers, one recently retired player with a strong legacy, and fresh names. Moves are kept in `h.mgrMoves` for the season review.
 - First appointments in an older save use fresh managers only.
 
+## Hidden potential
+
+- `p.pot` is a hidden ceiling (`rollPot`): young players can sit far below it, players in their late twenties are close. Positive growth stops at the ceiling (a 5% chance of +1 beyond it), so busts and late gems happen.
+- The UI shows a scout's range (`potRange`) that narrows with age and is shifted by a fixed per-player bias `p.potN`, so it is not centred on the truth. Players aged 26+ or at their ceiling show as fully developed. `settings.revealPot` (off by default) shows exact values.
+- `scoutView()` is how an AI club sees a prospect: young players are valued mostly on the scout's read of their ceiling, and poor scouts misread by much more.
+
 ## Player traits
 
 - `TRAITS` lists each trait with its plain-English description and the positions it suits. Players hold up to two in `p.tr`. `rollTraits()` gives new players 0 to 2 (about 70% get one), and `TRAIT_CLASH` stops opposites pairing up.
@@ -81,7 +87,6 @@ A pure-simulation football league game. The user sets up clubs and players, then
 
 - News feed with auto-written headlines.
 - Second division with promotion and relegation.
-- Hidden potential.
 - Sim several seasons at once.
 
 ## Installable app

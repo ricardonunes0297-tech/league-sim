@@ -414,7 +414,7 @@ const FLAGS={
  UKR:`<rect width="30" height="10" fill="#0057B7"/><rect y="10" width="30" height="10" fill="#FFD700"/>`
 };
 function flag(c,w=18){const n=NAT[c];if(!n)return "";return `<svg class="flag" width="${w}" height="${Math.round(w*2/3)}" viewBox="0 0 30 20" role="img" aria-label="${n.n}"><title>${n.n}</title>${FLAGS[c]}<rect x=".25" y=".25" width="29.5" height="19.5" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".5"/></svg>`}
-const DEFAULT_SETTINGS={aiTrades:"normal",injury:100,goals:100,home:10,nations:NATIONS.map(x=>x.c),homeNation:"",homeShare:50,genW:[10,25,35,22,8],draftW:[14,34,32,15,5],draftPer:2,draftAgeMin:17,draftAgeMax:21,retireAge:33,extraPlaces:2,theme:{mode:"system",turf:"#1F4D36",accent:"#E8C547",art:"pixel"},ring:{size:30,metal:"gold",stones:"diamond",centre:"plate",panel:"club",text:"CHAMPIONS"},trophies:{},cup:{on:true,name:""},sackings:true};
+const DEFAULT_SETTINGS={aiTrades:"normal",injury:100,goals:100,home:10,nations:NATIONS.map(x=>x.c),homeNation:"",homeShare:50,genW:[10,25,35,22,8],draftW:[14,34,32,15,5],draftPer:2,draftAgeMin:17,draftAgeMax:21,retireAge:33,extraPlaces:2,theme:{mode:"system",turf:"#1F4D36",accent:"#E8C547",art:"pixel"},ring:{size:30,metal:"gold",stones:"diamond",centre:"plate",panel:"club",text:"CHAMPIONS"},trophies:{},cup:{on:true,name:""},sackings:true,revealPot:false};
 function pickNation(){const S=state&&state.settings;const act=S&&S.nations&&S.nations.length?S.nations:NATIONS.map(x=>x.c);if(S&&S.homeNation&&NAT[S.homeNation]&&rand()*100<S.homeShare)return S.homeNation;return pick(act)}
 function guessNat(name){const last=String(name).split(" ").slice(-1)[0];const n=NATIONS.find(x=>x.l.includes(last));return n?n.c:pick(NATIONS).c}
 
@@ -458,12 +458,12 @@ function unpackState(d){
   delete d.packed;return d;
 }
 const saveText=()=>JSON.stringify(packState(state));
-const migrate=d=>{unpackState(d);d.retired=d.retired||{};(d.teams||[]).forEach(t=>{t.crest=t.crest||{shape:"shield",pattern:"plain",emblem:"none",text:"initials",c3:t.c2};t.kit=t.kit||randomKit(t.c1,t.c2);t.ground=t.ground||randomGround(t.name)});d.trades=d.trades||[];d.draftHistory=d.draftHistory||[];const S0=JSON.parse(JSON.stringify(DEFAULT_SETTINGS));d.settings={...S0,...(d.settings||{})};d.settings.theme={...S0.theme,...(d.settings.theme||{})};d.settings.ring={...S0.ring,...(d.settings.ring||{})};d.settings.cup={...S0.cup,...(d.settings.cup||{})};d.hof=d.hof||[];d.results=d.results||[];[...Object.values(d.players||{}),...Object.values(d.retired||{})].forEach(p=>{p.nat=p.nat||guessNat(p.name);p.inj=p.inj||0;p.awards=p.awards||[]});if(d.draft===undefined)d.draft=null;[...Object.values(d.players||{}),...(d.draft&&d.draft.pool||[])].forEach(p=>{if(!p.tr){p.tr=rollTraits(p);d.__traitsAdded=true}});Object.values(d.players||{}).forEach(p=>{p.moves=p.moves||[];p.seasonTeams=p.seasonTeams||[p.teamId]});return d};
+const migrate=d=>{unpackState(d);d.retired=d.retired||{};(d.teams||[]).forEach(t=>{t.crest=t.crest||{shape:"shield",pattern:"plain",emblem:"none",text:"initials",c3:t.c2};t.kit=t.kit||randomKit(t.c1,t.c2);t.ground=t.ground||randomGround(t.name)});d.trades=d.trades||[];d.draftHistory=d.draftHistory||[];const S0=JSON.parse(JSON.stringify(DEFAULT_SETTINGS));d.settings={...S0,...(d.settings||{})};d.settings.theme={...S0.theme,...(d.settings.theme||{})};d.settings.ring={...S0.ring,...(d.settings.ring||{})};d.settings.cup={...S0.cup,...(d.settings.cup||{})};d.hof=d.hof||[];d.results=d.results||[];[...Object.values(d.players||{}),...Object.values(d.retired||{})].forEach(p=>{p.nat=p.nat||guessNat(p.name);p.inj=p.inj||0;p.awards=p.awards||[]});if(d.draft===undefined)d.draft=null;[...Object.values(d.players||{}),...(d.draft&&d.draft.pool||[])].forEach(p=>{if(!p.tr){p.tr=rollTraits(p);d.__traitsAdded=true}if(p.pot===undefined){rollPot(p);d.__traitsAdded=true}});Object.values(d.players||{}).forEach(p=>{p.moves=p.moves||[];p.seasonTeams=p.seasonTeams||[p.teamId]});return d};
 let clubTab="squad",kitSide="home",_bid=0;
 const pname=id=>pl(id)?pl(id).name:"Unknown";
 
 function genName(nat){const N=NAT[nat]||NAT[pickNation()];const used=new Set(state?[...Object.values(state.players),...(state.draft?state.draft.pool:[])].map(p=>p.name):[]);let n;for(let i=0;i<30;i++){n=pick(N.f)+" "+pick(N.l);if(!used.has(n))return n}return n}
-function newPlayer(pos,teamId,o={}){const nat=o.nat||pickNation();const p={id:uid(),nat,inj:0,name:o.name||genName(nat),pos,age:o.age??randInt(18,33),rating:o.rating??tierRating(randTier()),teamId,s:blank(),career:[],moves:[],seasonTeams:[teamId]};p.tr=rollTraits(p);return p}
+function newPlayer(pos,teamId,o={}){const nat=o.nat||pickNation();const p={id:uid(),nat,inj:0,name:o.name||genName(nat),pos,age:o.age??randInt(18,33),rating:o.rating??tierRating(randTier()),teamId,s:blank(),career:[],moves:[],seasonTeams:[teamId]};p.tr=rollTraits(p);rollPot(p);return p}
 
 function roundRobin(ids){let t=[...ids];if(t.length%2)t.push(null);const n=t.length,out=[];for(let r=0;r<n-1;r++){const rd=[];for(let i=0;i<n/2;i++){const a=t[i],b=t[n-1-i];if(a&&b)rd.push(r%2?[b,a]:[a,b])}out.push(rd);t=[t[0],t[n-1],...t.slice(1,n-1)]}return out}
 function makeFixtures(){const rr=roundRobin(shuffle(state.teams.map(t=>t.id)));const back=rr.map(r=>r.map(([h,a])=>[a,h]));return[...rr,...back].map(r=>r.map(([h,a])=>({h,a,hg:0,ag:0,played:false,ev:[]})))}
@@ -473,6 +473,19 @@ function persist(){dirty=true;try{localStorage.setItem("leaguesim-backup",saveTe
 
 /* ---------- simulation ---------- */
 const eff=x=>x.p.rating-(x.p.pos===x.role?0:8)+(_bigGame&&hasT(x.p,"big")?5:0);
+/* ---------- hidden potential ----------
+   p.pot is the ceiling, p.potN a fixed scouting bias (-1 to 1) so the shown range is not centred on the truth. */
+function rollPot(p){const max=p.age<=19?28:p.age<=22?20:p.age<=25?10:p.age<=28?4:0;p.pot=clamp(p.rating+Math.round(Math.pow(rand(),1.5)*max),p.rating,97);p.potN=Math.round((rand()*2-1)*100)/100}
+const potCeil=p=>Math.max(p.pot??p.rating,p.rating);
+const potDone=p=>p.age>=26||p.rating>=potCeil(p);
+function potRange(p){const c=potCeil(p),err=clamp(Math.round((25-p.age)*1.6),2,14),mid=c+Math.round((p.potN||0)*err*.6);return[clamp(mid-err,p.rating,99),clamp(mid+err,p.rating,99)]}
+function potText(p,short){
+  if(p.retired)return "";
+  if(state.settings.revealPot)return short?`${potCeil(p)}`:`Potential ${potCeil(p)}${potDone(p)?", reached":""}`;
+  if(potDone(p))return short?`<span class="muted">Peaked</span>`:"Fully developed";
+  const [a,b]=potRange(p);return short?`${a}–${b}`:`Scouts see a ceiling of ${a} to ${b}`;
+}
+const potSort=p=>state.settings.revealPot?potCeil(p):potDone(p)?p.rating:(potRange(p)[0]+potRange(p)[1])/2;
 /* ---------- player traits ---------- */
 const TRAITS={
   clinical:{n:"Clinical",d:"Finishes more of the chances that fall to them.",pos:["FW","MF"]},
@@ -560,7 +573,7 @@ function endSeason(){
   for(const p of all){
     const ids=[...new Set([...(p.seasonTeams||[]),p.teamId])].filter(i=>team(i));
     p.career.push({season:state.season,team:ids.map(i=>team(i).name).join(" / "),teamId:p.teamId,teamIds:ids,...p.s,rating:p.rating,age:p.age});
-    p.s=blank();p.seasonTeams=[p.teamId];p.inj=0;p.age++;p.rating=clamp(p.rating+prog(p.age,p)+coachBonus(p),30,95);
+    p.s=blank();p.seasonTeams=[p.teamId];p.inj=0;p.age++;{let d=prog(p.age,p)+coachBonus(p);if(d>0){const room=potCeil(p)-p.rating;d=room>0?Math.min(d,room)+(room>12&&p.age<=23?randInt(0,2):0):rand()<.05?1:0}p.rating=clamp(p.rating+d,30,97)}
   }
   for(const p of all){
     const RA=state.settings.retireAge+(hasT(p,"evergreen")?3:0);if(p.age>=RA&&rand()<(p.age-RA+1)*.22){
@@ -849,14 +862,14 @@ function viewPlayers(){
   const cols=[["apps","Apps"],["goals","Goals"],["assists","Assists"],["cs","Clean sheets"]],q=(ps.q||"").trim().toLowerCase();
   let list=(ps.scope==="all"?everyone():Object.values(state.players)).filter(p=>ps.pos==="ALL"||p.pos===ps.pos).filter(p=>!q||p.name.toLowerCase().includes(q)||(team(p.teamId)&&team(p.teamId).name.toLowerCase().includes(q))||(NAT[p.nat]&&NAT[p.nat].n.toLowerCase().includes(q))).map(p=>({p,st:statsFor(p,ps.scope),rg:ringsOf(p)}));
   const key=ps.sort;
-  list.sort((a,b)=>{let va,vb;if(key==="rating"){va=a.p.rating;vb=b.p.rating}else if(key==="age"){va=a.p.age;vb=b.p.age}else if(key==="titles"){va=a.rg.length;vb=b.rg.length}else if(key==="avg"){va=avgOf(a.st)??0;vb=avgOf(b.st)??0}else if(key==="awards"){va=(a.p.awards||[]).length;vb=(b.p.awards||[]).length}else if(key==="name"){return ps.dir*a.p.name.localeCompare(b.p.name)}else{va=a.st[key];vb=b.st[key]}return ps.dir*(va-vb)||b.p.rating-a.p.rating});
+  list.sort((a,b)=>{let va,vb;if(key==="rating"){va=a.p.rating;vb=b.p.rating}else if(key==="pot"){va=a.p.retired?0:potSort(a.p);vb=b.p.retired?0:potSort(b.p)}else if(key==="age"){va=a.p.age;vb=b.p.age}else if(key==="titles"){va=a.rg.length;vb=b.rg.length}else if(key==="avg"){va=avgOf(a.st)??0;vb=avgOf(b.st)??0}else if(key==="awards"){va=(a.p.awards||[]).length;vb=(b.p.awards||[]).length}else if(key==="name"){return ps.dir*a.p.name.localeCompare(b.p.name)}else{va=a.st[key];vb=b.st[key]}return ps.dir*(va-vb)||b.p.rating-a.p.rating});
   const th=(k,l,r)=>`<th class="sortable ${r?"r":""} ${ps.sort===k?"on":""}" data-act="sort" data-v="${k}">${l}${ps.sort===k?(ps.dir<0?" ↓":" ↑"):""}</th>`;
   const clubCell=p=>p.retired?`<span class="club">${badge(team(p.teamId),20)}<span class="muted">${p.released?"Released":"Retired"} after S${p.retired}</span></span>`:clubLabel(team(p.teamId),20);
   const natSel=p=>`<select data-pf="nat" data-id="${p.id}" aria-label="Nationality">${NATIONS.map(n=>`<option value="${n.c}" ${p.nat===n.c?"selected":""}>${n.n}</option>`).join("")}</select>`;
   const posSel=p=>`<select data-pf="pos" data-id="${p.id}" aria-label="Position">${POS.map(x=>`<option ${x===p.pos?"selected":""}>${x}</option>`).join("")}</select>`;
-  const head=ps.edit?`<tr>${th("name","Player")}<th>Club</th><th>Pos</th><th>Nation</th>${th("age","Age",1)}${th("rating","Ability")}<th>Exact</th><th></th></tr>`:`<tr>${th("name","Player")}<th>Club</th><th>Pos</th>${th("age","Age",1)}${th("rating","Ability")}${cols.map(([k,l])=>th(k,l,1)).join("")}${th("avg","Avg",1)}${th("titles","Titles")}${th("awards","Awards")}</tr>`;
+  const head=ps.edit?`<tr>${th("name","Player")}<th>Club</th><th>Pos</th><th>Nation</th>${th("age","Age",1)}${th("rating","Ability")}<th>Exact</th><th></th></tr>`:`<tr>${th("name","Player")}<th>Club</th><th>Pos</th>${th("age","Age",1)}${th("rating","Ability")}${th("pot","Potential",1)}${cols.map(([k,l])=>th(k,l,1)).join("")}${th("avg","Avg",1)}${th("titles","Titles")}${th("awards","Awards")}</tr>`;
   const row=ps.edit?({p})=>`<tr><td><span class="namecell">${flag(p.nat)}<input type="text" data-pf="name" data-id="${p.id}" value="${esc(p.name)}" maxlength="40" aria-label="Player name"></span></td><td>${clubCell(p)}</td><td>${posSel(p)}</td><td>${natSel(p)}</td><td class="r"><input type="number" min="15" max="45" data-pf="age" data-id="${p.id}" value="${p.age}" aria-label="Age"></td><td>${stars(p.rating,p.id)}</td><td><input type="number" min="20" max="99" data-pf="rating" data-id="${p.id}" value="${p.rating}" aria-label="Exact ability"></td><td><button class="btn sm" data-act="player" data-id="${p.id}">Career</button></td></tr>`
-    :({p,st,rg})=>`<tr class="click" data-act="player" data-id="${p.id}"><td><span class="namecell">${flag(p.nat)}${esc(p.name)}</span>${injTag(p)}${traitTags(p)}</td><td>${clubCell(p)}</td><td>${p.pos}</td><td class="r num">${p.age}</td><td>${stars(p.rating)}</td>${cols.map(([k])=>`<td class="r num">${st[k]}</td>`).join("")}<td class="r num">${fmtAvg(avgOf(st))}</td><td>${ringsHTML(rg)}</td><td>${awardsHTML(ps.scope==="season"?awardsOf(p).filter(a=>a.season===state.season):awardsOf(p))}</td></tr>`;
+    :({p,st,rg})=>`<tr class="click" data-act="player" data-id="${p.id}"><td><span class="namecell">${flag(p.nat)}${esc(p.name)}</span>${injTag(p)}${traitTags(p)}</td><td>${clubCell(p)}</td><td>${p.pos}</td><td class="r num">${p.age}</td><td>${stars(p.rating)}</td><td class="r num">${potText(p,true)}</td>${cols.map(([k])=>`<td class="r num">${st[k]}</td>`).join("")}<td class="r num">${fmtAvg(avgOf(st))}</td><td>${ringsHTML(rg)}</td><td>${awardsHTML(ps.scope==="season"?awardsOf(p).filter(a=>a.season===state.season):awardsOf(p))}</td></tr>`;
   return `<div class="phead"><h2 style="margin:0">Players</h2><button class="btn ${ps.edit?"go":""}" data-act="pedit">${ps.edit?"Done editing":"Edit players"}</button></div>
   <div class="chips" style="align-items:center">${["season","all"].map(s=>`<button class="chip ${ps.scope===s?"on":""}" data-act="scope" data-v="${s}">${s==="season"?`Season ${state.season}`:"All time"}</button>`).join("")}<span style="width:8px"></span>${["ALL",...POS].map(p=>`<button class="chip ${ps.pos===p?"on":""}" data-act="pos" data-v="${p}">${p==="ALL"?"All positions":p}</button>`).join("")}<input type="search" data-pq placeholder="Search name, club or nation" value="${esc(ps.q||"")}" aria-label="Search players"></div>
   ${ps.edit?`<p class="muted">Changes save as you type. Tap the stars for a quick level or enter an exact ability.</p>`:""}
@@ -1231,6 +1244,7 @@ function viewSettings(){
   ${ringCard()}
   ${trophyCard()}
   ${cupCard()}
+  <section class="card"><h3>Hidden potential</h3><label class="nat"><input type="checkbox" data-reveal ${state.settings.revealPot?"checked":""}><span>Show every player's exact potential</span></label><p class="muted">Off by default, so you only see a scout's estimate that narrows as players get older. Turning it on is the commissioner's peek behind the curtain.</p></section>
   <section class="card"><h3>Managers</h3><label class="nat"><input type="checkbox" data-sack ${state.settings.sackings!==false?"checked":""}><span>Boards can sack managers who fall well short two seasons running</span></label><p class="muted">You can also edit any manager, or sack one yourself, from their page.</p></section>
   <section class="card"><h3>Matches</h3>${rng("goals","Goal rate",50,200,5,"%","100% is the normal level for the format.")}${rng("home","Home advantage",0,30,1,"%")}${rng("injury","Injury rate",0,300,10,"%","0% turns injuries off. At 100% each club loses a player roughly every few matches.")}</section>
   <section class="card"><h3>Players and nationalities</h3>
@@ -1325,7 +1339,7 @@ function makePick(pid){
 }
 const _taste={};const taste=(id,pos)=>(_taste[id]=_taste[id]||Object.fromEntries(POS.map(x=>[x,.9+rand()*.25])))[pos];
 // How a club's manager sees a prospect: weaker scouts misjudge ability more
-function scoutView(p,t){const m=mgrOf(t),e=(6-(m?m.sco:3))*1.6;return{...p,rating:p.rating+(rand()-.5)*2*e}}
+function scoutView(p,t){const m=mgrOf(t),sk=m?m.sco:3,r=p.rating+(rand()-.5)*2*(6-sk)*1.6,pt=potCeil(p)+(rand()-.5)*2*(6-sk)*3.2;return{...p,rating:Math.round(p.age<=23?r*.3+pt*.7:r)}}
 function aiChoice(){
   const d=state.draft,t=team(d.order[d.pick]),comp=FORMATS[state.format].squad,lu=FORMATS[state.format].lineup;
   const left=d.order.slice(d.pick).filter(x=>x===t.id).length;
@@ -1379,7 +1393,7 @@ function viewDraft(){
     const lo=Math.max(0,d.pick-4),hi=Math.min(d.order.length,d.pick+(op?10:T));
     cur=`<div class="banner">${badge(t,64)}<div class="grow"><h2>${esc(t.name)} are on the clock</h2><p>${op?`Opening draft, round ${Math.floor(d.pick/T)+1} of ${d.rounds}. `:""}Pick ${d.pick+1} of ${d.order.length}. ${op?"Snake order, so it flips every round.":"The lowest finisher picks first."}</p><div class="needs" title="Players held against the standard squad. Red means a starting place is still empty.">${needs}</div></div><div class="bbtns"><button class="btn go" data-act="draft-auto">Auto-pick for ${esc(t.short)}</button>${op?`<button class="btn ghost" data-act="draft-auto-round">Auto-draft this round</button>`:""}<button class="btn ghost" data-act="draft-auto-all">Auto-draft the rest</button></div></div>
     <div class="grid2"><section class="card"><div class="phead" style="margin-bottom:8px"><h3 style="margin:0">${op?"Player pool":"Prospects"} <span class="muted" style="font-size:1rem;font-weight:500">${d.pool.length} left</span></h3><div class="chips" style="margin:0">${["ALL",...POS].map(x=>`<button class="chip ${draftPos===x?"on":""}" data-act="dpos" data-v="${x}">${x==="ALL"?"All":x}</button>`).join("")}</div></div>
-    <div class="scroll"><table><thead><tr><th>Name</th><th>Pos</th><th class="r">Age</th><th>Ability</th><th class="r">Value</th><th></th></tr></thead><tbody>${pool.map(p=>`<tr><td><span class="namecell">${flag(p.nat)}${esc(p.name)}</span>${traitTags(p)}</td><td>${p.pos}</td><td class="r num">${p.age}</td><td>${stars(p.rating)}</td><td class="r num">${pValue(p)}</td><td><button class="btn sm" data-act="draft-pick" data-id="${p.id}" aria-label="Draft ${esc(p.name)} to ${esc(t.name)}">Draft</button></td></tr>`).join("")}</tbody></table></div></section>
+    <div class="scroll"><table><thead><tr><th>Name</th><th>Pos</th><th class="r">Age</th><th>Ability</th><th class="r">Potential</th><th class="r">Value</th><th></th></tr></thead><tbody>${pool.map(p=>`<tr><td><span class="namecell">${flag(p.nat)}${esc(p.name)}</span>${traitTags(p)}</td><td>${p.pos}</td><td class="r num">${p.age}</td><td>${stars(p.rating)}</td><td class="r num">${potText(p,true)}</td><td class="r num">${pValue(p)}</td><td><button class="btn sm" data-act="draft-pick" data-id="${p.id}" aria-label="Draft ${esc(p.name)} to ${esc(t.name)}">Draft</button></td></tr>`).join("")}</tbody></table></div></section>
     <aside class="card"><h3 style="margin-top:0">${op?"Pick tracker":"Draft order"}</h3>${d.order.slice(lo,hi).map((id,j)=>{const i=lo+j,k=d.picks[i];return `<div class="fx ${i===d.pick?"onclock":""}" style="grid-template-columns:30px 1fr auto"><span class="num">${i+1}</span>${clubLabel(team(id),20)}<span class="${k?"":"muted"}">${k?`${esc(k.name)} <span class="muted">${k.pos}</span>`:i===d.pick?"On the clock":""}</span></div>`}).join("")}
     ${op?`<h3>Squads so far</h3>${state.teams.map(x=>`<div class="fx" style="grid-template-columns:1fr auto"><span>${clubLabel(x,20)}</span><span class="muted num">${POS.map(p=>`${p} ${posCount(x,p)}`).join(" &nbsp;")}</span></div>`).join("")}`:""}</aside></div>`}
   const tbl=h=>`<div class="scroll"><table><tbody>${h.picks.map(k=>{const p=pl(k.id);return `<tr class="click" data-act="player" data-id="${k.id}"><td class="num">${k.n}</td><td>${clubOr(k.team,k.teamName)}</td><td><span class="namecell">${p?flag(p.nat):""}${esc(k.name)}</span></td><td>${k.pos}</td><td class="muted">Drafted at ${k.rating}${p?`, now ${p.rating}${p.retired?(p.released?", released":", retired"):p.teamId!==k.team?`, now at ${esc(team(p.teamId).name)}`:""}`:""}</td></tr>`}).join("")}</tbody></table></div>`;
@@ -1571,7 +1585,7 @@ function viewPlayer(id){
    <p class="muted" style="margin:.4em 0">${NAT[p.nat]?NAT[p.nat].n+". ":""}${p.pos}, age ${p.age}. ${p.retired?`${p.released?"Released":"Retired"} after season ${p.retired}, last club ${esc(p.lastTeam)}.`:`<button class="linkbtn inl" data-act="club" data-id="${t.id}">${esc(t.name)}</button>`}${p.inj>0?` <b style="color:var(--loss)">Injured, out for ${p.inj} ${p.inj===1?"matchday":"matchdays"}.</b>`:""}</p>
    <p class="ptraits">${(p.tr||[]).map(k=>TRAITS[k]?`<span class="trt big" title="${esc(TRAITS[k].d)}">${TRAITS[k].n}${p.retired?"":`<button data-act="trait-del" data-id="${p.id}" data-v="${k}" aria-label="Remove ${TRAITS[k].n}">×</button>`}</span>`:"").join("")}${!p.retired&&(p.tr||[]).length<2?`<select data-trait-add="${p.id}" aria-label="Add a trait"><option value="">Add a trait</option>${Object.keys(TRAITS).filter(k=>traitOk(p,k,p.tr||[])).map(k=>`<option value="${k}">${TRAITS[k].n}</option>`).join("")}</select>`:""}</p>
    ${(p.tr||[]).length?`<p class="muted" style="margin:0 0 .4em;font-size:.88rem">${p.tr.map(k=>TRAITS[k]?`${TRAITS[k].n}: ${TRAITS[k].d}`:"").join(" ")}</p>`:""}
-   <p style="margin:0">${stars(p.rating)}${p.mgr&&state.managers&&state.managers[p.mgr]?` <button class="linkbtn inl" data-act="mgr" data-id="${p.mgr}">Now a manager</button>`:""}${p.hof?` <span class="hoftag">Hall of Fame, class of season ${p.hof}</span>`:""}</p></div><div class="pbadge">${p.teamId&&team(p.teamId)?badge(team(p.teamId),76):""}</div></div>
+   <p style="margin:0">${stars(p.rating)}${p.retired?"":` <span class="muted" style="margin-left:6px">${potText(p)}</span>`}${p.mgr&&state.managers&&state.managers[p.mgr]?` <button class="linkbtn inl" data-act="mgr" data-id="${p.mgr}">Now a manager</button>`:""}${p.hof?` <span class="hoftag">Hall of Fame, class of season ${p.hof}</span>`:""}</p></div><div class="pbadge">${p.teamId&&team(p.teamId)?badge(team(p.teamId),76):""}</div></div>
   <div class="grid2 even" style="margin-bottom:16px"><section class="card"><h3 style="margin-top:0">Trophy cabinet</h3>
     <p class="muted" style="margin:0 0 6px">Championship rings</p>${rg.length?ringsHTML(rg,true):`<p class="muted">No titles yet.</p>`}
     <p class="muted" style="margin:16px 0 6px">Awards</p>${aw.length?awardsHTML(aw,true):`<p class="muted">No awards yet.</p>`}
@@ -1797,6 +1811,7 @@ document.addEventListener("change",e=>{
   if(el.dataset.nat){const S=state.settings,c=el.dataset.nat;S.nations=el.checked?[...new Set([...S.nations,c])]:S.nations.filter(x=>x!==c);persist();render();return}
   if(el.dataset.themeK){persist();render();return}
   if(el.dataset.mf){const m=state.managers[el.dataset.id],k=el.dataset.mf;if(m){if(k==="name")m.name=el.value.trim()||m.name;else if(k==="style")m.style=el.value;else m[k]=clamp(+el.value,1,5)}persist();render();return}
+  if(el.dataset.reveal!==undefined){state.settings.revealPot=el.checked;persist();render();return}
   if(el.dataset.sack!==undefined){state.settings.sackings=el.checked;persist();render();return}
   if(el.dataset.traitAdd){const p=pl(el.dataset.traitAdd);if(p&&el.value&&traitOk(p,el.value,p.tr||[])&&(p.tr||[]).length<2)p.tr=[...(p.tr||[]),el.value];persist();render();return}
   if(el.dataset.rvname){const r=(state.rivals||[]).find(x=>x.k===el.dataset.rvname);if(r&&el.value.trim())r.name=el.value.trim().slice(0,30);persist();render();return}
@@ -1808,7 +1823,7 @@ document.addEventListener("change",e=>{
   if(el.dataset.lf){state.name=el.value.trim()||state.name;persist();render();return}
   if(el.dataset.tf){const t=team(el.dataset.id),k=el.dataset.tf;let v=el.value;if(k==="name"){v=v.trim()||t.name;if(t.short===shortOf(t.name))t.short=shortOf(v)}if(k==="short")v=v.trim().toUpperCase().slice(0,3)||t.short;t[k]=v;persist();render();return}
   if(el.dataset.cf||el.dataset.kf||el.dataset.gf){const t=team(el.dataset.id);if(el.dataset.gf==="name"){t.ground.name=el.value.trim()||t.ground.name}else applyField(t,el);persist();render();return}
-  if(el.dataset.pf){const p=pl(el.dataset.id),k=el.dataset.pf;if(k==="name")p.name=el.value.trim()||p.name;else if(k==="pos")p.pos=el.value;else if(k==="age")p.age=clamp(parseInt(el.value)||p.age,15,45);else if(k==="nat")p.nat=el.value;else if(k==="rating")p.rating=clamp(parseInt(el.value)||p.rating,20,99);persist();render()}
+  if(el.dataset.pf){const p=pl(el.dataset.id),k=el.dataset.pf;if(k==="name")p.name=el.value.trim()||p.name;else if(k==="pos")p.pos=el.value;else if(k==="age")p.age=clamp(parseInt(el.value)||p.age,15,45);else if(k==="nat")p.nat=el.value;else if(k==="rating"){p.rating=clamp(parseInt(el.value)||p.rating,20,99);if(p.pot!==undefined)p.pot=Math.max(p.pot,p.rating)}persist();render()}
 });
 $("#modal").addEventListener("click",e=>{if(e.target.id==="modal")closeModal()});
 window.addEventListener("beforeunload",e=>{if(dirty&&state){e.preventDefault();e.returnValue=""}});
