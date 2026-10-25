@@ -1,7 +1,7 @@
 /* League Sim offline worker.
    The game page is fetched fresh when online, so uploading a new index.html is all an update needs.
    When offline (or the network is slow) the last cached copy is used. Save files are never touched here. */
-const CACHE = "leaguesim-v1";
+const CACHE = "leaguesim-v2";
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/apple-touch-icon.png"];
 
 self.addEventListener("install", e => {
@@ -22,9 +22,11 @@ self.addEventListener("fetch", e => {
   // Game page: network first, cache as fallback
   if (req.mode === "navigate") {
     e.respondWith(
-      Promise.race([fetch(req, { cache: "no-cache" }), timeout(4000)])
-        .then(res => { const copy = res.clone(); caches.open(CACHE).then(c => c.put("./index.html", copy)); return res; })
-        .catch(() => caches.match("./index.html"))
+      (() => {
+        // Store the fresh page whenever it arrives, even if the slow-network fallback was used this time
+        const net = fetch(req, { cache: "no-cache" }).then(res => { if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put("./index.html", copy)); } return res; });
+        return Promise.race([net, timeout(4000)]).catch(() => caches.match("./index.html").then(hit => hit || net));
+      })()
     );
     return;
   }

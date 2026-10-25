@@ -1374,6 +1374,7 @@ function viewSettings(){
   <section class="card"><h3>Draft</h3>${rng("draftPer","Prospects per club",1,5,1,"")}${rng("draftAgeMin","Youngest prospect",15,25,1,"")}${rng("draftAgeMax","Oldest prospect",16,30,1,"")}${wts("draftW","Chance of each ability level for prospects")}${rng("extraPlaces","Squad places above the standard size",0,6,1,"","Clubs over the limit after a draft release their lowest value player.")}</section>
   <section class="card"><h3>AI trades</h3><p>How many trades AI clubs try to make in each window. Windows open at the end of each season and again after the draft. A player who has been traded sits out the next few windows.</p><div class="seg">${[["off","Off"],["low","Low"],["normal","Normal"],["high","High"]].map(([k,l])=>`<button class="${S.aiTrades===k?"on":""}" data-act="ai-trades" data-v="${k}">${l}</button>`).join("")}</div></section>
   <section class="card"><h3>Your save file</h3><p>Use <b>Save</b> to write the league to a file on your laptop, and <b>Open</b> to load one. In Chrome or Edge, Save writes back to the same file each time. In other browsers it downloads a fresh copy.</p><p class="muted">Settings, including colours, are stored in the save file.</p></section>
+  <section class="card"><h3>App version</h3><p>You are on version <b>${APP_VERSION}</b>.</p><p class="muted">If a new feature does not show up, press the button below. It clears the app's stored copy and loads the latest one. Your leagues and save files are not touched.</p><button class="btn" data-act="check-updates">Check for updates</button></section>
   <section class="card"><h3>Delete league</h3><p class="muted">Clears this league from the app. Your save files are not touched.</p><button class="btn danger" data-act="delete">Delete league</button></section>
   </div>`;
 }
@@ -1587,6 +1588,8 @@ function customAwardsCard(){
   ${L.some(c=>c.off)?`<p class="muted">Removed awards that were already won stay in the record books but are not given out any more.</p>`:""}
   <div class="toolbar"><button class="btn" data-act="ca-add">Add an award</button></div></section>`;
 }
+const APP_VERSION="2026.10.25-7";
+async function checkUpdates(){try{if(window.caches)for(const k of await caches.keys())await caches.delete(k);if(navigator.serviceWorker)for(const r of await navigator.serviceWorker.getRegistrations())await r.unregister()}catch(e){}location.reload()}
 let trophyTab="league";
 function trophyCard(){
   const k=trophyTab,T=trophySpec(k),custom=!!((state.settings.trophies||{})[k]);
@@ -1852,6 +1855,7 @@ document.addEventListener("click",async e=>{
     case "club":{closeModal();view="club:"+id;clubTab="squad";const rv=rivalOf(id);if(rv)h2h.b=rv.a===id?rv.b:rv.a;break}
     case "ctab":clubTab=v;break;
     case "ptab":pTab=v;break;
+    case "check-updates":if(dirty)persist();checkUpdates();return;
     case "kside":kitSide=v;break;
     case "crest":team(id).crest[b.dataset.k]=v;persist();break;
     case "kit":team(id).kit[kitSide].style=v;persist();break;
@@ -1955,7 +1959,9 @@ try{const b=localStorage.getItem("leaguesim-backup");if(b){const d=JSON.parse(b)
 render();
 
 /* ---------- installable app ---------- */
-if("serviceWorker" in navigator&&location.protocol.startsWith("http"))window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+if("serviceWorker" in navigator&&location.protocol.startsWith("http")){window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").then(r=>r.update()).catch(()=>{}));
+  // When a newer version of the app takes over, reload once so it shows straight away
+  let _swHad=!!navigator.serviceWorker.controller,_swRe=false;navigator.serviceWorker.addEventListener("controllerchange",()=>{if(_swHad&&!_swRe&&!dirty){_swRe=true;location.reload()}_swHad=true})}
 </script>
 </body>
 </html>
