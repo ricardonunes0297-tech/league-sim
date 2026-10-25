@@ -8,11 +8,13 @@ A pure-simulation football league game. The user sets up clubs and players, then
 - It runs offline by double-clicking the file.
 - Saves are JSON files written with the File System Access API (Chrome and Edge overwrite the same file), with a download fallback. A backup also goes to `localStorage` under `leaguesim-backup`.
 - Older saves must always keep loading. All schema changes go through `migrate(d)`, which fills in missing fields with defaults.
+- Saves are compact: `saveText()` runs `packState()`, which turns career rows and archived results into short arrays (marked `packed:1`) and writes JSON without whitespace. `migrate()` calls `unpackState()` first, so in memory everything stays as objects. New fields on career rows or results are safe: rows with unknown keys are left as objects.
+- Keep the save small as features grow: about 30KB per season for a 10 club 11 a side league. Store ids, not copies of names, wherever history allows.
 
 ## Architecture notes
 
 - Global `state` holds the league: `teams`, `players` (active), `retired` (retired and released players, kept for history), `fixtures` (current season rounds), `history` (one entry per finished season), `results` (archived matches for head to head), `trades`, `draftHistory`, `draft` (active draft or null), `hof`, `settings`.
-- `render()` rebuilds the whole view from `state`. Views: table, fixtures, players, clubs, `club:<id>`, `player:<id>`, draft, trades, history, hof, settings.
+- `render()` rebuilds the whole view from `state`. Long lists are paged (the players list shows 50 at a time via `ps.lim`). Views: table, fixtures, players, clubs, `club:<id>`, `player:<id>`, draft, trades, history, hof, settings.
 - Events use delegated `data-act` click handlers and `data-*` change and input handlers at the bottom of the script.
 - `persist()` marks unsaved changes and writes the browser backup.
 - Formats: 5, 7 and 11 a side (`FORMATS`), each with lineup shape, squad shape, match length and base goal rate.
@@ -28,6 +30,8 @@ A pure-simulation football league game. The user sets up clubs and players, then
 - Hall of Fame: legacy points from apps, goals, assists, clean sheets, titles and awards. Up to two retired players per class, one class every three seasons.
 
 ## Visual style
+
+- The sidebar is drawn as a pitch: a chalk outline, a penalty box around the league name, one mowing stripe per menu item, the halfway line and centre circle above the sim buttons, and a penalty box around the file buttons.
 
 - Pixel art engine drawn onto canvas at low resolution and shown with `image-rendering: pixelated`: badges (`pxBadge`), kits (`pxKit`), league trophy plate (`pxPlate`), championship rings (`pxRing`), award trophies on plinths (`pxAward`), position charts (`pxChart`). A 3x5 pixel font is in `FONT`, with wide 5x5 glyphs for M, N, V and W in `FONTW`.
 - A Smooth setting falls back to the earlier vector SVG art.
