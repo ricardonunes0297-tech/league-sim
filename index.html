@@ -270,32 +270,17 @@ tr.sel td{background:color-mix(in srgb,var(--flood) 20%,transparent)}
 .h2hbar{display:flex;height:10px;border-radius:5px;overflow:hidden;margin-top:12px;background:var(--line)}
 .empty{color:var(--muted);padding:30px;text-align:center;border:2px dashed var(--line);border-radius:10px}
 .hist{margin-bottom:16px}
-.clubhead>div:last-child{min-width:0;flex:1}
-.rafters{display:flex;align-items:flex-start;margin:12px 0 6px;padding:0 0 4px;max-width:100%;outline:none}
-.rafters .bnr{flex:0 1 auto;min-width:14px;margin-right:6px;position:relative}
-.rafters .bn{display:block;width:62px;height:94px;background:var(--bntr);clip-path:polygon(0 0,100% 0,100% 84%,50% 100%,0 84%);filter:drop-shadow(0 2px 0 rgba(0,0,0,.2));transition:width .2s ease}
-.rafters .bni{position:absolute;inset:3px 3px 4px;display:flex;flex-direction:column;align-items:center;padding-top:9px;background:linear-gradient(90deg,color-mix(in srgb,var(--bnbg) 88%,#fff),var(--bnbg) 30%,var(--bnbg) 70%,color-mix(in srgb,var(--bnbg) 85%,#000));color:var(--bntr);clip-path:polygon(0 0,100% 0,100% 84%,50% 100%,0 84%);overflow:hidden}
-.rafters .bni i{display:block;width:14px;height:14px;color:var(--bntr)}
-.rafters .bni svg{display:block;width:100%;height:100%;fill:currentColor}
-.rafters .bni small{font:700 .58rem/1 var(--bd);letter-spacing:.12em;text-transform:uppercase;margin-top:5px;white-space:nowrap}
-.rafters .bni b{font:700 1.75rem/1 var(--hd);margin-top:3px}
-.rafters .bni .bns{margin-top:2px;opacity:.85}
-.rafters.tight .bnr{margin-right:3px}
-.rafters.tight .bn{width:32px}
-.rafters.tight .bni small{display:none}
-.rafters.tight .bni b{font-size:1.05rem;margin-top:8px}
-.rafters .bnr:hover{flex-shrink:0;z-index:2}
-.rafters.tight .bnr:hover .bn{width:62px}
-.rafters.tight .bnr:hover .bni small{display:block}
-.rafters.tight .bnr:hover .bni b{font-size:1.75rem;margin-top:3px}
-.rafters.tight:focus{overflow-x:auto}
-.rafters.tight:focus .bnr{flex-shrink:0}
-@media (prefers-reduced-motion:reduce){.rafters .bn{transition:none}}
-.cab{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:10px}
-.cabt{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 6px 10px;border-radius:8px;background:color-mix(in srgb,var(--turf) 92%,#000);border:3px solid color-mix(in srgb,var(--turf) 60%,#fff);box-shadow:inset 0 -4px 0 rgba(0,0,0,.25);color:var(--chalk);text-align:center}
-.cabt b{font:700 .9rem var(--hd);letter-spacing:.03em;text-transform:uppercase}
-.cabt i{font-style:normal;color:var(--flood)}
-.cabt small{color:var(--chalk-dim);font-size:.72rem}
+.cabinet{background:linear-gradient(180deg,#7a4b2a,#5a3519);border:2px solid #3a2110;border-radius:12px;padding:0 14px 16px;box-shadow:0 8px 24px rgba(0,0,0,.22),inset 0 2px 0 rgba(255,255,255,.15)}
+.cabcrown{display:flex;justify-content:center;padding:10px 0}
+.cabplate{background:linear-gradient(180deg,#f3d27a,#c99a2e);color:#3a2a08;font:700 .95rem var(--hd);letter-spacing:.08em;text-transform:uppercase;padding:4px 18px;border-radius:4px;box-shadow:inset 0 -2px 0 rgba(0,0,0,.25),0 1px 0 rgba(255,255,255,.3)}
+.cabin{position:relative;background:linear-gradient(180deg,#2b1a10,#1d120b);border:6px solid #4a2b16;border-radius:4px;padding:14px 14px 0;box-shadow:inset 0 0 30px rgba(0,0,0,.6);overflow:hidden}
+.cabin::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.07) 38%,transparent 46%,transparent 60%,rgba(255,255,255,.05) 64%,transparent 70%)}
+.cablbl{display:block;color:#e9cf8a;font:700 .8rem var(--hd);letter-spacing:.1em;text-transform:uppercase}
+.shelves{display:flex;flex-wrap:wrap;align-content:flex-start;margin:0 -14px 16px;padding:0 14px;background:repeating-linear-gradient(180deg,transparent 0 108px,#9a6a40 108px 110px,#6b4226 110px 118px,#2a170b 118px 120px)}
+.cabitem{height:120px;width:76px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:14px}
+.cabitem img{filter:drop-shadow(0 3px 2px rgba(0,0,0,.55))}
+.plq{margin-top:4px;background:linear-gradient(180deg,#e9c76a,#b08227);color:#2e2006;font:700 .64rem var(--bd);padding:1px 6px;border-radius:2px;white-space:nowrap;max-width:70px;overflow:hidden;text-overflow:ellipsis}
+.cabempty{color:#e9cf8a;opacity:.8;text-align:center;padding:30px 0 40px;margin:0}
 .caedit{display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
 .caedit.off{opacity:.55}
 .caedit>img{flex:none;width:46px}
@@ -938,9 +923,9 @@ function viewClubs(){
 }
 function viewClub(id){
   const t=team(id);if(!t){view="clubs";return viewClubs()}
-  const ti=titles(id),tabs=[["squad","Squad"],["hist","History"],["legends","Legends"],["h2h","Head to head"],["badge","Badge"],["kit","Kits"],["ground","Ground"]];
-  const body=clubTab==="legends"?legendsHTML(t):clubTab==="h2h"?h2hHTML(t.id):clubTab==="hist"?clubHistoryPanel(t):clubTab==="badge"?badgeEditor(t):clubTab==="kit"?kitEditor(t):clubTab==="ground"?groundEditor(t):squadPanel(t);
-  return `<div class="clubhead">${badge(t,84)}<span class="hdkit">${kitSvg(t.kit.home,false,58)}</span><div><h1 style="margin:0">${esc(t.name)}</h1>${bannersHTML(t)}<p class="muted" style="margin:.2em 0 0">${esc(t.ground.name)}${t.ground.cap?`, capacity ${capText(t.ground.cap)}`:""}. Average ability ${avgRating(t)}</p>${mgrOf(t)?`<p style="margin:.3em 0 0"><span class="muted">Manager:</span> ${mgrLink(mgrOf(t))} <span class="muted">${STYLES[mgrOf(t).style]}. Tactics ${mgrOf(t).tac}, coaching ${mgrOf(t).coa}, scouting ${mgrOf(t).sco}</span></p>`:""}${(()=>{const rv=rivalOf(id),o=clubRuns()[id],cur=o&&(o.curw>1?runText(o.curw,"w"):o.curl>1?runText(o.curl,"l"):o.curu>2?runText(o.curu,"u"):"");return (rv?`<p style="margin:.3em 0 0"><span class="muted">Rivals:</span> <button class="linkbtn inl" data-act="club" data-id="${rv.a===id?rv.b:rv.a}">${esc(team(rv.a===id?rv.b:rv.a).name)}</button> <b class="derby">${esc(rv.name)}</b></p>`:"")+(cur?`<p class="muted" style="margin:.2em 0 0">On a run of ${cur}. Best ever: ${runText(o.w.n,"w")}, ${runText(o.u.n,"u")}.</p>`:o&&o.w.n?`<p class="muted" style="margin:.2em 0 0">Best ever: ${runText(o.w.n,"w")}, ${runText(o.u.n,"u")}.</p>`:"")})()}</div></div>
+  const ti=titles(id),tabs=[["squad","Squad"],["cab","Trophy cabinet"],["hist","History"],["legends","Legends"],["h2h","Head to head"],["badge","Badge"],["kit","Kits"],["ground","Ground"]];
+  const body=clubTab==="cab"?clubCabinet(t):clubTab==="legends"?legendsHTML(t):clubTab==="h2h"?h2hHTML(t.id):clubTab==="hist"?clubHistoryPanel(t):clubTab==="badge"?badgeEditor(t):clubTab==="kit"?kitEditor(t):clubTab==="ground"?groundEditor(t):squadPanel(t);
+  return `<div class="clubhead">${badge(t,84)}<span class="hdkit">${kitSvg(t.kit.home,false,58)}</span><div><h1 style="margin:0">${esc(t.name)}</h1><p style="margin:.4em 0 0">${ti.length?`${trophies(id,44,true)} <span class="muted">Season ${ti.join(", ")}</span>`:`<span class="muted">No titles yet</span>`}${cupsOf(id).length?` ${cupTrophies(id,44,true)} <span class="muted">Season ${cupsOf(id).join(", ")}</span>`:""}</p><p class="muted" style="margin:.2em 0 0">${esc(t.ground.name)}${t.ground.cap?`, capacity ${capText(t.ground.cap)}`:""}. Average ability ${avgRating(t)}</p>${mgrOf(t)?`<p style="margin:.3em 0 0"><span class="muted">Manager:</span> ${mgrLink(mgrOf(t))} <span class="muted">${STYLES[mgrOf(t).style]}. Tactics ${mgrOf(t).tac}, coaching ${mgrOf(t).coa}, scouting ${mgrOf(t).sco}</span></p>`:""}${(()=>{const rv=rivalOf(id),o=clubRuns()[id],cur=o&&(o.curw>1?runText(o.curw,"w"):o.curl>1?runText(o.curl,"l"):o.curu>2?runText(o.curu,"u"):"");return (rv?`<p style="margin:.3em 0 0"><span class="muted">Rivals:</span> <button class="linkbtn inl" data-act="club" data-id="${rv.a===id?rv.b:rv.a}">${esc(team(rv.a===id?rv.b:rv.a).name)}</button> <b class="derby">${esc(rv.name)}</b></p>`:"")+(cur?`<p class="muted" style="margin:.2em 0 0">On a run of ${cur}. Best ever: ${runText(o.w.n,"w")}, ${runText(o.u.n,"u")}.</p>`:o&&o.w.n?`<p class="muted" style="margin:.2em 0 0">Best ever: ${runText(o.w.n,"w")}, ${runText(o.u.n,"u")}.</p>`:"")})()}</div></div>
   <div class="chips tabs" role="tablist">${tabs.map(([k,l])=>`<button class="chip ${clubTab===k?"on":""}" role="tab" aria-selected="${clubTab===k}" data-act="ctab" data-v="${k}">${l}</button>`).join("")}</div>${body}`;
 }
 function squadPanel(t){
@@ -1183,15 +1168,14 @@ function viewManager(id){
   return `<button class="btn sm" data-act="back">‹ Back</button>
   <div class="phero"><div class="pinfo"><h1 class="namecell" style="display:flex;margin:0">${flag(m.nat,32)}${esc(m.name)}</h1>
    <p class="muted" style="margin:.4em 0">${NAT[m.nat]?NAT[m.nat].n+". ":""}Age ${m.age}. ${t?`Manager of <button class="linkbtn inl" data-act="club" data-id="${t.id}">${esc(t.name)}</button> since season ${m.since}.`:m.retired?`Retired after season ${m.retired}.`:"Out of work."}${m.exp&&pl(m.exp)?` Former player, <button class="linkbtn inl" data-act="player" data-id="${m.exp}">see playing career</button>.`:""}${m.strikes&&t?` <b style="color:var(--loss)">Under pressure after a poor season.</b>`:""}</p></div><div class="pbadge">${t?badge(t,76):""}</div></div>
-  <div class="grid2 even" style="margin-bottom:16px"><section class="card"><h3 style="margin-top:0">Profile</h3><div class="fields">
+  ${pTabs()}${pTab==="cab"?managerCabinet(m):`<div class="grid2 even" style="margin-bottom:16px"><section class="card"><h3 style="margin-top:0">Profile</h3><div class="fields">
    <label class="f">Name<input type="text" data-mf="name" data-id="${m.id}" value="${esc(m.name)}" maxlength="40"></label>
    <label class="f">Style${sel("style",Object.entries(STYLES))}</label>${Object.entries(MSKILL).map(([k,[l]])=>`<label class="f">${l}${sel(k,[1,2,3,4,5].map(n=>[n,"★".repeat(n)]))}</label>`).join("")}</div>
    <p class="muted">${Object.values(MSKILL).map(([l,d])=>`${l}: ${d.toLowerCase()}.`).join(" ")}</p>
    ${t?`<div class="toolbar"><button class="btn danger" data-act="mgr-sack" data-id="${m.id}">Sack as commissioner</button></div>`:""}</section>
-  <section class="card"><h3 style="margin-top:0">Career</h3><div class="tiles">${tile("Seasons",T.s)}${tile("Win rate",g?Math.round(T.w/g*100)+"%":"–")}${tile("Titles",T.t)}${tile("Cups",T.c)}${tile("Sacked",m.sacked||0)}</div>
-   <p class="muted" style="margin:16px 0 6px">Awards</p>${(m.awards||[]).length?cabinetHTML(m.awards):`<p class="muted">No awards yet.</p>`}</section></div>
+  <section class="card"><h3 style="margin-top:0">Career</h3><div class="tiles">${tile("Seasons",T.s)}${tile("Win rate",g?Math.round(T.w/g*100)+"%":"–")}${tile("Titles",T.t)}${tile("Cups",T.c)}${tile("Sacked",m.sacked||0)}${tile("Awards",(m.awards||[]).length)}</div></section></div>
   <div class="card scroll"><table><thead><tr><th>Season</th><th>Club</th><th class="r">Finish</th><th class="r">Expected</th><th class="r">W</th><th class="r">D</th><th class="r">L</th><th>Honours</th></tr></thead><tbody>
-  ${m.hist.length?[...m.hist].reverse().map(r=>`<tr><td>${r.season}</td><td>${esc(r.team)}</td><td class="r num">${ordinal(r.pos)}</td><td class="r num ${r.pos<r.exp?"up":r.pos>r.exp?"down":""}">${ordinal(r.exp)}</td><td class="r num">${r.w}</td><td class="r num">${r.d}</td><td class="r num">${r.l}</td><td>${[r.title?"Champions":"",r.cup?"Cup winners":"",r.sacked?"Sacked":""].filter(Boolean).join(", ")}</td></tr>`).join(""):`<tr><td colspan="8" class="muted">No finished seasons yet.</td></tr>`}</tbody></table></div>`;
+  ${m.hist.length?[...m.hist].reverse().map(r=>`<tr><td>${r.season}</td><td>${esc(r.team)}</td><td class="r num">${ordinal(r.pos)}</td><td class="r num ${r.pos<r.exp?"up":r.pos>r.exp?"down":""}">${ordinal(r.exp)}</td><td class="r num">${r.w}</td><td class="r num">${r.d}</td><td class="r num">${r.l}</td><td>${[r.title?"Champions":"",r.cup?"Cup winners":"",r.sacked?"Sacked":""].filter(Boolean).join(", ")}</td></tr>`).join(""):`<tr><td colspan="8" class="muted">No finished seasons yet.</td></tr>`}</tbody></table></div>`}`;
 }
 /* ---------- milestones, club legends, stadiums ---------- */
 const MILESTONES={goals:[25,50,100,150,200,300,400,500],apps:[50,100,200,300,400,500],assists:[25,50,100,150,200,300],cs:[25,50,100,150,200]};
@@ -1252,16 +1236,19 @@ function anRender(){
 }
 function anAdvance(){if(!_an)return;if(!_an.shown)_an.shown=true;else if(_an.i<_an.steps.length-1){_an.i++;_an.shown=false}else return anClose();anRender()}
 document.addEventListener("keydown",e=>{if(!_an||$("#an").hidden)return;if(e.key==="Escape"){e.preventDefault();anClose()}else if(e.key===" "||e.key==="Enter"){e.preventDefault();anAdvance()}});
-/* ---------- rafter banners for titles and cups ---------- */
-const BN_SVG={league:`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.6 7L12 17.3 5.8 20.9l1.6-7L2 9.2l7.1-.6z"/></svg>`,cup:`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v2h3v3a5 5 0 0 1-4.6 5A5 5 0 0 1 13 15v3h3v3H8v-3h3v-3a5 5 0 0 1-3.4-3A5 5 0 0 1 3 7V4h3zM5 6v1a3 3 0 0 0 1.6 2.6A9 9 0 0 1 6 6zm13 0a9 9 0 0 1-.6 3.6A3 3 0 0 0 19 7V6z"/></svg>`};
-function bannerCols(t){const k=t.kit&&t.kit.home||{},bg=k.a||"#2a5d3c";let tr=k.b||"#fff";if(Math.abs(lum(tr)-lum(bg))<.25)tr=lum(bg)>.45?"#1B1712":"#FFFFFF";return{bg,tr}}
-function bannersHTML(t){
-  const L=[...titles(t.id).map(s=>({s,k:"league"})),...cupsOf(t.id).map(s=>({s,k:"cup"}))].sort((a,b)=>a.s-b.s||(a.k==="league"?-1:1));
-  if(!L.length)return `<p style="margin:.4em 0 0"><span class="muted">No titles yet</span></p>`;
-  const {bg,tr}=bannerCols(t),gold=Math.abs(lum("#E2AD2E")-lum(bg))>.25?"#E2AD2E":tr;
-  // Up to 8 hang at full width. Beyond that they fold to slim banners that open up as you move along them
-  return `<div class="rafters${L.length>8?" tight":""}" tabindex="0" style="--bnbg:${bg};--bntr:${tr}" aria-label="${pluralN(titles(t.id).length,"league title")} and ${pluralN(cupsOf(t.id).length,"cup win")}">${L.map(b=>`<span class="bnr" title="${b.k==="cup"?esc(cupName())+" winners":"League champions"}, season ${b.s}"><span class="bn"><span class="bni">${b.k==="cup"?`<i style="color:${gold}">${BN_SVG.cup}</i>`:`<i>${BN_SVG.league}</i>`}<small>${b.k==="cup"?"Cup":"League"}</small><b>${b.s}</b><small class="bns">Season</small></span></span></span>`).join("")}</div>`;
+/* ---------- trophy cabinet ---------- */
+let pTab="car";
+// groups: [{label, items:[{img, w, lbl, tip}]}]. Each group gets its own run of wooden shelves.
+function cabinetPanel(name,groups){
+  groups=groups.filter(g=>g.items.length);const px=pxCtx();
+  return `<div class="cabinet"><div class="cabcrown"><span class="cabplate">${esc(name)}</span></div><div class="cabin">${groups.length?groups.map(g=>`<div class="cabgrp"><span class="cablbl">${esc(g.label)}${g.items.length>1?` ×${g.items.length}`:""}</span><div class="shelves">${g.items.map(i=>`<div class="cabitem" title="${esc(i.tip)}">${px?`<img class="px" src="${i.img()}" width="${i.w}" alt="">`:""}<span class="plq">${esc(i.lbl)}</span></div>`).join("")}</div></div>`).join(""):`<p class="cabempty">The cabinet is empty for now.</p>`}</div></div>`;
 }
+const cabT=(k,s,tip)=>({img:()=>pxTrophy(k),w:46,lbl:"S"+s,tip});
+function awardGroups(list){const by={};list.forEach(a=>(by[a.type]=by[a.type]||[]).push(a.season));return Object.keys(AWARDS).filter(k=>by[k]).map(k=>({label:AWARDS[k].full,items:by[k].sort((a,b)=>a-b).map(s=>cabT(k,s,`${AWARDS[k].full}, season ${s}`))}))}
+function clubCabinet(t){return cabinetPanel(t.name,[{label:"League titles",items:titles(t.id).map(s=>cabT("league",s,`League champions, season ${s}`))},{label:cupName(),items:cupsOf(t.id).map(s=>cabT("cup",s,`${cupName()} winners, season ${s}`))}])}
+function playerCabinet(p){return cabinetPanel(p.name,[{label:"Championship rings",items:ringsOf(p).map(r=>({img:()=>pxRing(r.c1,r.season,r.tid),w:52,lbl:"S"+r.season,tip:`Champions with ${r.team}, season ${r.season}`}))},{label:`${cupName()} medals`,items:cupMedalsOf(p).map(a=>cabT("cup",a.season,`${cupName()} winner, season ${a.season}`))},...awardGroups(awardsOf(p))])}
+function managerCabinet(m){return cabinetPanel(m.name,[{label:"League titles",items:m.hist.filter(r=>r.title).map(r=>cabT("league",r.season,`League champions with ${r.team}, season ${r.season}`))},{label:cupName(),items:m.hist.filter(r=>r.cup).map(r=>cabT("cup",r.season,`${cupName()} winners with ${r.team}, season ${r.season}`))},...awardGroups(m.awards||[])])}
+const pTabs=()=>`<div class="chips tabs" role="tablist" style="margin-bottom:14px">${[["car","Career"],["cab","Trophy cabinet"]].map(([k,l])=>`<button class="chip ${pTab===k?"on":""}" role="tab" aria-selected="${pTab===k}" data-act="ptab" data-v="${k}">${l}</button>`).join("")}</div>`;
 /* ---------- season review ---------- */
 function viewReview(season){
   const h=state.history.find(x=>x.season===+season);if(!h)return `<div class="empty">That season has not finished yet.</div>`;
@@ -1600,11 +1587,6 @@ function customAwardsCard(){
   ${L.some(c=>c.off)?`<p class="muted">Removed awards that were already won stay in the record books but are not given out any more.</p>`:""}
   <div class="toolbar"><button class="btn" data-act="ca-add">Add an award</button></div></section>`;
 }
-function cabinetHTML(list){
-  if(!pxCtx())return awardsHTML(list,true);
-  const by={};list.forEach(a=>(by[a.type]=by[a.type]||[]).push(a.season));
-  return `<div class="cab">${Object.entries(by).map(([t,s])=>`<div class="cabt" title="${esc(AWARDS[t]?AWARDS[t].full:t)}, season ${s.join(", ")}"><img class="px" src="${pxTrophy(t)}" width="46" alt=""><b>${esc(AWARDS[t]?AWARDS[t].s:t)}${s.length>1?` <i>×${s.length}</i>`:""}</b><small>${s.length>3?`S${s[0]} to S${s[s.length-1]}`:s.map(x=>"S"+x).join(", ")}</small></div>`).join("")}</div>`;
-}
 let trophyTab="league";
 function trophyCard(){
   const k=trophyTab,T=trophySpec(k),custom=!!((state.settings.trophies||{})[k]);
@@ -1715,15 +1697,14 @@ function viewPlayer(id){
    <p class="ptraits">${(p.tr||[]).map(k=>TRAITS[k]?`<span class="trt big" title="${esc(TRAITS[k].d)}">${TRAITS[k].n}${p.retired?"":`<button data-act="trait-del" data-id="${p.id}" data-v="${k}" aria-label="Remove ${TRAITS[k].n}">×</button>`}</span>`:"").join("")}${!p.retired&&(p.tr||[]).length<2?`<select data-trait-add="${p.id}" aria-label="Add a trait"><option value="">Add a trait</option>${Object.keys(TRAITS).filter(k=>traitOk(p,k,p.tr||[])).map(k=>`<option value="${k}">${TRAITS[k].n}</option>`).join("")}</select>`:""}</p>
    ${(p.tr||[]).length?`<p class="muted" style="margin:0 0 .4em;font-size:.88rem">${p.tr.map(k=>TRAITS[k]?`${TRAITS[k].n}: ${TRAITS[k].d}`:"").join(" ")}</p>`:""}
    <p style="margin:0">${stars(p.rating)}${p.retired?"":` <span class="muted" style="margin-left:6px">${potText(p)}</span>`}${p.mgr&&state.managers&&state.managers[p.mgr]?` <button class="linkbtn inl" data-act="mgr" data-id="${p.mgr}">Now a manager</button>`:""}${p.hof?` <span class="hoftag">Hall of Fame, class of season ${p.hof}</span>`:""}</p></div><div class="pbadge">${p.teamId&&team(p.teamId)?badge(team(p.teamId),76):""}</div></div>
-  <div class="grid2 even" style="margin-bottom:16px"><section class="card"><h3 style="margin-top:0">Trophy cabinet</h3>
-    <p class="muted" style="margin:0 0 6px">Championship rings</p>${rg.length?ringsHTML(rg,true):`<p class="muted">No titles yet.</p>`}
-    <p class="muted" style="margin:16px 0 6px">Awards</p>${aw.length?cabinetHTML(aw):`<p class="muted">No awards yet.</p>`}
-    ${(p.ms||[]).length?`<p class="muted" style="margin:16px 0 6px">Milestones</p>${msHTML(p)}`:""}
-    ${cupMedalsOf(p).length?`<p class="muted" style="margin:16px 0 6px">Cup winner medals</p>${cabinetHTML(cupMedalsOf(p))}`:""}</section>
+  ${pTabs()}${pTab==="cab"?playerCabinet(p):`<div class="grid2 even" style="margin-bottom:16px"><section class="card"><h3 style="margin-top:0">Honours</h3>
+    <p style="margin:0 0 10px">${[pluralN(rg.length,"league title"),pluralN(cupMedalsOf(p).length,"cup win"),pluralN(aw.length,"award")].join(", ")}.</p>${rg.length?ringsHTML(rg,true):""}
+    <div class="toolbar"><button class="btn sm" data-act="ptab" data-v="cab">Open the trophy cabinet</button></div>
+    ${(p.ms||[]).length?`<p class="muted" style="margin:16px 0 6px">Milestones</p>${msHTML(p)}`:""}</section>
    <section class="card"><h3 style="margin-top:0">Career</h3><div class="tiles">${tile("Apps",tot.apps)}${tile("Goals",tot.goals)}${tile("Assists",tot.assists)}${tile("Clean sheets",tot.cs)}${tile("Avg rating",fmtAvg(avg))}${tile("Cup goals",tot.cgoals||0)}${tile("Hat-tricks",tot.ht||0)}${tile("Team of the season",(p.tots||[]).length)}${tile("Legacy",legacy(p))}</div>${p.retired&&!p.hof?`<p class="muted">Hall of Fame bar is ${hofBar()} legacy points.</p>`:""}</section></div>
   <div class="card scroll"><table><thead><tr><th>Season</th><th>Club</th><th class="r">Age</th><th class="r">Ability</th><th class="r">Apps</th><th class="r">Goals</th><th class="r">Assists</th><th class="r">CS</th><th class="r">Avg</th><th class="r">Cup goals</th><th>Awards</th></tr></thead><tbody>
   ${rows.map(r=>{const a=aw.filter(x=>x.season===r.season);return `<tr><td>${r.season}${r.current?" (now)":""}</td><td>${esc(r.team)}</td><td class="r num">${r.age}</td><td class="r num">${r.rating}</td><td class="r num">${r.apps}</td><td class="r num">${r.goals}</td><td class="r num">${r.assists}</td><td class="r num">${r.cs}</td><td class="r num">${fmtAvg(avgOf(r))}</td><td class="r num">${r.cgoals||0}</td><td>${awardsHTML(a,false)}</td></tr>`}).join("")}
-  <tr><td colspan="4"><b>Career</b></td><td class="r num"><b>${tot.apps}</b></td><td class="r num"><b>${tot.goals}</b></td><td class="r num"><b>${tot.assists}</b></td><td class="r num"><b>${tot.cs}</b></td><td class="r num"><b>${fmtAvg(avg)}</b></td><td class="r num"><b>${tot.cgoals||0}</b></td><td></td></tr></tbody></table></div>${movesHTML(p)}`;
+  <tr><td colspan="4"><b>Career</b></td><td class="r num"><b>${tot.apps}</b></td><td class="r num"><b>${tot.goals}</b></td><td class="r num"><b>${tot.assists}</b></td><td class="r num"><b>${tot.cs}</b></td><td class="r num"><b>${fmtAvg(avg)}</b></td><td class="r num"><b>${tot.cgoals||0}</b></td><td></td></tr></tbody></table></div>${movesHTML(p)}`}`;
 }
 function viewHof(){
   const next=Math.ceil((state.season)/3)*3,ballot=Object.values(state.retired).filter(p=>!p.hof).map(p=>({p,s:legacy(p)})).sort((a,b)=>b.s-a.s).slice(0,6);
@@ -1870,6 +1851,7 @@ document.addEventListener("click",async e=>{
     case "trait-del":{const p=pl(id);if(p)p.tr=(p.tr||[]).filter(k=>k!==v);persist();break}
     case "club":{closeModal();view="club:"+id;clubTab="squad";const rv=rivalOf(id);if(rv)h2h.b=rv.a===id?rv.b:rv.a;break}
     case "ctab":clubTab=v;break;
+    case "ptab":pTab=v;break;
     case "kside":kitSide=v;break;
     case "crest":team(id).crest[b.dataset.k]=v;persist();break;
     case "kit":team(id).kit[kitSide].style=v;persist();break;

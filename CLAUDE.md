@@ -48,13 +48,13 @@ A pure-simulation football league game. The user sets up clubs and players, then
 ## Trophy art and custom awards
 
 - Trophies are hand-drawn maps in `TRO_MAPS` (12 shapes: champ, cup, plate, star, ball, boot, glove, medal, kicker, runner, keeper, coach). Characters: g metal, d engraving, w shine, a accent, k black. `pxTrophy()` shades each row of metal light on the left to dark on the right and adds a small plinth (rows 25 to 31). Icon mode drops the plinth. Shape, metal, plinth and accent are still set per award in the Trophy room (`settings.trophies`).
-- `cabinetHTML()` shows awards as tiles grouped by type (player and manager pages).
 - Custom awards live in `settings.customAwards` ({id, name, short, stat, pos, age, off}). `syncCustom()` (called in `render`) adds each one to `AWARDS`, `TROPHY_DEF` and `TROPHY_L` under the key `x<id>`, so every page that shows awards works with them. `decideAwards` ranks them with `caRank()` (stats in `CA_STATS`) and they appear on awards night with nominees. Removing an award that has been won only sets `off`, so history keeps its name and trophy.
 
-## Rafter banners
+## Trophy cabinet
 
-- The club header shows a banner per league title and cup win (`bannersHTML`). They are plain HTML and CSS, not pixel art: kit colour fill, trim outline (`bannerCols` falls back to black or white when the colours are too close), pointed bottom via `clip-path`, a star or cup icon and the season number.
-- Up to 8 hang at full width. Beyond that they fold to slim banners that widen on hover or keyboard focus. Each banner is a flex item that can shrink, so very long rows overlap to fit any width.
+- Clubs have a Trophy cabinet tab (`clubTab="cab"`); player and manager pages have Career and Trophy cabinet tabs (`pTab`, shared by both).
+- `cabinetPanel(name, groups)` draws a wooden cabinet with a brass name plate, glass sheen and one run of shelves per group (shelves are a repeating CSS gradient, items are a fixed 120px tall so they stand on them). `clubCabinet`, `playerCabinet` (rings, cup medals, each award type) and `managerCabinet` (titles, cups, awards) build the groups.
+- Rafter banners were tried and removed at the user's request.
 
 ## Awards night
 
