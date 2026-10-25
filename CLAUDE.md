@@ -50,11 +50,6 @@ A pure-simulation football league game. The user sets up clubs and players, then
 - Trophies are hand-drawn maps in `TRO_MAPS` (12 shapes: champ, cup, plate, star, ball, boot, glove, medal, kicker, runner, keeper, coach). Characters: g metal, d engraving, w shine, a accent, k black. `pxTrophy()` shades each row of metal light on the left to dark on the right and adds a small plinth (rows 25 to 31). Icon mode drops the plinth. Shape, metal, plinth and accent are still set per award in the Trophy room (`settings.trophies`).
 - Custom awards live in `settings.customAwards` ({id, name, short, stat, pos, age, off}). `syncCustom()` (called in `render`) adds each one to `AWARDS`, `TROPHY_DEF` and `TROPHY_L` under the key `x<id>`, so every page that shows awards works with them. `decideAwards` ranks them with `caRank()` (stats in `CA_STATS`) and they appear on awards night with nominees. Removing an award that has been won only sets `off`, so history keeps its name and trophy.
 
-## Pixel faces
-
-- `pxFace(p, kit, suit)` draws a 16x18 portrait: skin, hair style, hair colour, facial hair, clubs' home kit (or a suit and tie for managers). `faceLook(p)` picks the look from a hash of the id, weighted by a broad region for the nationality (`FACE_REG`, `FACE_SKIN`), and adds grey hair or a receding line with age. Nothing is stored unless edited: `p.face` {s,c,h,f} overrides.
-- `faceImg(p,w)` / `mgrFaceImg(m,w)` are used in name cells, player and manager heroes, the team of the season and awards night. `settings.faces` (on by default) turns them off. Player page has an Edit face panel (`faceEdit`, `faceEditor`).
-
 ## Releases
 
 - Bump `APP_VERSION` in index.html with every push, so the user can confirm in Settings which version they are on. Settings also has a Check for updates button (`checkUpdates`) that clears the offline cache and service worker, then reloads.

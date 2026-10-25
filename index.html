@@ -270,12 +270,6 @@ tr.sel td{background:color-mix(in srgb,var(--flood) 20%,transparent)}
 .h2hbar{display:flex;height:10px;border-radius:5px;overflow:hidden;margin-top:12px;background:var(--line)}
 .empty{color:var(--muted);padding:30px;text-align:center;border:2px dashed var(--line);border-radius:10px}
 .hist{margin-bottom:16px}
-.face{flex:none;image-rendering:pixelated;margin:-4px 0}
-.bigface{display:block;image-rendering:pixelated;filter:drop-shadow(0 2px 0 rgba(0,0,0,.15))}
-.pkit{display:flex;flex-direction:column;align-items:center;gap:4px}
-.totsface{image-rendering:pixelated}
-.anwin .face{margin:0}
-.faceed{margin-bottom:14px}
 .cabinet{background:linear-gradient(180deg,#7a4b2a,#5a3519);border:2px solid #3a2110;border-radius:12px;padding:0 14px 16px;box-shadow:0 8px 24px rgba(0,0,0,.22),inset 0 2px 0 rgba(255,255,255,.15)}
 .cabcrown{display:flex;justify-content:center;padding:10px 0}
 .cabplate{background:linear-gradient(180deg,#f3d27a,#c99a2e);color:#3a2a08;font:700 .95rem var(--hd);letter-spacing:.08em;text-transform:uppercase;padding:4px 18px;border-radius:4px;box-shadow:inset 0 -2px 0 rgba(0,0,0,.25),0 1px 0 rgba(255,255,255,.3)}
@@ -880,7 +874,7 @@ function viewTable(){
   return `${banner}<div class="grid2"><section class="card"><h2>Season ${state.season}</h2>${leagueTable(tbl)}</section><aside class="card">
     ${next?`<h3 style="margin-top:0">Matchday ${state.round+1} of ${state.fixtures.length}</h3>${next.map(fixtureRow).join("")}`:""}
     ${last?`<h3 ${next?"":`style="margin-top:0"`}>Latest results</h3>${last.map(resultRow).join("")}`:""}
-    <h3>Top scorers</h3>${leaders.length?`<table><tbody>${leaders.map(p=>`<tr class="click" data-act="player" data-id="${p.id}"><td><span class="namecell">${faceImg(p)}${flag(p.nat)}${esc(p.name)}</span></td><td>${badge(team(p.teamId),18)}</td><td class="r num pts">${p.s.goals}</td></tr>`).join("")}</tbody></table>`:`<p class="muted">Goals will show here once the first matchday is played.</p>`}
+    <h3>Top scorers</h3>${leaders.length?`<table><tbody>${leaders.map(p=>`<tr class="click" data-act="player" data-id="${p.id}"><td><span class="namecell">${flag(p.nat)}${esc(p.name)}</span></td><td>${badge(team(p.teamId),18)}</td><td class="r num pts">${p.s.goals}</td></tr>`).join("")}</tbody></table>`:`<p class="muted">Goals will show here once the first matchday is played.</p>`}
   </aside></div>`;
 }
 let fxRound=null;
@@ -915,8 +909,8 @@ function viewPlayers(){
   const natSel=p=>`<select data-pf="nat" data-id="${p.id}" aria-label="Nationality">${NATIONS.map(n=>`<option value="${n.c}" ${p.nat===n.c?"selected":""}>${n.n}</option>`).join("")}</select>`;
   const posSel=p=>`<select data-pf="pos" data-id="${p.id}" aria-label="Position">${POS.map(x=>`<option ${x===p.pos?"selected":""}>${x}</option>`).join("")}</select>`;
   const head=ps.edit?`<tr>${th("name","Player")}<th>Club</th><th>Pos</th><th>Nation</th>${th("age","Age",1)}${th("rating","Ability")}<th>Exact</th><th></th></tr>`:`<tr>${th("name","Player")}<th>Club</th><th>Pos</th>${th("age","Age",1)}${th("rating","Ability")}${th("pot","Potential",1)}${cols.map(([k,l])=>th(k,l,1)).join("")}${th("avg","Avg",1)}${th("titles","Titles")}${th("awards","Awards")}</tr>`;
-  const row=ps.edit?({p})=>`<tr><td><span class="namecell">${faceImg(p)}${flag(p.nat)}<input type="text" data-pf="name" data-id="${p.id}" value="${esc(p.name)}" maxlength="40" aria-label="Player name"></span></td><td>${clubCell(p)}</td><td>${posSel(p)}</td><td>${natSel(p)}</td><td class="r"><input type="number" min="15" max="45" data-pf="age" data-id="${p.id}" value="${p.age}" aria-label="Age"></td><td>${stars(p.rating,p.id)}</td><td><input type="number" min="20" max="99" data-pf="rating" data-id="${p.id}" value="${p.rating}" aria-label="Exact ability"></td><td><button class="btn sm" data-act="player" data-id="${p.id}">Career</button></td></tr>`
-    :({p,st,rg})=>`<tr class="click" data-act="player" data-id="${p.id}"><td><span class="namecell">${faceImg(p)}${flag(p.nat)}${esc(p.name)}</span>${injTag(p)}${traitTags(p)}</td><td>${clubCell(p)}</td><td>${p.pos}</td><td class="r num">${p.age}</td><td>${stars(p.rating)}</td><td class="r num">${potText(p,true)}</td>${cols.map(([k])=>`<td class="r num">${st[k]}</td>`).join("")}<td class="r num">${fmtAvg(avgOf(st))}</td><td>${ringsHTML(rg)}</td><td>${awardsHTML(ps.scope==="season"?awardsOf(p).filter(a=>a.season===state.season):awardsOf(p))}</td></tr>`;
+  const row=ps.edit?({p})=>`<tr><td><span class="namecell">${flag(p.nat)}<input type="text" data-pf="name" data-id="${p.id}" value="${esc(p.name)}" maxlength="40" aria-label="Player name"></span></td><td>${clubCell(p)}</td><td>${posSel(p)}</td><td>${natSel(p)}</td><td class="r"><input type="number" min="15" max="45" data-pf="age" data-id="${p.id}" value="${p.age}" aria-label="Age"></td><td>${stars(p.rating,p.id)}</td><td><input type="number" min="20" max="99" data-pf="rating" data-id="${p.id}" value="${p.rating}" aria-label="Exact ability"></td><td><button class="btn sm" data-act="player" data-id="${p.id}">Career</button></td></tr>`
+    :({p,st,rg})=>`<tr class="click" data-act="player" data-id="${p.id}"><td><span class="namecell">${flag(p.nat)}${esc(p.name)}</span>${injTag(p)}${traitTags(p)}</td><td>${clubCell(p)}</td><td>${p.pos}</td><td class="r num">${p.age}</td><td>${stars(p.rating)}</td><td class="r num">${potText(p,true)}</td>${cols.map(([k])=>`<td class="r num">${st[k]}</td>`).join("")}<td class="r num">${fmtAvg(avgOf(st))}</td><td>${ringsHTML(rg)}</td><td>${awardsHTML(ps.scope==="season"?awardsOf(p).filter(a=>a.season===state.season):awardsOf(p))}</td></tr>`;
   return `<div class="phead"><h2 style="margin:0">Players</h2><button class="btn ${ps.edit?"go":""}" data-act="pedit">${ps.edit?"Done editing":"Edit players"}</button></div>
   <div class="chips" style="align-items:center">${["season","all"].map(s=>`<button class="chip ${ps.scope===s?"on":""}" data-act="scope" data-v="${s}">${s==="season"?`Season ${state.season}`:"All time"}</button>`).join("")}<span style="width:8px"></span>${["ALL",...POS].map(p=>`<button class="chip ${ps.pos===p?"on":""}" data-act="pos" data-v="${p}">${p==="ALL"?"All positions":p}</button>`).join("")}<input type="search" data-pq placeholder="Search name, club or nation" value="${esc(ps.q||"")}" aria-label="Search players"></div>
   ${ps.edit?`<p class="muted">Changes save as you type. Tap the stars for a quick level or enter an exact ability.</p>`:""}
@@ -938,7 +932,7 @@ function squadPanel(t){
   const id=t.id,ps2=t.players.map(pl).filter(Boolean).sort((a,b)=>POS.indexOf(a.pos)-POS.indexOf(b.pos)||b.rating-a.rating);
   return `<div class="toolbar" style="margin-top:0"><button class="btn" data-act="add-player" data-id="${id}">Add player</button><button class="btn" data-act="paste-open" data-id="${id}">Paste names</button><button class="btn" data-act="rename-squad" data-id="${id}">Generate new names</button></div>
   <div class="card scroll"><table><thead><tr><th>Name</th><th>Pos</th><th>Nation</th><th class="r">Age</th><th>Ability</th><th class="r">Apps</th><th class="r">Goals</th><th class="r">Assists</th><th class="r">CS</th><th>Titles</th><th></th></tr></thead><tbody>
-  ${ps2.map(p=>`<tr><td><span class="namecell">${faceImg(p)}${flag(p.nat)}<input type="text" data-pf="name" data-id="${p.id}" value="${esc(p.name)}" maxlength="40" aria-label="Player name"></span>${injTag(p)}${traitTags(p)}</td>
+  ${ps2.map(p=>`<tr><td><span class="namecell">${flag(p.nat)}<input type="text" data-pf="name" data-id="${p.id}" value="${esc(p.name)}" maxlength="40" aria-label="Player name"></span>${injTag(p)}${traitTags(p)}</td>
     <td><select data-pf="pos" data-id="${p.id}" aria-label="Position">${POS.map(x=>`<option ${x===p.pos?"selected":""}>${x}</option>`).join("")}</select></td>
     <td><select data-pf="nat" data-id="${p.id}" aria-label="Nationality" style="max-width:130px">${NATIONS.map(n=>`<option value="${n.c}" ${p.nat===n.c?"selected":""}>${n.n}</option>`).join("")}</select></td>
     <td class="r"><input type="number" min="15" max="45" data-pf="age" data-id="${p.id}" value="${p.age}" aria-label="Age"></td>
@@ -1044,7 +1038,7 @@ function viewCup(){
   ${body}
   <div class="grid2 even" style="margin-top:18px"><section class="card"><h3 style="margin-top:0">Winners</h3>${past.length?`<table><tbody>${[...past].reverse().map(h=>`<tr><td class="muted">S${h.season}</td><td>${clubLabel(team(h.cup.winner.id)||h.cup.winner,20)}</td><td class="muted">${esc(finalLine(h.cup.final,id=>team(id)?team(id).short:"?"))}</td></tr>`).join("")}</tbody></table>`:`<p class="muted">The first final is at the end of this season.</p>`}</section>
   <section class="card"><h3 style="margin-top:0">Most cup wins</h3>${Object.keys(wins).length?`<table><tbody>${Object.entries(wins).sort((a,b)=>b[1]-a[1]).map(([id,n])=>team(id)?`<tr class="click" data-act="club" data-id="${id}"><td>${clubLabel(team(id),20)}</td><td class="r">${cupTrophies(id,20)}</td></tr>`:"").join("")}</tbody></table>`:`<p class="muted">No winners yet.</p>`}
-  <h3>All time cup scorers</h3>${scorers.length?`<table><tbody>${scorers.map(x=>`<tr class="click" data-act="player" data-id="${x.p.id}"><td><span class="namecell">${faceImg(x.p)}${flag(x.p.nat)}${esc(x.p.name)}</span></td><td class="r num"><b>${x.n}</b></td></tr>`).join("")}</tbody></table>`:`<p class="muted">No cup goals yet.</p>`}</section></div>`;
+  <h3>All time cup scorers</h3>${scorers.length?`<table><tbody>${scorers.map(x=>`<tr class="click" data-act="player" data-id="${x.p.id}"><td><span class="namecell">${flag(x.p.nat)}${esc(x.p.name)}</span></td><td class="r num"><b>${x.n}</b></td></tr>`).join("")}</tbody></table>`:`<p class="muted">No cup goals yet.</p>`}</section></div>`;
 }
 function cupCard(){
   const c=state.settings.cup||{};
@@ -1077,7 +1071,7 @@ function pickTots(all){
 }
 function totsHTML(list){
   const rows=["FW","MF","DF","GK"].map(pos=>list.filter(x=>x.pos===pos)).filter(r=>r.length);
-  return `<div class="tots">${rows.map(r=>`<div class="totsrow">${r.map(x=>{const t=team(x.tid);const P=pl(x.id);return `<button class="totsp" data-act="player" data-id="${x.id}">${facesOn()&&P?faceImg(P,48,"totsface"):t&&t.kit?(pxOn()?`<img class="px" src="${pxKit(t.kit.home,false)}" width="52" alt="">`:kitSvg(t.kit.home,false,44)):""}<b>${esc(x.name)}</b><span>${esc(x.team)}, ${x.avg.toFixed(2)}</span></button>`}).join("")}</div>`).join("")}</div>`;
+  return `<div class="tots">${rows.map(r=>`<div class="totsrow">${r.map(x=>{const t=team(x.tid);return `<button class="totsp" data-act="player" data-id="${x.id}">${t&&t.kit?(pxOn()?`<img class="px" src="${pxKit(t.kit.home,false)}" width="52" alt="">`:kitSvg(t.kit.home,false,44)):""}<b>${esc(x.name)}</b><span>${esc(x.team)}, ${x.avg.toFixed(2)}</span></button>`}).join("")}</div>`).join("")}</div>`;
 }
 const DERBY_NAMES=["The Grudge Match","The Big One","The Old Derby","The Feud","The Showdown","The Classic","The Decider","The Rivalry","The Clash","The Battle"];
 const pairKey=(a,b)=>a<b?a+"|"+b:b+"|"+a;
@@ -1162,7 +1156,7 @@ const mgrTotals=m=>m.hist.reduce((a,r)=>({s:a.s+1,w:a.w+r.w,d:a.d+r.d,l:a.l+r.l,
 function viewManagers(){
   const M=Object.values(state.managers||{}),tbl=computeTable(),act=state.teams.map(t=>mgrOf(t)).filter(Boolean).sort((a,b)=>tbl.findIndex(r=>r.id===a.teamId)-tbl.findIndex(r=>r.id===b.teamId));
   const free=M.filter(m=>!m.teamId&&!m.retired),gone=M.filter(m=>m.retired);
-  const row=m=>{const T=mgrTotals(m),g=T.w+T.d+T.l,mos=(m.awards||[]).length;return `<tr class="click" data-act="mgr" data-id="${m.id}"><td><span class="namecell">${mgrFaceImg(m)}${flag(m.nat)}${esc(m.name)}</span>${m.exp?`<span class="trts"><span class="trt">Former player</span></span>`:""}</td><td>${m.teamId&&team(m.teamId)?clubLabel(team(m.teamId),20):`<span class="muted">${m.retired?`Retired after S${m.retired}`:"Out of work"}</span>`}</td><td>${STYLES[m.style]}</td><td>${skillStars(m.tac)}</td><td>${skillStars(m.coa)}</td><td>${skillStars(m.sco)}</td><td class="r num">${T.s}</td><td class="r num">${g?Math.round(T.w/g*100)+"%":"–"}</td><td class="r num">${T.t}</td><td class="r num">${T.c}</td><td class="r num">${mos}</td></tr>`};
+  const row=m=>{const T=mgrTotals(m),g=T.w+T.d+T.l,mos=(m.awards||[]).length;return `<tr class="click" data-act="mgr" data-id="${m.id}"><td><span class="namecell">${flag(m.nat)}${esc(m.name)}</span>${m.exp?`<span class="trts"><span class="trt">Former player</span></span>`:""}</td><td>${m.teamId&&team(m.teamId)?clubLabel(team(m.teamId),20):`<span class="muted">${m.retired?`Retired after S${m.retired}`:"Out of work"}</span>`}</td><td>${STYLES[m.style]}</td><td>${skillStars(m.tac)}</td><td>${skillStars(m.coa)}</td><td>${skillStars(m.sco)}</td><td class="r num">${T.s}</td><td class="r num">${g?Math.round(T.w/g*100)+"%":"–"}</td><td class="r num">${T.t}</td><td class="r num">${T.c}</td><td class="r num">${mos}</td></tr>`};
   const tblH=list=>`<div class="card scroll"><table><thead><tr><th>Manager</th><th>Club</th><th>Style</th><th>Tactics</th><th>Coaching</th><th>Scouting</th><th class="r">Seasons</th><th class="r">Win rate</th><th class="r">Titles</th><th class="r">Cups</th><th class="r">Manager awards</th></tr></thead><tbody>${list.map(row).join("")}</tbody></table></div>`;
   return `<h2>Managers</h2><p class="muted">Boards expect a finish based on squad strength. ${state.settings.sackings!==false?"Two seasons running well below that and the manager is sacked, unless they won something.":"Sackings are off in Settings."} Tactics nudges results, coaching speeds up young players, scouting sharpens the draft.</p>
   ${tblH(act)}${free.length?`<h3>Out of work</h3>${tblH(free)}`:""}${gone.length?`<details style="margin-top:14px"><summary>Retired managers (${gone.length})</summary>${tblH(gone)}</details>`:""}`;
@@ -1172,7 +1166,7 @@ function viewManager(id){
   const t=team(m.teamId),T=mgrTotals(m),g=T.w+T.d+T.l,sel=(k,opts)=>`<select data-mf="${k}" data-id="${m.id}" aria-label="${k}">${opts.map(([v,l])=>`<option value="${v}" ${String(m[k])===String(v)?"selected":""}>${l}</option>`).join("")}</select>`;
   const tile=(l,v)=>`<div class="tile"><span class="muted">${l}</span><b class="num">${v}</b></div>`;
   return `<button class="btn sm" data-act="back">‹ Back</button>
-  <div class="phero">${facesOn()?`<div class="pkit">${mgrFaceImg(m,80,"bigface")}</div>`:""}<div class="pinfo"><h1 class="namecell" style="display:flex;margin:0">${flag(m.nat,32)}${esc(m.name)}</h1>
+  <div class="phero"><div class="pinfo"><h1 class="namecell" style="display:flex;margin:0">${flag(m.nat,32)}${esc(m.name)}</h1>
    <p class="muted" style="margin:.4em 0">${NAT[m.nat]?NAT[m.nat].n+". ":""}Age ${m.age}. ${t?`Manager of <button class="linkbtn inl" data-act="club" data-id="${t.id}">${esc(t.name)}</button> since season ${m.since}.`:m.retired?`Retired after season ${m.retired}.`:"Out of work."}${m.exp&&pl(m.exp)?` Former player, <button class="linkbtn inl" data-act="player" data-id="${m.exp}">see playing career</button>.`:""}${m.strikes&&t?` <b style="color:var(--loss)">Under pressure after a poor season.</b>`:""}</p></div><div class="pbadge">${t?badge(t,76):""}</div></div>
   ${pTabs()}${pTab==="cab"?managerCabinet(m):`<div class="grid2 even" style="margin-bottom:16px"><section class="card"><h3 style="margin-top:0">Profile</h3><div class="fields">
    <label class="f">Name<input type="text" data-mf="name" data-id="${m.id}" value="${esc(m.name)}" maxlength="40"></label>
@@ -1197,7 +1191,7 @@ function oneClubCheck(p){const ids=new Set(p.career.flatMap(c=>c.teamIds||[c.tea
 const msHTML=p=>(p.ms||[]).length?`<div class="mschips">${[...p.ms].sort((a,b)=>(a.s||0)-(b.s||0)).map(m=>`<span class="mschip">${msText(m)}${m.s?`<small> S${m.s}</small>`:""}</span>`).join("")}</div>`:"";
 function legendsHTML(t){
   const rows=everyone().map(p=>{const cs=p.career.filter(c=>c.teamId===t.id),cur=!p.retired&&p.teamId===t.id?p.s:null,sum=k=>cs.reduce((a,c)=>a+(c[k]||0),0)+(cur?cur[k]||0:0);return{p,apps:sum("apps")+sum("capps"),goals:sum("goals")+sum("cgoals"),seasons:cs.length}}).filter(x=>x.apps>0);
-  const top=(k,l)=>{const L=[...rows].sort((a,b)=>b[k]-a[k]).slice(0,8).filter(x=>x[k]>0);return `<section class="card"><h3 style="margin-top:0">${l}</h3>${L.length?`<table><tbody>${L.map((x,i)=>`<tr class="click" data-act="player" data-id="${x.p.id}"><td class="muted num">${i+1}</td><td><span class="namecell">${faceImg(x.p)}${flag(x.p.nat)}${esc(x.p.name)}</span>${x.p.retired?`<span class="trts"><span class="trt">${x.p.hof?"Hall of Fame":"Retired"}</span></span>`:""}</td><td class="r num"><b>${x[k]}</b></td></tr>`).join("")}</tbody></table>`:`<p class="muted">Nobody yet.</p>`}</section>`};
+  const top=(k,l)=>{const L=[...rows].sort((a,b)=>b[k]-a[k]).slice(0,8).filter(x=>x[k]>0);return `<section class="card"><h3 style="margin-top:0">${l}</h3>${L.length?`<table><tbody>${L.map((x,i)=>`<tr class="click" data-act="player" data-id="${x.p.id}"><td class="muted num">${i+1}</td><td><span class="namecell">${flag(x.p.nat)}${esc(x.p.name)}</span>${x.p.retired?`<span class="trts"><span class="trt">${x.p.hof?"Hall of Fame":"Retired"}</span></span>`:""}</td><td class="r num"><b>${x[k]}</b></td></tr>`).join("")}</tbody></table>`:`<p class="muted">Nobody yet.</p>`}</section>`};
   const hof=rows.filter(x=>x.p.hof),one=everyone().filter(p=>p.oneClub===t.id),mg=Object.values(state.managers||{}).map(m=>({m,n:m.hist.filter(r=>r.teamId===t.id&&(r.title||r.cup)).length})).filter(x=>x.n).sort((a,b)=>b.n-a.n);
   const list=(l,items)=>`<section class="card"><h3 style="margin-top:0">${l}</h3>${items.length?items.join(""):`<p class="muted">None yet.</p>`}</section>`;
   return `<div class="grid2 even">${top("apps","Most appearances")}${top("goals","Most goals")}
@@ -1230,7 +1224,7 @@ function anRender(){
   const el=$("#an");if(!el||!_an)return;const {h,steps,i,shown}=_an,s=steps[i],last=i===steps.length-1;
   const big=k=>pxCtx()?`<img class="px antro" src="${pxTrophy(k)}" width="92" alt="">`:"";
   const win=(bdg,name,sub)=>`<div class="anwin">${bdg}<div><b>${esc(name)}</b><span>${esc(sub)}</span></div></div>`;
-  const who=(x,mgr)=>{const P=mgr?null:pl(x.id),M=mgr&&state.managers?state.managers[x.id]:null,t=P&&team(P.teamId);return win(`${P?faceImg(P,64):M?mgrFaceImg(M,64):""}${t?badge(t,56):""}`,x.name,`${x.team}${x.val?`. ${x.val}`:""}`)};
+  const who=(x,mgr)=>{const t=mgr?null:pl(x.id)&&team(pl(x.id).teamId);return win(t?badge(t,56):"",x.name,`${x.team}${x.val?`. ${x.val}`:""}`)};
   let body="";
   if(s.kind==="award")body=`${big(s.trophy)}${s.noms.length?`<p class="anlbl">${s.noms.length===1?"The only nominee":"The nominees"}</p><ul class="annoms">${s.noms.map(n=>`<li class="${shown&&n.id===s.win.id?"on":""}"><b>${esc(n.name)}</b><span>${esc(n.team)}. ${esc(n.val||"")}</span></li>`).join("")}</ul>`:""}${shown?`<p class="anlbl">The winner is</p>${who(s.win,s.mgr)}`:""}`;
   else if(s.kind==="tots")body=shown?totsHTML(h.tots):`<p class="anlbl">The best ${h.tots.length} players of the season, picked on average rating</p>`;
@@ -1255,70 +1249,6 @@ function clubCabinet(t){return cabinetPanel(t.name,[{label:"League titles",items
 function playerCabinet(p){return cabinetPanel(p.name,[{label:"Championship rings",items:ringsOf(p).map(r=>({img:()=>pxRing(r.c1,r.season,r.tid),w:52,lbl:"S"+r.season,tip:`Champions with ${r.team}, season ${r.season}`}))},{label:`${cupName()} medals`,items:cupMedalsOf(p).map(a=>cabT("cup",a.season,`${cupName()} winner, season ${a.season}`))},...awardGroups(awardsOf(p))])}
 function managerCabinet(m){return cabinetPanel(m.name,[{label:"League titles",items:m.hist.filter(r=>r.title).map(r=>cabT("league",r.season,`League champions with ${r.team}, season ${r.season}`))},{label:cupName(),items:m.hist.filter(r=>r.cup).map(r=>cabT("cup",r.season,`${cupName()} winners with ${r.team}, season ${r.season}`))},...awardGroups(m.awards||[])])}
 const pTabs=()=>`<div class="chips tabs" role="tablist" style="margin-bottom:14px">${[["car","Career"],["cab","Trophy cabinet"]].map(([k,l])=>`<button class="chip ${pTab===k?"on":""}" role="tab" aria-selected="${pTab===k}" data-act="ptab" data-v="${k}">${l}</button>`).join("")}</div>`;
-/* ---------- pixel faces ----------
-   Looks come from a hash of the id, weighted by a broad region for the nationality, so nothing is stored.
-   p.face (only set when edited by hand) overrides: {s skin, c hair colour, h hair style, f facial hair}. */
-const SKINS=["#F4D3BA","#E9BC98","#D49F78","#B07A52","#8A5A3A","#5F3D28"];
-const HAIRC=["#211A16","#3D2A1E","#6A4A2E","#9A6B3F","#D8B15A","#B5532A","#A7A7A7","#E2E2E2"];
-const HAIRS=["Buzz cut","Short","Quiff","Curly","Long","Bald","Mohawk","Receding"];
-const FACIAL=["Clean shaven","Stubble","Beard","Moustache"];
-const SKIN_L=["Very light","Light","Medium","Tan","Brown","Dark"],HAIRC_L=["Black","Dark brown","Brown","Light brown","Blond","Ginger","Grey","White"];
-const FACE_REG={N:"ENG SCO IRL GER NED BEL SWE DEN NOR POL HUN UKR CRO",S:"ESP POR ITA",F:"FRA",L:"BRA COL",A:"ARG MEX",U:"USA",W:"NGA GHA SEN",M:"MAR TUR",E:"JPN"};
-const FACE_SKIN={N:[34,34,14,8,6,4],S:[15,32,32,12,6,3],F:[16,22,18,14,16,14],L:[8,14,24,22,18,14],A:[18,32,30,14,4,2],U:[20,22,16,14,16,12],W:[0,0,2,10,40,48],M:[4,14,40,32,8,2],E:[22,48,26,4,0,0]};
-const _faceReg={};Object.entries(FACE_REG).forEach(([r,l])=>l.split(" ").forEach(c=>_faceReg[c]=r));
-function hashStr(s){let h=2166136261;for(const ch of String(s))h=Math.imul(h^ch.charCodeAt(0),16777619);return h>>>0}
-function faceLook(p){
-  let x=hashStr(p.id)||1;const r=()=>{x^=x<<13;x>>>=0;x^=x>>>17;x^=x<<5;x>>>=0;return x/4294967296};
-  const pick=w=>{let t=r()*w.reduce((a,b)=>a+b,0);for(let i=0;i<w.length;i++){if((t-=w[i])<0)return i}return 0};
-  const reg=_faceReg[p.nat]||"U",s=pick(FACE_SKIN[reg]);
-  let c=pick(reg==="E"?[85,15,0,0,0,0]:s===0?[10,25,25,15,18,7]:s===1?[18,32,25,12,10,3]:s===2?[40,35,18,5,2,0]:[75,22,3,0,0,0]);
-  let h=pick(s>=4?[35,15,5,25,3,12,5]:[12,32,20,8,14,6,8]);const f=pick([55,22,18,5]),g=r(),b=r();
-  const L={s,c,h,f,...(p.face||{})},age=p.age||25;
-  // Ageing, unless the look was set by hand: grey from the mid thirties, some hair loss
-  if(!(p.face&&p.face.c!==undefined)&&age>=34&&g<(age-33)*.12)L.c=age>=50?7:6;
-  if(!(p.face&&p.face.h!==undefined)&&age>=33&&L.h===1&&b<(age-32)*.1)L.h=7;
-  return L;
-}
-function pxFace(p,kit,suit){
-  const L=faceLook(p),key=["fc",L.s,L.c,L.h,L.f,suit?1:0,kit?kit.a+kit.b:""].join("|");if(PXC.cache.has(key))return PXC.cache.get(key);
-  const W=16,H=18,g=Grid(W,H),sk=SKINS[L.s]||SKINS[1],hc=HAIRC[L.c]||HAIRC[0],skD=drk(sk,.16),hcL=lit(hc,.18),hcD=drk(hc,.25);
-  const head={2:[5,10],3:[4,11],4:[3,12],5:[3,12],6:[3,12],7:[3,12],8:[3,12],9:[3,12],10:[4,11],11:[5,10],12:[6,9]};
-  // clothes: kit with a V collar, or a suit with shirt and tie
-  const A=suit?"#2B2F3A":kit&&kit.a||"#5A6B7A",B=suit?"#F2F2F2":kit&&kit.b||"#FFFFFF";
-  for(let y=14;y<H;y++){const x0=y===14?3:y===15?1:0,x1=W-1-x0;for(let x=x0;x<=x1;x++)g.set(x,y,x<=x0+1?lit(A,.14):x>=x1-1?drk(A,.22):A)}
-  for(let y=12;y<=14;y++)for(let x=6;x<=9;x++)g.set(x,y,y===12?skD:sk);
-  if(suit){[[6,14],[9,14],[6,15],[9,15],[7,15],[8,15]].forEach(([x,y])=>g.set(x,y,B));g.set(7,15,"#9B1C2C");g.set(8,15,"#9B1C2C");g.set(7,16,"#7E1522");g.set(8,16,"#9B1C2C");g.set(7,17,"#9B1C2C");g.set(8,17,"#7E1522")}
-  else{g.set(5,14,B);g.set(10,14,B);g.set(6,15,B);g.set(9,15,B);g.set(7,15,sk);g.set(8,15,sk);g.set(7,16,B);g.set(8,16,B)}
-  for(const y in head){const [a,b]=head[y];for(let x=a;x<=b;x++)g.set(x,+y,x===b||(+y>=10&&x===b-1)?skD:sk)}
-  [[2,7],[2,8],[13,7],[13,8]].forEach(([x,y])=>g.set(x,y,x===2?sk:skD));
-  g.set(6,7,"#1B1712");g.set(9,7,"#1B1712");g.set(8,9,skD);g.set(7,10,drk(sk,.32));g.set(8,10,drk(sk,.32));
-  const hp=(pts,col)=>pts.forEach(([x,y])=>g.set(x,y,typeof col==="function"?col(x,y):col));
-  const R=(y,a,b)=>{const o=[];for(let x=a;x<=b;x++)o.push([x,y]);return o};
-  const tone=(x,y)=>x<=4?hcL:x>=11?hcD:hc;
-  const short=[...R(1,5,10),...R(2,4,11),...R(3,3,12),[3,4],[4,4],[11,4],[12,4],[5,4],[6,4],[3,5],[12,5]];
-  switch(L.h){
-    case 0:hp([...R(2,5,10),...R(3,4,11),[3,4],[12,4],[3,5],[12,5]],(x,y)=>mix(tone(x,y),sk,.35));break;
-    case 1:hp(short,tone);break;
-    case 2:hp([...short,...R(0,6,10),...R(1,4,11),[11,0]],tone);break;
-    case 3:hp([...R(0,4,11),...R(1,3,12),...R(2,2,13),...R(3,2,13),[2,4],[3,4],[4,4],[11,4],[12,4],[13,4],[2,5],[3,5],[12,5],[13,5],[2,6],[13,6]],(x,y)=>(x+y)%2?tone(x,y):hcD);break;
-    case 4:hp([...short,[2,4],[13,4],...[5,6,7,8,9,10,11].flatMap(y=>[[2,y],[3,y],[12,y],[13,y]])],tone);break;
-    case 5:hp([[3,6],[12,6],[3,7],[12,7]],(x,y)=>mix(hc,sk,.3));break;
-    case 6:hp([...R(0,6,9),...R(1,6,9),...R(2,6,9),...R(3,6,9)],tone);hp([[4,3],[5,3],[10,3],[11,3],[3,4],[12,4],[3,5],[12,5]],(x,y)=>mix(hc,sk,.45));break;
-    case 7:hp([[4,2],[5,2],[10,2],[11,2],[3,3],[4,3],[11,3],[12,3],[3,4],[12,4],[3,5],[12,5]],tone);break;
-  }
-  [[5,6],[6,6],[9,6],[10,6]].forEach(([x,y])=>g.set(x,y,hcD));
-  const mouth=(x,y)=>(x===7||x===8)&&y===10;
-  if(L.f===1)for(let y=10;y<=12;y++){const [a,b]=head[y];for(let x=a;x<=b;x++)if(!mouth(x,y)&&(x+y)%2===0)g.set(x,y,mix(g.get(x,y),hc,.22))}
-  if(L.f===2){for(let y=9;y<=12;y++){const [a,b]=head[y];for(let x=a;x<=b;x++)if(!mouth(x,y)&&(y>=10||x<=4||x>=11))g.set(x,y,x>=b?hcD:hc)}g.set(7,10,drk(sk,.32));g.set(8,10,drk(sk,.32))}
-  if(L.f===3){[[6,9],[7,9],[8,9],[9,9]].forEach(([x,y])=>g.set(x,y,hc))}
-  outlineG(g,"#14100C");const url=gridURL(g);PXC.cache.set(key,url);return url;
-}
-const facesOn=()=>pxCtx()&&state&&state.settings.faces!==false;
-function faceImg(p,w=32,cls="face"){if(!facesOn()||!p)return "";const t=p.teamId&&team(p.teamId);return `<img class="px ${cls}" src="${pxFace(p,t&&t.kit?t.kit.home:null)}" width="${w}" height="${Math.round(w*18/16)}" alt="">`}
-function mgrFaceImg(m,w=32,cls="face"){if(!facesOn()||!m)return "";return `<img class="px ${cls}" src="${pxFace(m,null,true)}" width="${w}" height="${Math.round(w*18/16)}" alt="">`}
-let faceEdit=false;
-function faceEditor(p){const L=faceLook(p),sel=(k,labels)=>`<label class="f">${{s:"Skin",c:"Hair colour",h:"Hair",f:"Facial hair"}[k]}<select data-face="${k}" data-id="${p.id}">${labels.map((l,i)=>`<option value="${i}" ${L[k]===i?"selected":""}>${l}</option>`).join("")}</select></label>`;
-  return `<div class="card faceed"><div class="fields">${sel("s",SKIN_L)}${sel("h",HAIRS)}${sel("c",HAIRC_L)}${sel("f",FACIAL)}</div><div class="toolbar"><button class="btn" data-act="face-rand" data-id="${p.id}">Random</button>${p.face?`<button class="btn" data-act="face-reset" data-id="${p.id}">Back to default</button>`:""}<button class="btn" data-act="face-edit">Done</button></div><p class="muted" style="margin:0">Faces are made from each player's nationality and change a little with age. Anything you set here stays fixed.</p></div>`}
 /* ---------- season review ---------- */
 function viewReview(season){
   const h=state.history.find(x=>x.season===+season);if(!h)return `<div class="empty">That season has not finished yet.</div>`;
@@ -1429,7 +1359,6 @@ function viewSettings(){
   ${trophyCard()}
   ${cupCard()}
   ${customAwardsCard()}
-  <section class="card"><h3>Faces</h3><label class="nat"><input type="checkbox" data-faces ${state.settings.faces!==false?"checked":""}><span>Show pixel faces for players and managers</span></label><p class="muted">Each face is made from the player's nationality and changes a little with age. Change any player's face from their page.</p></section>
   <section class="card"><h3>Awards night</h3><label class="nat"><input type="checkbox" data-anight ${state.settings.awardsNight!==false?"checked":""}><span>Reveal the awards one by one when a season ends</span></label><p class="muted">You can replay any season's awards night from its review page.</p></section>
   <section class="card"><h3>Hidden potential</h3><label class="nat"><input type="checkbox" data-reveal ${state.settings.revealPot?"checked":""}><span>Show every player's exact potential</span></label><p class="muted">Off by default, so you only see a scout's estimate that narrows as players get older. Turning it on is the commissioner's peek behind the curtain.</p></section>
   <section class="card"><h3>Managers</h3><label class="nat"><input type="checkbox" data-sack ${state.settings.sackings!==false?"checked":""}><span>Boards can sack managers who fall well short two seasons running</span></label><p class="muted">You can also edit any manager, or sack one yourself, from their page.</p></section>
@@ -1569,7 +1498,7 @@ function poolEditor(d){
   return `<h2>Draft setup</h2><div class="banner"><div class="grow"><h2>Build the player pool</h2><p>Edit anyone before the opening draft. Clubs need ${T*squadTarget()} players in total, and the pool has ${d.pool.length}. The counts show players available against what the clubs need.</p><div class="needs">${cnt}</div></div><div class="bbtns"><button class="btn go" data-act="draft-start">Start the draft</button></div></div>
   <div class="toolbar">${POS.map(x=>`<button class="btn" data-act="pool-add" data-v="${x}">Add ${x}</button>`).join("")}<button class="btn" data-act="pool-paste">Paste names</button><button class="btn" data-act="pool-rename">New random names</button><button class="btn" data-act="pool-regen">Regenerate pool</button></div>
   <div class="chips" style="align-items:center">${["ALL",...POS].map(x=>`<button class="chip ${draftPos===x?"on":""}" data-act="dpos" data-v="${x}">${x==="ALL"?"All positions":x}</button>`).join("")}<input type="search" data-dq placeholder="Search name or nation" value="${esc(ps.dq||"")}" aria-label="Search the pool"></div>
-  <div class="card scroll"><table><thead><tr><th>Name</th><th>Pos</th><th>Nation</th><th class="r">Age</th><th>Ability</th><th>Exact</th><th></th></tr></thead><tbody>${list.map(p=>`<tr><td><span class="namecell">${faceImg(p)}${flag(p.nat)}<input type="text" data-pf="name" data-id="${p.id}" value="${esc(p.name)}" maxlength="40" aria-label="Player name"></span></td><td><select data-pf="pos" data-id="${p.id}" aria-label="Position">${POS.map(x=>`<option ${x===p.pos?"selected":""}>${x}</option>`).join("")}</select></td><td><select data-pf="nat" data-id="${p.id}" aria-label="Nationality">${NATIONS.map(n=>`<option value="${n.c}" ${p.nat===n.c?"selected":""}>${n.n}</option>`).join("")}</select></td><td class="r"><input type="number" min="15" max="45" data-pf="age" data-id="${p.id}" value="${p.age}" aria-label="Age"></td><td>${stars(p.rating,p.id)}</td><td><input type="number" min="20" max="99" data-pf="rating" data-id="${p.id}" value="${p.rating}" aria-label="Exact ability"></td><td><button class="btn sm danger" data-act="pool-remove" data-id="${p.id}" aria-label="Remove ${esc(p.name)}">Remove</button></td></tr>`).join("")||`<tr><td colspan="7" class="muted">No players match.</td></tr>`}</tbody></table></div>`;
+  <div class="card scroll"><table><thead><tr><th>Name</th><th>Pos</th><th>Nation</th><th class="r">Age</th><th>Ability</th><th>Exact</th><th></th></tr></thead><tbody>${list.map(p=>`<tr><td><span class="namecell">${flag(p.nat)}<input type="text" data-pf="name" data-id="${p.id}" value="${esc(p.name)}" maxlength="40" aria-label="Player name"></span></td><td><select data-pf="pos" data-id="${p.id}" aria-label="Position">${POS.map(x=>`<option ${x===p.pos?"selected":""}>${x}</option>`).join("")}</select></td><td><select data-pf="nat" data-id="${p.id}" aria-label="Nationality">${NATIONS.map(n=>`<option value="${n.c}" ${p.nat===n.c?"selected":""}>${n.n}</option>`).join("")}</select></td><td class="r"><input type="number" min="15" max="45" data-pf="age" data-id="${p.id}" value="${p.age}" aria-label="Age"></td><td>${stars(p.rating,p.id)}</td><td><input type="number" min="20" max="99" data-pf="rating" data-id="${p.id}" value="${p.rating}" aria-label="Exact ability"></td><td><button class="btn sm danger" data-act="pool-remove" data-id="${p.id}" aria-label="Remove ${esc(p.name)}">Remove</button></td></tr>`).join("")||`<tr><td colspan="7" class="muted">No players match.</td></tr>`}</tbody></table></div>`;
 }
 function poolPasteModal(){openModal(`<button class="btn sm x" data-act="close">Close</button><h2>Paste names into the pool</h2><p class="muted">One name per line. Names replace pool players in order, goalkeepers first. Extra lines become new players in random positions.</p><textarea id="pasteBox" rows="12" style="width:100%"></textarea><div class="toolbar"><button class="btn go" data-act="pool-paste-apply">Apply names</button></div>`)}
 function viewDraft(){
@@ -1581,7 +1510,7 @@ function viewDraft(){
     const lo=Math.max(0,d.pick-4),hi=Math.min(d.order.length,d.pick+(op?10:T));
     cur=`<div class="banner">${badge(t,64)}<div class="grow"><h2>${esc(t.name)} are on the clock</h2><p>${op?`Opening draft, round ${Math.floor(d.pick/T)+1} of ${d.rounds}. `:""}Pick ${d.pick+1} of ${d.order.length}. ${op?"Snake order, so it flips every round.":"The lowest finisher picks first."}</p><div class="needs" title="Players held against the standard squad. Red means a starting place is still empty.">${needs}</div></div><div class="bbtns"><button class="btn go" data-act="draft-auto">Auto-pick for ${esc(t.short)}</button>${op?`<button class="btn ghost" data-act="draft-auto-round">Auto-draft this round</button>`:""}<button class="btn ghost" data-act="draft-auto-all">Auto-draft the rest</button></div></div>
     <div class="grid2"><section class="card"><div class="phead" style="margin-bottom:8px"><h3 style="margin:0">${op?"Player pool":"Prospects"} <span class="muted" style="font-size:1rem;font-weight:500">${d.pool.length} left</span></h3><div class="chips" style="margin:0">${["ALL",...POS].map(x=>`<button class="chip ${draftPos===x?"on":""}" data-act="dpos" data-v="${x}">${x==="ALL"?"All":x}</button>`).join("")}</div></div>
-    <div class="scroll"><table><thead><tr><th>Name</th><th>Pos</th><th class="r">Age</th><th>Ability</th><th class="r">Potential</th><th class="r">Value</th><th></th></tr></thead><tbody>${pool.map(p=>`<tr><td><span class="namecell">${faceImg(p)}${flag(p.nat)}${esc(p.name)}</span>${traitTags(p)}</td><td>${p.pos}</td><td class="r num">${p.age}</td><td>${stars(p.rating)}</td><td class="r num">${potText(p,true)}</td><td class="r num">${pValue(p)}</td><td><button class="btn sm" data-act="draft-pick" data-id="${p.id}" aria-label="Draft ${esc(p.name)} to ${esc(t.name)}">Draft</button></td></tr>`).join("")}</tbody></table></div></section>
+    <div class="scroll"><table><thead><tr><th>Name</th><th>Pos</th><th class="r">Age</th><th>Ability</th><th class="r">Potential</th><th class="r">Value</th><th></th></tr></thead><tbody>${pool.map(p=>`<tr><td><span class="namecell">${flag(p.nat)}${esc(p.name)}</span>${traitTags(p)}</td><td>${p.pos}</td><td class="r num">${p.age}</td><td>${stars(p.rating)}</td><td class="r num">${potText(p,true)}</td><td class="r num">${pValue(p)}</td><td><button class="btn sm" data-act="draft-pick" data-id="${p.id}" aria-label="Draft ${esc(p.name)} to ${esc(t.name)}">Draft</button></td></tr>`).join("")}</tbody></table></div></section>
     <aside class="card"><h3 style="margin-top:0">${op?"Pick tracker":"Draft order"}</h3>${d.order.slice(lo,hi).map((id,j)=>{const i=lo+j,k=d.picks[i];return `<div class="fx ${i===d.pick?"onclock":""}" style="grid-template-columns:30px 1fr auto"><span class="num">${i+1}</span>${clubLabel(team(id),20)}<span class="${k?"":"muted"}">${k?`${esc(k.name)} <span class="muted">${k.pos}</span>`:i===d.pick?"On the clock":""}</span></div>`}).join("")}
     ${op?`<h3>Squads so far</h3>${state.teams.map(x=>`<div class="fx" style="grid-template-columns:1fr auto"><span>${clubLabel(x,20)}</span><span class="muted num">${POS.map(p=>`${p} ${posCount(x,p)}`).join(" &nbsp;")}</span></div>`).join("")}`:""}</aside></div>`}
   const tbl=h=>`<div class="scroll"><table><tbody>${h.picks.map(k=>{const p=pl(k.id);return `<tr class="click" data-act="player" data-id="${k.id}"><td class="num">${k.n}</td><td>${clubOr(k.team,k.teamName)}</td><td><span class="namecell">${p?flag(p.nat):""}${esc(k.name)}</span></td><td>${k.pos}</td><td class="muted">Drafted at ${k.rating}${p?`, now ${p.rating}${p.retired?(p.released?", released":", retired"):p.teamId!==k.team?`, now at ${esc(team(p.teamId).name)}`:""}`:""}</td></tr>`}).join("")}</tbody></table></div>`;
@@ -1598,7 +1527,7 @@ function viewTrades(){
   const side=k=>{const t=team(tb[k]),ch=tb["g"+k],o=tb[k==="a"?"b":"a"];
     return `<section class="card"><label class="f">Club<select data-tb="${k}">${state.teams.map(x=>`<option value="${x.id}" ${x.id===tb[k]?"selected":""} ${x.id===o?"disabled":""}>${esc(x.name)}</option>`).join("")}</select></label>
     <div class="clubhead" style="margin:12px 0">${badge(t,40)}<div><b>${esc(t.name)}</b><br><span class="muted">Gives ${ch.length} ${ch.length===1?"player":"players"}, value ${val(ch)}</span></div></div>
-    <div class="scroll"><table><thead><tr><th></th><th>Name</th><th>Pos</th><th class="r">Age</th><th>Ability</th><th class="r">Value</th></tr></thead><tbody>${t.players.map(pl).sort((x,y)=>POS.indexOf(x.pos)-POS.indexOf(y.pos)||y.rating-x.rating).map(p=>`<tr class="click ${ch.includes(p.id)?"sel":""}" data-act="tb-toggle" data-side="${k}" data-id="${p.id}"><td><input type="checkbox" tabindex="-1" ${ch.includes(p.id)?"checked":""} aria-label="Select ${esc(p.name)}"></td><td><span class="namecell">${faceImg(p)}${flag(p.nat)}${esc(p.name)}</span>${injTag(p)}${traitTags(p)}</td><td>${p.pos}</td><td class="r num">${p.age}</td><td>${stars(p.rating)}</td><td class="r num">${pValue(p)}</td></tr>`).join("")}</tbody></table></div></section>`};
+    <div class="scroll"><table><thead><tr><th></th><th>Name</th><th>Pos</th><th class="r">Age</th><th>Ability</th><th class="r">Value</th></tr></thead><tbody>${t.players.map(pl).sort((x,y)=>POS.indexOf(x.pos)-POS.indexOf(y.pos)||y.rating-x.rating).map(p=>`<tr class="click ${ch.includes(p.id)?"sel":""}" data-act="tb-toggle" data-side="${k}" data-id="${p.id}"><td><input type="checkbox" tabindex="-1" ${ch.includes(p.id)?"checked":""} aria-label="Select ${esc(p.name)}"></td><td><span class="namecell">${flag(p.nat)}${esc(p.name)}</span>${injTag(p)}${traitTags(p)}</td><td>${p.pos}</td><td class="r num">${p.age}</td><td>${stars(p.rating)}</td><td class="r num">${pValue(p)}</td></tr>`).join("")}</tbody></table></div></section>`};
   const lst=a=>a.map(x=>`${plink(x)} <span class="muted">${x.pos}</span>`).join(", ");
   const log=state.trades.length?[...state.trades].reverse().map(r=>`<div class="card" style="margin-bottom:10px"><div class="muted" style="font-size:.85rem">Season ${r.season}, ${esc(r.when)}${r.ai?"":", made by you"}</div><div class="fx" style="border:0"><span class="h">${clubOr(r.a.id,r.a.name)}<br>${lst(r.aGive)}</span><span class="vs">⇄</span><span>${clubOr(r.b.id,r.b.name)}<br>${lst(r.bGive)}</span></div></div>`).join(""):`<div class="empty">No trades yet. AI clubs trade at the end of each season and after the draft, or make one yourself above.</div>`;
   return `<h2>Trades</h2><div class="card" style="margin-bottom:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap"><span style="flex:1;min-width:200px">${verdict}</span><button class="btn" data-act="tb-clear">Clear</button><button class="btn go" data-act="tb-do" ${ready?"":"disabled"}>Complete trade</button></div>
@@ -1659,7 +1588,7 @@ function customAwardsCard(){
   ${L.some(c=>c.off)?`<p class="muted">Removed awards that were already won stay in the record books but are not given out any more.</p>`:""}
   <div class="toolbar"><button class="btn" data-act="ca-add">Add an award</button></div></section>`;
 }
-const APP_VERSION="2026.10.25-8";
+const APP_VERSION="2026.10.25-9";
 async function checkUpdates(){try{if(window.caches)for(const k of await caches.keys())await caches.delete(k);if(navigator.serviceWorker)for(const r of await navigator.serviceWorker.getRegistrations())await r.unregister()}catch(e){}location.reload()}
 let trophyTab="league";
 function trophyCard(){
@@ -1766,12 +1695,12 @@ function viewPlayer(id){
   const rows=[...p.career,...(p.retired?[]:[{season:state.season,team:t.name,...p.s,rating:p.rating,age:p.age,current:true}])],rg=ringsOf(p),aw=awardsOf(p),tot=statsFor(p,"all"),avg=avgOf(tot);
   const tile=(l,v)=>`<div class="tile"><span class="muted">${l}</span><b class="num">${v}</b></div>`;
   return `<button class="btn sm" data-act="back">‹ Back</button>
-  <div class="phero"><div class="pkit">${facesOn()?`${faceImg(p,80,"bigface")}${p.retired?"":`<button class="linkbtn" data-act="face-edit" style="font-size:.8rem">${faceEdit?"Close":"Edit face"}</button>`}`:t.kit?kitSvg(t.kit.home,true,64):""}</div><div class="pinfo"><h1 class="namecell" style="display:flex;margin:0">${flag(p.nat,32)}${esc(p.name)}</h1>
+  <div class="phero"><div class="pkit">${t.kit?kitSvg(t.kit.home,true,64):""}</div><div class="pinfo"><h1 class="namecell" style="display:flex;margin:0">${flag(p.nat,32)}${esc(p.name)}</h1>
    <p class="muted" style="margin:.4em 0">${NAT[p.nat]?NAT[p.nat].n+". ":""}${p.pos}, age ${p.age}. ${p.retired?`${p.released?"Released":"Retired"} after season ${p.retired}, last club ${esc(p.lastTeam)}.`:`<button class="linkbtn inl" data-act="club" data-id="${t.id}">${esc(t.name)}</button>`}${p.inj>0?` <b style="color:var(--loss)">Injured, out for ${p.inj} ${p.inj===1?"matchday":"matchdays"}.</b>`:""}</p>
    <p class="ptraits">${(p.tr||[]).map(k=>TRAITS[k]?`<span class="trt big" title="${esc(TRAITS[k].d)}">${TRAITS[k].n}${p.retired?"":`<button data-act="trait-del" data-id="${p.id}" data-v="${k}" aria-label="Remove ${TRAITS[k].n}">×</button>`}</span>`:"").join("")}${!p.retired&&(p.tr||[]).length<2?`<select data-trait-add="${p.id}" aria-label="Add a trait"><option value="">Add a trait</option>${Object.keys(TRAITS).filter(k=>traitOk(p,k,p.tr||[])).map(k=>`<option value="${k}">${TRAITS[k].n}</option>`).join("")}</select>`:""}</p>
    ${(p.tr||[]).length?`<p class="muted" style="margin:0 0 .4em;font-size:.88rem">${p.tr.map(k=>TRAITS[k]?`${TRAITS[k].n}: ${TRAITS[k].d}`:"").join(" ")}</p>`:""}
    <p style="margin:0">${stars(p.rating)}${p.retired?"":` <span class="muted" style="margin-left:6px">${potText(p)}</span>`}${p.mgr&&state.managers&&state.managers[p.mgr]?` <button class="linkbtn inl" data-act="mgr" data-id="${p.mgr}">Now a manager</button>`:""}${p.hof?` <span class="hoftag">Hall of Fame, class of season ${p.hof}</span>`:""}</p></div><div class="pbadge">${p.teamId&&team(p.teamId)?badge(team(p.teamId),76):""}</div></div>
-  ${faceEdit&&facesOn()&&!p.retired?faceEditor(p):""}${pTabs()}${pTab==="cab"?playerCabinet(p):`<div class="grid2 even" style="margin-bottom:16px"><section class="card"><h3 style="margin-top:0">Honours</h3>
+  ${pTabs()}${pTab==="cab"?playerCabinet(p):`<div class="grid2 even" style="margin-bottom:16px"><section class="card"><h3 style="margin-top:0">Honours</h3>
     <p style="margin:0 0 10px">${[pluralN(rg.length,"league title"),pluralN(cupMedalsOf(p).length,"cup win"),pluralN(aw.length,"award")].join(", ")}.</p>${rg.length?ringsHTML(rg,true):""}
     <div class="toolbar"><button class="btn sm" data-act="ptab" data-v="cab">Open the trophy cabinet</button></div>
     ${(p.ms||[]).length?`<p class="muted" style="margin:16px 0 6px">Milestones</p>${msHTML(p)}`:""}</section>
@@ -1782,11 +1711,11 @@ function viewPlayer(id){
 }
 function viewHof(){
   const next=Math.ceil((state.season)/3)*3,ballot=Object.values(state.retired).filter(p=>!p.hof).map(p=>({p,s:legacy(p)})).sort((a,b)=>b.s-a.s).slice(0,6);
-  const plaque=p=>{const tt=statsFor(p,"all");return `<button class="plaque" data-act="player" data-id="${p.id}"><span class="namecell">${faceImg(p,48)}${flag(p.nat,22)}<b>${esc(p.name)}</b></span><span class="muted">${p.pos}, ${esc(p.lastTeam||"")}. Seasons ${p.career[0]?p.career[0].season:"?"} to ${p.retired}</span><span class="num">${tt.apps} apps, ${tt.goals} goals, ${tt.assists} assists${p.pos==="GK"?`, ${tt.cs} clean sheets`:""}</span><span>${ringsHTML(ringsOf(p))} ${awardsHTML(awardsOf(p))}</span><span class="muted">Legacy ${legacy(p)}</span></button>`};
+  const plaque=p=>{const tt=statsFor(p,"all");return `<button class="plaque" data-act="player" data-id="${p.id}"><span class="namecell">${flag(p.nat,22)}<b>${esc(p.name)}</b></span><span class="muted">${p.pos}, ${esc(p.lastTeam||"")}. Seasons ${p.career[0]?p.career[0].season:"?"} to ${p.retired}</span><span class="num">${tt.apps} apps, ${tt.goals} goals, ${tt.assists} assists${p.pos==="GK"?`, ${tt.cs} clean sheets`:""}</span><span>${ringsHTML(ringsOf(p))} ${awardsHTML(awardsOf(p))}</span><span class="muted">Legacy ${legacy(p)}</span></button>`};
   const classes=[...state.hof].reverse();
   return `<h2>Hall of Fame</h2><div class="banner">${pxCtx()?`<img class="px" src="${pxTrophy("league")}" width="46" alt="">`:""}<div class="grow"><h2>${state.hof.reduce((a,c)=>a+c.ids.length,0)} inducted</h2><p>A new class is chosen after season ${next}. Retired players need ${hofBar()} legacy points, built from appearances, goals, assists, clean sheets, titles and awards. Up to two go in each time.</p></div></div>
   ${classes.length?classes.map(c=>`<div class="card hist"><h3 style="margin-top:0">Class of season ${c.season}</h3>${c.ids.length?`<div class="plaques">${c.ids.map(i=>pl(i)).filter(Boolean).map(plaque).join("")}</div>`:`<p class="muted">No retired player reached the bar this time.</p>`}</div>`).join(""):`<div class="empty">The first class is chosen after season ${next}.</div>`}
-  <h3>On the ballot</h3>${ballot.length?`<div class="card"><table><tbody>${ballot.map(x=>`<tr class="click" data-act="player" data-id="${x.p.id}"><td><span class="namecell">${faceImg(x.p)}${flag(x.p.nat)}${esc(x.p.name)}</span></td><td>${x.p.pos}</td><td class="muted">${esc(x.p.lastTeam||"")}</td><td class="r num"><b>${x.s}</b> <span class="muted">/ ${hofBar()}</span></td></tr>`).join("")}</tbody></table></div>`:`<div class="empty">No retired players yet.</div>`}`;
+  <h3>On the ballot</h3>${ballot.length?`<div class="card"><table><tbody>${ballot.map(x=>`<tr class="click" data-act="player" data-id="${x.p.id}"><td><span class="namecell">${flag(x.p.nat)}${esc(x.p.name)}</span></td><td>${x.p.pos}</td><td class="muted">${esc(x.p.lastTeam||"")}</td><td class="r num"><b>${x.s}</b> <span class="muted">/ ${hofBar()}</span></td></tr>`).join("")}</tbody></table></div>`:`<div class="empty">No retired players yet.</div>`}`;
 }
 const RING_OPTS={metal:[["gold","Gold"],["silver","Silver"],["rose","Rose gold"],["black","Black"]],stones:[["diamond","Diamond"],["club","Club colour"],["ruby","Ruby"],["sapphire","Sapphire"],["emerald","Emerald"]],centre:[["plate","Trophy"],["badge","Club badge"],["star","Star"]],panel:[["club","Club colour"],["metal","Metal"]]};
 function ringCard(){
@@ -1926,9 +1855,6 @@ document.addEventListener("click",async e=>{
     case "club":{closeModal();view="club:"+id;clubTab="squad";const rv=rivalOf(id);if(rv)h2h.b=rv.a===id?rv.b:rv.a;break}
     case "ctab":clubTab=v;break;
     case "ptab":pTab=v;break;
-    case "face-edit":faceEdit=!faceEdit;break;
-    case "face-rand":{const p=pl(id);if(p)p.face={s:randInt(0,5),c:randInt(0,5),h:randInt(0,7),f:randInt(0,3)};break}
-    case "face-reset":{const p=pl(id);if(p)delete p.face;break}
     case "check-updates":if(dirty)persist();checkUpdates();return;
     case "kside":kitSide=v;break;
     case "crest":team(id).crest[b.dataset.k]=v;persist();break;
@@ -1939,7 +1865,7 @@ document.addEventListener("click",async e=>{
     case "rand-kit":{const t=team(id);t.kit[kitSide]=randomKit(t.c1,t.c2)[kitSide];persist();break}
     case "rand-ground":{const t=team(id);const g=randomGround(t.name);g.name=t.ground.name;t.ground=g;persist();break}
     case "kit-badge":{const t=team(id),k=t.kit[kitSide];Object.assign(k,{a:t.c1,b:t.c2,sleeves:t.c1,trim:t.crest.c3||t.c2,shorts:t.c2,socks:t.c1});persist();break}
-    case "player":closeModal();if(!view.startsWith("player:"))prevView=view;view="player:"+id;faceEdit=false;break;
+    case "player":closeModal();if(!view.startsWith("player:"))prevView=view;view="player:"+id;break;
     case "back":view=prevView||"players";break;
     case "race":raceSeason=v;break;
     case "hl":hlTeam=hlTeam===id?null:id;break;
@@ -2008,8 +1934,6 @@ document.addEventListener("change",e=>{
   if(el.dataset.themeK){persist();render();return}
   if(el.dataset.mf){const m=state.managers[el.dataset.id],k=el.dataset.mf;if(m){if(k==="name")m.name=el.value.trim()||m.name;else if(k==="style")m.style=el.value;else m[k]=clamp(+el.value,1,5)}persist();render();return}
   if(el.dataset.ca){const c=(state.settings.customAwards||[]).find(x=>x.id===el.dataset.id);if(c){const k=el.dataset.ca;c[k]=el.value.trim()||(k==="name"?c.name:"");if(k==="name"&&!c.short)c.short=c.name.slice(0,8)}persist();render();return}
-  if(el.dataset.faces!==undefined){state.settings.faces=el.checked;persist();render();return}
-  if(el.dataset.face){const p=pl(el.dataset.id);if(p){p.face={...(p.face||{}),[el.dataset.face]:+el.value}}persist();render();return}
   if(el.dataset.anight!==undefined){state.settings.awardsNight=el.checked;persist();render();return}
   if(el.dataset.reveal!==undefined){state.settings.revealPot=el.checked;persist();render();return}
   if(el.dataset.sack!==undefined){state.settings.sackings=el.checked;persist();render();return}
