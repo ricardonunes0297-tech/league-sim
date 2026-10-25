@@ -232,6 +232,18 @@ input[type=search]{background:var(--surface);border:1px solid var(--line);border
 .rec:hover{border-color:var(--line)}
 .rec .v{font-family:var(--hd);font-size:1.6rem;font-weight:700;line-height:1}
 .rec .who{font-weight:600}
+.trib{display:flex;gap:12px;align-items:flex-start;text-align:left;background:color-mix(in srgb,currentColor 6%,transparent);border:1px solid color-mix(in srgb,currentColor 18%,transparent);border-radius:10px;padding:12px 14px;margin-bottom:8px}
+.trib p{margin:.25em 0}
+.anfw{width:100%;max-height:52vh;overflow:auto}.anfw .linkbtn{display:none}.anfw .muted{color:inherit;opacity:.75}
+.slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr));gap:10px}
+.slot{display:flex;gap:12px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.slot.cur{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)}
+.slot .grow{display:flex;flex-direction:column;gap:2px;min-width:0}.slot .eratag{align-self:flex-start;margin:2px 0}
+.slotn{font-family:var(--hd);font-size:1.2rem;overflow-wrap:anywhere}
+.slot .row{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.tribn{display:block;font-family:var(--hd);font-size:1.25rem;margin:.1em 0 .2em}
+.era{display:flex;gap:12px;align-items:flex-start;background:var(--paper);border-left:4px solid var(--ec);border-radius:8px;padding:10px 12px;margin-bottom:8px}
+.erahd{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.erahd b{font-family:var(--hd);font-size:1.15rem}
+.eratag{font:700 .7rem/1 var(--hd);text-transform:uppercase;letter-spacing:.04em;padding:3px 6px;border-radius:4px;background:var(--gold);color:#1B1712}.eratag.live{background:var(--win,#2E8B57);color:#fff}
 .linkbtn{background:none;border:0;padding:0;font-weight:700;font-family:var(--hd);font-size:1.05rem;cursor:pointer;text-decoration:underline;text-underline-offset:2px;display:block;text-align:left}
 .editor{display:grid;grid-template-columns:minmax(220px,340px) minmax(0,1fr);gap:20px;align-items:start}
 .pv{display:grid;place-items:center;min-height:260px;position:sticky;top:20px;gap:10px}
@@ -475,33 +487,39 @@ function poisson(l){const L=Math.exp(-l);let k=0,p=1;do{k++;p*=rand()}while(p>L)
 const tierRating=t=>[0,45,55,65,75,85][t]+randInt(-4,4);
 const starsOf=r=>r<50?1:r<60?2:r<70?3:r<80?4:5;
 const randTier=w=>{w=w||(state&&state.settings&&state.settings.genW)||DEFAULT_SETTINGS.genW;if(!w.some(x=>x>0))w=DEFAULT_SETTINGS.genW;return wpick([1,2,3,4,5],t=>w[t-1])};
-const blank=()=>({apps:0,goals:0,assists:0,cs:0,rsum:0,rapps:0,capps:0,cgoals:0,ht:0});
+const blank=()=>({apps:0,goals:0,assists:0,cs:0,rsum:0,rapps:0,capps:0,cgoals:0,cas:0,ccs:0,ht:0});
+// League stats live in apps/goals/assists/cs, cup stats in capps/cgoals/cas/ccs. cv() reads one competition ("lg", "cup") or both ("all").
+const COMP_K={apps:["apps","capps"],goals:["goals","cgoals"],assists:["assists","cas"],cs:["cs","ccs"]};
+const cv=(st,k,c="all")=>{const m=COMP_K[k];if(!m)return st[k]||0;const l=st[m[0]]||0,u=st[m[1]]||0;return c==="lg"?l:c==="cup"?u:l+u};
+const compStats=(st,c)=>({...st,apps:cv(st,"apps",c),goals:cv(st,"goals",c),assists:cv(st,"assists",c),cs:cv(st,"cs",c)});
+const hasCup=()=>cupOn()||state.history.some(h=>h.cup);
+const compChips=(cur,act)=>hasCup()?`<div class="chips" style="margin:0 0 10px">${[["all","All competitions"],["lg","League"],["cup","Cup"]].map(([k,l])=>`<button class="chip ${cur===k?"on":""}" data-act="${act}" data-v="${k}">${l}</button>`).join("")}</div>`:"";
 const shortOf=n=>(n.replace(/[^A-Za-z ]/g,"").split(" ")[0]||"CLB").slice(0,3).toUpperCase();
 function teamNameGen(used){for(let i=0;i<40;i++){const n=pick(PLACES)+" "+pick(SUFFIX);if(!used.includes(n))return n}return "Club "+randInt(10,99)}
 
 /* ---------- state ---------- */
-let state=null,view="table",fileHandle=null,dirty=false,setup=null;
-let ps={sort:"goals",dir:-1,scope:"season",pos:"ALL",lim:50};
+let state=null,view="table",dirty=false,setup=null;
+let ps={sort:"goals",dir:-1,scope:"season",pos:"ALL",lim:50,comp:"all"},pComp="all";
 const team=id=>state.teams.find(t=>t.id===id);
 const pl=id=>state.players[id]||(state.retired&&state.retired[id])||(state.draft&&state.draft.pool.find(p=>p.id===id));
 /* Saves store career rows and archived results as short arrays. In memory they stay as objects. */
-const CAREER_KEYS=["season","team","teamId","teamIds","apps","goals","assists","cs","rsum","rapps","rating","age","capps","cgoals","ht"],RESULT_KEYS=["s","r","h","a","hg","ag","g","c"];
+const CAREER_KEYS=["season","team","teamId","teamIds","apps","goals","assists","cs","rsum","rapps","rating","age","capps","cgoals","ht","cas","ccs"],RESULT_KEYS=["s","r","h","a","hg","ag","g","c"];
 function packState(st){
   const r1=x=>Math.round((x||0)*10)/10;
-  const pc=c=>Object.keys(c).every(k=>CAREER_KEYS.includes(k))?[c.season,c.team,c.teamId,c.teamIds&&c.teamIds.length===1&&c.teamIds[0]===c.teamId?0:(c.teamIds||[]),c.apps,c.goals,c.assists,c.cs,r1(c.rsum),c.rapps||0,c.rating,c.age,c.capps||0,c.cgoals||0,c.ht||0]:c;
+  const pc=c=>Object.keys(c).every(k=>CAREER_KEYS.includes(k))?[c.season,c.team,c.teamId,c.teamIds&&c.teamIds.length===1&&c.teamIds[0]===c.teamId?0:(c.teamIds||[]),c.apps,c.goals,c.assists,c.cs,r1(c.rsum),c.rapps||0,c.rating,c.age,c.capps||0,c.cgoals||0,c.ht||0,c.cas||0,c.ccs||0]:c;
   const pm=o=>{const out={};for(const k in o||{})out[k]={...o[k],career:(o[k].career||[]).map(pc)};return out};
   const pr=m=>Object.keys(m).every(k=>RESULT_KEYS.includes(k))?[m.s,m.r,m.h,m.a,m.hg,m.ag,(m.g||[]).map(([p,t])=>(t===m.a?"~":"")+p).join(","),...(m.c?[1]:[])]:m;
   return{...st,packed:1,players:pm(st.players),retired:pm(st.retired),results:(st.results||[]).map(pr)};
 }
 function unpackState(d){
   if(!d.packed)return d;
-  const uc=c=>Array.isArray(c)?{season:c[0],team:c[1],teamId:c[2],teamIds:c[3]||[c[2]],apps:c[4],goals:c[5],assists:c[6],cs:c[7],rsum:c[8],rapps:c[9],rating:c[10],age:c[11],capps:c[12]||0,cgoals:c[13]||0,ht:c[14]||0}:c;
+  const uc=c=>Array.isArray(c)?{season:c[0],team:c[1],teamId:c[2],teamIds:c[3]||[c[2]],apps:c[4],goals:c[5],assists:c[6],cs:c[7],rsum:c[8],rapps:c[9],rating:c[10],age:c[11],capps:c[12]||0,cgoals:c[13]||0,ht:c[14]||0,cas:c[15]||0,ccs:c[16]||0}:c;
   [...Object.values(d.players||{}),...Object.values(d.retired||{})].forEach(p=>{p.career=(p.career||[]).map(uc)});
   d.results=(d.results||[]).map(m=>Array.isArray(m)?{s:m[0],r:m[1],h:m[2],a:m[3],hg:m[4],ag:m[5],g:m[6]?m[6].split(",").map(x=>x[0]==="~"?[x.slice(1),m[3]]:[x,m[2]]):[],...(m[7]?{c:1}:{})}:m);
   delete d.packed;return d;
 }
 const saveText=()=>JSON.stringify(packState(state));
-const migrate=d=>{unpackState(d);d.retired=d.retired||{};(d.teams||[]).forEach(t=>{t.crest=t.crest||{shape:"shield",pattern:"plain",emblem:"none",text:"initials",c3:t.c2};t.kit=t.kit||randomKit(t.c1,t.c2);t.ground=t.ground||randomGround(t.name)});d.trades=d.trades||[];d.draftHistory=d.draftHistory||[];const S0=JSON.parse(JSON.stringify(DEFAULT_SETTINGS));d.settings={...S0,...(d.settings||{})};d.settings.theme={...S0.theme,...(d.settings.theme||{})};d.settings.ring={...S0.ring,...(d.settings.ring||{})};d.settings.cup={...S0.cup,...(d.settings.cup||{})};d.hof=d.hof||[];d.results=d.results||[];[...Object.values(d.players||{}),...Object.values(d.retired||{})].forEach(p=>{p.nat=p.nat||guessNat(p.name);p.inj=p.inj||0;p.awards=p.awards||[]});if(d.draft===undefined)d.draft=null;[...Object.values(d.players||{}),...(d.draft&&d.draft.pool||[])].forEach(p=>{if(!p.ms&&p.career){const t=statsFor(p,"all"),tot={goals:t.goals+(t.cgoals||0),apps:t.apps+(t.capps||0),assists:t.assists,cs:t.cs};p.ms=[];for(const k in MILESTONES)for(const n of MILESTONES[k])if(tot[k]>=n)p.ms.push({k,n,s:null})}if(!p.tr){p.tr=rollTraits(p);d.__traitsAdded=true}if(p.pot===undefined){rollPot(p);d.__traitsAdded=true}});Object.values(d.players||{}).forEach(p=>{p.moves=p.moves||[];p.seasonTeams=p.seasonTeams||[p.teamId]});return d};
+const migrate=d=>{unpackState(d);d.retired=d.retired||{};(d.teams||[]).forEach(t=>{t.crest=t.crest||{shape:"shield",pattern:"plain",emblem:"none",text:"initials",c3:t.c2};t.kit=t.kit||randomKit(t.c1,t.c2);t.ground=t.ground||randomGround(t.name)});d.trades=d.trades||[];d.draftHistory=d.draftHistory||[];const S0=JSON.parse(JSON.stringify(DEFAULT_SETTINGS));d.settings={...S0,...(d.settings||{})};d.settings.theme={...S0.theme,...(d.settings.theme||{})};d.settings.ring={...S0.ring,...(d.settings.ring||{})};d.settings.cup={...S0.cup,...(d.settings.cup||{})};d.hof=d.hof||[];d.results=d.results||[];[...Object.values(d.players||{}),...Object.values(d.retired||{})].forEach(p=>{p.nat=p.nat||guessNat(p.name);p.inj=p.inj||0;p.awards=p.awards||[]});if(d.draft===undefined)d.draft=null;[...Object.values(d.players||{}),...(d.draft&&d.draft.pool||[])].forEach(p=>{if(!p.ms&&p.career){const t=statsFor(p,"all"),tot={goals:cv(t,"goals"),apps:cv(t,"apps"),assists:cv(t,"assists"),cs:cv(t,"cs")};p.ms=[];for(const k in MILESTONES)for(const n of MILESTONES[k])if(tot[k]>=n)p.ms.push({k,n,s:null})}if(!p.tr){p.tr=rollTraits(p);d.__traitsAdded=true}if(p.pot===undefined){rollPot(p);d.__traitsAdded=true}});Object.values(d.players||{}).forEach(p=>{p.moves=p.moves||[];p.seasonTeams=p.seasonTeams||[p.teamId]});return d};
 let clubTab="squad",kitSide="home",_bid=0;
 const pname=id=>pl(id)?pl(id).name:"Unknown";
 
@@ -512,7 +530,7 @@ function roundRobin(ids){let t=[...ids];if(t.length%2)t.push(null);const n=t.len
 function makeFixtures(){const rr=roundRobin(shuffle(state.teams.map(t=>t.id)));const back=rr.map(r=>r.map(([h,a])=>[a,h]));return[...rr,...back].map(r=>r.map(([h,a])=>({h,a,hg:0,ag:0,played:false,ev:[]})))}
 const seasonDone=()=>state.round>=state.fixtures.length;
 
-function persist(){dirty=true;try{localStorage.setItem("leaguesim-backup",saveText())}catch(e){}}
+function persist(){dirty=true;try{localStorage.setItem("leaguesim-backup",saveText())}catch(e){}autosaveSoon()}
 
 /* ---------- simulation ---------- */
 const eff=x=>x.p.rating-(x.p.pos===x.role?0:8)+(_bigGame&&hasT(x.p,"big")?5:0);
@@ -622,7 +640,7 @@ function endSeason(){
   }
   for(const p of all){
     const RA=state.settings.retireAge+(hasT(p,"evergreen")?3:0);if(p.age>=RA&&rand()<(p.age-RA+1)*.22){
-      const tot=p.career.reduce((a,c)=>({apps:a.apps+c.apps,goals:a.goals+c.goals,assists:a.assists+c.assists}),{apps:0,goals:0,assists:0});
+      const tot=p.career.reduce((a,c)=>({apps:a.apps+cv(c,"apps"),goals:a.goals+cv(c,"goals"),assists:a.assists+cv(c,"assists")}),{apps:0,goals:0,assists:0});
       const t=team(p.teamId);
       h.retired.push({id:p.id,name:p.name,pos:p.pos,team:t.name,age:p.age,...tot});
       t.players=t.players.filter(id=>id!==p.id);delete state.players[p.id];
@@ -654,7 +672,7 @@ function computeTable(upto){
 }
 const titles=id=>state.history.filter(h=>h.champion.id===id).map(h=>h.season);
 const avgRating=t=>{const r=t.players.map(pl).filter(Boolean).map(p=>p.rating);return r.length?Math.round(r.reduce((a,b)=>a+b,0)/r.length):0};
-function statsFor(p,scope){if(scope==="season")return p.s;return p.career.reduce((a,c)=>({apps:a.apps+c.apps,goals:a.goals+c.goals,assists:a.assists+c.assists,cs:a.cs+c.cs,rsum:(a.rsum||0)+(c.rsum||0),rapps:(a.rapps||0)+(c.rapps||0),capps:(a.capps||0)+(c.capps||0),cgoals:(a.cgoals||0)+(c.cgoals||0),ht:(a.ht||0)+(c.ht||0)}),{...p.s})}
+function statsFor(p,scope){if(scope==="season")return p.s;return p.career.reduce((a,c)=>({apps:a.apps+c.apps,goals:a.goals+c.goals,assists:a.assists+c.assists,cs:a.cs+c.cs,rsum:(a.rsum||0)+(c.rsum||0),rapps:(a.rapps||0)+(c.rapps||0),capps:(a.capps||0)+(c.capps||0),cgoals:(a.cgoals||0)+(c.cgoals||0),cas:(a.cas||0)+(c.cas||0),ccs:(a.ccs||0)+(c.ccs||0),ht:(a.ht||0)+(c.ht||0)}),{...p.s})}
 
 /* ---------- small renderers ---------- */
 const trophySvg=sz=>pxOn()?`<img class="px" src="${pxTrophy("league",true)}" width="${sz<30?23:sz<56?46:69}" alt="">`:`<svg width="${Math.round(sz*.8)}" height="${sz}" viewBox="0 0 32 40" aria-hidden="true"><path d="M8.5 7 C2 7 1.5 17 10 19.5 M23.5 7 C30 7 30.5 17 22 19.5" fill="none" stroke="url(#gCup)" stroke-width="2.4" stroke-linecap="round"/><path d="M7.5 4 H24.5 V11.5 C24.5 18.5 20.5 23 16 23 C11.5 23 7.5 18.5 7.5 11.5 Z" fill="url(#gCup)" stroke="#7A520A" stroke-width=".6"/><rect x="6.5" y="2.6" width="19" height="2.6" rx="1.2" fill="url(#gCupH)" stroke="#7A520A" stroke-width=".5"/><path d="M14.3 23 H17.7 L18.6 28.5 H13.4 Z" fill="url(#gCup)"/><rect x="11.5" y="28" width="9" height="2.2" rx=".8" fill="url(#gCupH)"/><path d="M9.5 31 H22.5 L23.5 38.5 H8.5 Z" fill="#2A2420"/><rect x="9.2" y="33.4" width="13.6" height="1.6" fill="url(#gCup)"/><path d="M11 6.5 C11 13 12 17.5 14.2 20.5" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="1.2" stroke-linecap="round"/></svg>`;
@@ -666,19 +684,98 @@ function ringsHTML(list,big){if(!list.length)return "";const sz=(state&&state.se
 const injTag=p=>p.inj>0?`<span class="injtag" title="Injured, out for ${p.inj} ${p.inj===1?"matchday":"matchdays"}">+${p.inj}</span>`:"";
 const everyone=()=>[...Object.values(state.players),...Object.values(state.retired||{})];
 const whoTag=p=>p.retired?`${p.released?"Released":"Retired"}, ${esc(p.lastTeam)}`:esc(team(p.teamId).name);
-function recordsHTML(){
-  const all=everyone(),car=all.map(p=>({p,st:statsFor(p,"all"),rg:ringsOf(p).length}));
-  const seas=all.flatMap(p=>[...p.career.map(c=>({p,c})),...(p.retired?[]:[{p,c:{...p.s,season:state.season}}])]);
-  const best=k=>car.filter(x=>x.st[k]>0).sort((a,b)=>b.st[k]-a.st[k])[0];
-  const bestS=k=>seas.filter(x=>x.c[k]>0).sort((a,b)=>b.c[k]-a.c[k])[0];
-  const mr=car.filter(x=>x.rg>0).sort((a,b)=>b.rg-a.rg)[0];
-  const items=[["Most career goals",best("goals"),x=>x.st.goals],["Most career assists",best("assists"),x=>x.st.assists],["Most appearances",best("apps"),x=>x.st.apps],["Most clean sheets",best("cs"),x=>x.st.cs],
-    ["Most goals in a season",bestS("goals"),x=>`${x.c.goals}<small class="muted"> in season ${x.c.season}</small>`],["Most assists in a season",bestS("assists"),x=>`${x.c.assists}<small class="muted"> in season ${x.c.season}</small>`],["Most league titles",mr,x=>x.rg],["Most MVP awards",car.map(x=>({...x,m:(x.p.awards||[]).filter(a=>a.type==="mvp").length})).filter(x=>x.m).sort((a,b)=>b.m-a.m)[0],x=>x.m],["Most hat-tricks",best("ht"),x=>x.st.ht],["Most hat-tricks in a season",bestS("ht"),x=>`${x.c.ht}<small class="muted"> in season ${x.c.season}</small>`],
-    ["Longest scoring run",all.filter(p=>p.skBest).sort((a,b)=>b.skBest.n-a.skBest.n).map(p=>({p}))[0],x=>`${x.p.skBest.n}<small class="muted"> games, season ${x.p.skBest.s}</small>`],
-    ["Most team of the season picks",all.filter(p=>(p.tots||[]).length).sort((a,b)=>b.tots.length-a.tots.length).map(p=>({p}))[0],x=>x.p.tots.length],["Best career average",car.filter(x=>(x.st.rapps||0)>=20).sort((a,b)=>avgOf(b.st)-avgOf(a.st))[0],x=>fmtAvg(avgOf(x.st))]].filter(i=>i[1]);
-  if(!items.length)return "";
-  return `<div class="card" style="margin-bottom:18px"><h3 style="margin-top:0">Records</h3><p class="muted" style="margin-top:-.4em">Includes retired players and the season in progress.</p><div class="records">${items.map(([l,x,f])=>`<button class="rec" data-act="player" data-id="${x.p.id}"><span class="muted">${l}</span><div class="v">${f(x)}</div><div class="who">${esc(x.p.name)}</div><span class="muted">${whoTag(x.p)}</span></button>`).join("")}</div></div>`;
+/* ---------- records ---------- */
+let tblTab="table",recComp="all";
+// Every player season, including the one in progress
+const seasonRows=()=>everyone().flatMap(p=>[...p.career.map(c=>({p,c})),...(p.retired?[]:[{p,c:{...p.s,season:state.season,now:1}}])]);
+// Finished league seasons as table rows (the current one once it is complete)
+const clubSeasons=()=>[...state.history.flatMap(h=>h.table.map((r,i)=>({...r,season:h.season,pos:i+1}))),...(seasonDone()?computeTable().map((r,i)=>({...r,season:state.season,pos:i+1})):[])];
+function allMatches(){const out=[...(state.results||[])];state.fixtures.forEach((r,ri)=>r.forEach(f=>{if(f.played)out.push({s:state.season,r:ri+1,h:f.h,a:f.a,hg:f.hg,ag:f.ag})}));
+  if(state.cup&&state.cup.season===state.season)state.cup.rounds.forEach((r,k)=>r.ties.forEach(f=>{if(f.played)out.push({s:state.season,r:k+1,c:1,h:f.h,a:f.a,hg:f.hg,ag:f.ag})}));return out}
+const tname=(id,fb)=>team(id)?team(id).name:fb||"";
+function recTile(l,v,who,sub,act,id){return `<button class="rec" ${act?`data-act="${act}" data-id="${id}"`:""}><span class="muted">${l}</span><div class="v">${v}</div><div class="who">${esc(who)}</div><span class="muted">${sub}</span></button>`}
+const topBy=(list,f)=>list.map(x=>({x,v:f(x)})).filter(o=>o.v>0).sort((a,b)=>b.v-a.v);
+function viewRecords(){
+  const C=recComp,cl=C==="lg"?"League":C==="cup"?"Cup":"All competitions",cups=hasCup();
+  const car=everyone().map(p=>({p,st:statsFor(p,"all")})),seas=seasonRows(),cs=clubSeasons(),ms=allMatches(),lg=ms.filter(m=>!m.c);
+  const sub=s=>`<small class="muted"> in season ${s}</small>`;
+  // club records, league only apart from the cup count
+  const club=[];
+  const cRec=(l,arr,val,suffix)=>{if(arr[0])club.push(recTile(l,val(arr[0]),tname(arr[0].id,arr[0].name),`Season ${arr[0].season}${suffix?suffix(arr[0]):""}`,"club",arr[0].id))};
+  cRec("Most points in a season",[...cs].sort((a,b)=>b.pts-a.pts),r=>r.pts,r=>`, ${ordinal(r.pos)}`);
+  cRec("Fewest points in a season",[...cs].sort((a,b)=>a.pts-b.pts),r=>r.pts,r=>`, ${ordinal(r.pos)}`);
+  cRec("Most wins in a season",[...cs].sort((a,b)=>b.w-a.w),r=>r.w);
+  cRec("Most goals in a season",[...cs].sort((a,b)=>b.gf-a.gf),r=>r.gf);
+  cRec("Fewest conceded in a season",[...cs].sort((a,b)=>a.ga-b.ga),r=>r.ga);
+  cRec("Best goal difference",[...cs].sort((a,b)=>(b.gf-b.ga)-(a.gf-a.ga)),r=>(r.gf-r.ga>0?"+":"")+(r.gf-r.ga));
+  const mline=m=>`${tname(m.h)} ${m.hg}-${m.ag} ${tname(m.a)}, season ${m.s}${m.c?", cup":""}`;
+  const bw=[...ms].sort((a,b)=>Math.abs(b.hg-b.ag)-Math.abs(a.hg-a.ag)||(b.hg+b.ag)-(a.hg+a.ag))[0];
+  if(bw&&bw.hg!==bw.ag){const w=bw.hg>bw.ag?bw.h:bw.a;club.push(recTile("Biggest win",`${Math.max(bw.hg,bw.ag)}-${Math.min(bw.hg,bw.ag)}`,tname(w),esc(mline(bw)),"club",w))}
+  const hs=[...ms].sort((a,b)=>(b.hg+b.ag)-(a.hg+a.ag))[0];if(hs&&hs.hg+hs.ag>0)club.push(recTile("Most goals in a game",hs.hg+hs.ag,`${tname(hs.h)} v ${tname(hs.a)}`,esc(mline(hs)),"club",hs.h));
+  const runs=clubRuns();[["Longest winning run","w"],["Longest unbeaten run","u"],["Longest losing run","l"]].forEach(([l,k])=>{const b=Object.entries(runs).filter(([id,o])=>team(id)&&o[k].n>1).sort((a,b)=>b[1][k].n-a[1][k].n)[0];if(b){const o=b[1][k];club.push(recTile(l,`${o.n}<small class="muted"> games</small>`,tname(b[0]),o.s0===o.s1?`Season ${o.s0}`:`Seasons ${o.s0} to ${o.s1}`,"club",b[0]))}});
+  const tt=topBy(state.teams,t=>titles(t.id).length)[0];if(tt)club.push(recTile("Most league titles",tt.v,tt.x.name,"","club",tt.x.id));
+  if(cups){const tc=topBy(state.teams,t=>cupsOf(t.id).length)[0];if(tc)club.push(recTile(`Most ${esc(cupName())} wins`,tc.v,tc.x.name,"","club",tc.x.id))}
+  const er=allEras().sort((a,b)=>b.titles.length-a.titles.length||a.to-a.from-(b.to-b.from))[0];if(er)club.push(recTile("Greatest dynasty",`${er.titles.length}<small class="muted"> titles</small>`,tname(er.tid),`${esc(er.name)}, seasons ${er.from} to ${er.to}`,"club",er.tid));
+  // player records for the chosen competition
+  const pRec=[],pT=(l,o,v,s)=>{if(o)pRec.push(recTile(l,v,o.x.p.name,s,"player",o.x.p.id))};
+  const sR=[],sT=(l,o,v)=>{if(o)sR.push(recTile(l,`${v}${sub(o.x.c.season)}`,o.x.p.name,`${o.x.c.now?"Season in progress, ":""}${whoTag(o.x.p)}`,"player",o.x.p.id))};
+  [["Most goals","goals"],["Most assists","assists"],["Most appearances","apps"],["Most clean sheets","cs"]].forEach(([l,k])=>{const o=topBy(car,x=>cv(x.st,k,C))[0];pT(l,o,o&&o.v,o?whoTag(o.x.p):"")});
+  {const o=topBy(car,x=>cv(x.st,"goals",C)+cv(x.st,"assists",C))[0];pT("Most goals and assists",o,o&&o.v,o?whoTag(o.x.p):"")}
+  [["Most goals in a season","goals"],["Most assists in a season","assists"],["Most clean sheets in a season","cs"]].forEach(([l,k])=>{const o=topBy(seas,x=>cv(x.c,k,C))[0];sT(l,o,o&&o.v)});
+  {const o=topBy(seas,x=>cv(x.c,"goals",C)+cv(x.c,"assists",C))[0];sT("Most goals and assists in a season",o,o&&o.v)}
+  if(C!=="cup"){
+    const reg=Math.max(4,Math.round(state.fixtures.length*.6));
+    {const o=topBy(seas.filter(x=>(x.c.rapps||0)>=reg),x=>avgOf(x.c))[0];sT("Best average in a season",o,o&&fmtAvg(o.v))}
+    if(C==="all"){const o=topBy(seas,x=>x.c.ht||0)[0];sT("Most hat-tricks in a season",o,o&&o.v)}
+    {const o=topBy(car.filter(x=>(x.st.rapps||0)>=20),x=>avgOf(x.st))[0];pT("Best career average",o,o&&fmtAvg(o.v),o?whoTag(o.x.p):"")}
+  }
+  if(C==="all"){
+    const ex=(l,f,fmt)=>{const o=topBy(car,f)[0];pT(l,o,o&&(fmt?fmt(o):o.v),o?whoTag(o.x.p):"")};
+    ex("Most hat-tricks",x=>x.st.ht||0);ex("Most league titles",x=>ringsOf(x.p).length);if(cups)ex(`Most ${esc(cupName())} wins`,x=>cupMedalsOf(x.p).length);
+    ex("Most awards",x=>(x.p.awards||[]).length);ex("Most MVP awards",x=>(x.p.awards||[]).filter(a=>a.type==="mvp").length);ex("Most team of the season picks",x=>(x.p.tots||[]).length);
+    ex("Longest scoring run",x=>x.p.skBest?x.p.skBest.n:0,o=>`${o.v}<small class="muted"> games, season ${o.x.p.skBest.s}</small>`);
+  }
+  // leaderboards
+  const board=(title,rows,val,cols)=>`<section class="card"><h3 style="margin-top:0">${title}</h3>${rows.length?`<table><tbody>${rows.map((r,i)=>`<tr class="click" data-act="${r.act||"player"}" data-id="${r.id}"><td class="muted num">${i+1}</td><td><span class="namecell">${r.flag||""}${esc(r.name)}</span></td><td class="muted">${r.sub}</td><td class="r num"><b>${val(r)}</b></td></tr>`).join("")}</tbody></table>`:`<p class="muted">Nothing yet.</p>`}</section>`;
+  const pRows=(arr,f,sb)=>topBy(arr,f).slice(0,10).map(o=>({id:o.x.p.id,name:o.x.p.name,flag:flag(o.x.p.nat),sub:sb(o.x),v:o.v}));
+  const v=r=>r.v;
+  const boards=[board(`All time top scorers`,pRows(car,x=>cv(x.st,"goals",C),x=>whoTag(x.p)),v),board(`All time top assists`,pRows(car,x=>cv(x.st,"assists",C),x=>whoTag(x.p)),v),
+    board(`Most goals in a season`,pRows(seas,x=>cv(x.c,"goals",C),x=>`Season ${x.c.season}${x.c.now?" (now)":""}`),v),board(`Most assists in a season`,pRows(seas,x=>cv(x.c,"assists",C),x=>`Season ${x.c.season}${x.c.now?" (now)":""}`),v),
+    board(`Most points in a season`,[...cs].sort((a,b)=>b.pts-a.pts||(b.gf-b.ga)-(a.gf-a.ga)).slice(0,10).map(r=>({act:"club",id:r.id,name:tname(r.id,r.name),flag:team(r.id)?badge(team(r.id),18):"",sub:`Season ${r.season}, ${ordinal(r.pos)}`,v:r.pts})),v,1)];
+  return `${tableTabs()}<div class="phead"><h2 style="margin:0">Records</h2></div><p class="muted">Includes retired players. Player records count ${C==="all"?"league and cup games together":C==="lg"?"league games only":"cup games only"}. Club records are from the league${cups?", apart from the biggest wins and cup counts":""}.</p>
+  ${compChips(C,"rec-comp")}
+  ${club.length?`<h3>Clubs</h3><div class="records">${club.join("")}</div>`:""}
+  ${pRec.length?`<h3>Players, all time <small class="muted">${cl}</small></h3><div class="records">${pRec.join("")}</div>`:""}
+  ${sR.length?`<h3>Players, single season <small class="muted">${cl}</small></h3><div class="records">${sR.join("")}</div>`:""}
+  ${pRec.length||club.length?`<h3>Leaderboards</h3><div class="grid2 even">${boards.join("")}</div>`:`<div class="empty">Play some matches to start setting records.</div>`}`;
 }
+/* ---------- eras and dynasties ---------- */
+// A club's titles grouped into runs where no more than one season passes without a title. Three or more titles in a run make an era.
+const surname=n=>String(n||"").trim().split(/\s+/).pop();
+function erasOf(t){
+  const ts=titles(t.id).sort((a,b)=>a-b),runs=[];let cur=[];
+  ts.forEach(s=>{if(cur.length&&s-cur[cur.length-1]>2){runs.push(cur);cur=[]}cur.push(s)});if(cur.length)runs.push(cur);
+  const last=state.history.length?state.history[state.history.length-1].season:0;
+  return runs.filter(r=>r.length>=3).map(r=>{
+    const from=r[0],to=r[r.length-1],inR=s=>s>=from&&s<=to,cups=cupsOf(t.id).filter(inR),doubles=r.filter(s=>cups.includes(s));
+    let streak=1,best=1;for(let i=1;i<r.length;i++){streak=r[i]===r[i-1]+1?streak+1:1;best=Math.max(best,streak)}
+    const mg={};Object.values(state.managers||{}).forEach(m=>m.hist.forEach(h=>{if(h.teamId===t.id&&h.title&&inR(h.season))mg[m.id]=(mg[m.id]||0)+1}));
+    const [mid,mn]=Object.entries(mg).sort((a,b)=>b[1]-a[1])[0]||[];const boss=mid&&mn>=Math.ceil(r.length*2/3)?state.managers[mid]:null;
+    const core=everyone().map(p=>{const cs=p.career.filter(c=>inR(c.season)&&(c.teamIds||[c.teamId]).includes(t.id));return{p,apps:cs.reduce((a,c)=>a+cv(c,"apps"),0),goals:cs.reduce((a,c)=>a+cv(c,"goals"),0)}}).filter(x=>x.apps).sort((a,b)=>b.apps-a.apps||b.goals-a.goals).slice(0,3);
+    const name=boss?`The ${surname(boss.name)} era`:core[0]?`The ${surname(core[0].p.name)} years`:"The golden years";
+    return{tid:t.id,name,from,to,titles:r,cups,doubles,best,boss,core,dynasty:r.length>=4||best>=3,live:last-to<=1};
+  });
+}
+const allEras=()=>state.teams.flatMap(erasOf);
+const IN_ROW=["","","Back to back","Three in a row","Four in a row","Five in a row","Six in a row","Seven in a row","Eight in a row","Nine in a row","Ten in a row"];
+function eraCard(e,withClub){
+  const t=team(e.tid);
+  return `<div class="era" style="--ec:${esc(t.c1)}">${withClub?badge(t,40):""}<div class="grow"><div class="erahd"><b>${esc(e.name)}</b><span class="eratag">${e.dynasty?"Dynasty":"Era"}</span>${e.live?`<span class="eratag live">Ongoing</span>`:""}</div>
+  <p class="muted" style="margin:.2em 0">${withClub?`<button class="linkbtn inl" data-act="club" data-id="${t.id}">${esc(t.name)}</button>, s`:"S"}easons ${e.from} to ${e.to}${e.best>=2?`. ${IN_ROW[e.best]||e.best+" in a row"}`:""}</p>
+  <p style="margin:.2em 0">${pluralN(e.titles.length,"league title")} (${e.titles.map(s=>"S"+s).join(", ")})${e.cups.length?`, ${pluralN(e.cups.length,"cup")}`:""}${e.doubles.length?`, ${pluralN(e.doubles.length,"double")}`:""}.</p>
+  <p class="muted" style="margin:.2em 0">${e.boss?`Manager: <button class="linkbtn inl" data-act="mgr" data-id="${e.boss.id}">${esc(e.boss.name)}</button>. `:""}${e.core.length?`Core: ${e.core.map(x=>`<button class="linkbtn inl" data-act="player" data-id="${x.p.id}">${esc(x.p.name)}</button> (${x.apps} apps, ${pluralN(x.goals,"goal")})`).join(", ")}.`:""}</p></div></div>`;
+}
+const tableTabs=()=>`<div class="chips tabs" role="tablist" style="margin-bottom:14px">${[["table","Table"],["records","Records"]].map(([k,l])=>`<button class="chip ${tblTab===k?"on":""}" role="tab" aria-selected="${tblTab===k}" data-act="tbltab" data-v="${k}">${l}</button>`).join("")}</div>`;
 /* ---------- pixel art ---------- */
 const PXC={cache:new Map(),paths:new Map(),grids:new Map(),ctx:undefined};
 function pxCtx(){if(PXC.ctx!==undefined)return PXC.ctx;try{const c=document.createElement("canvas");PXC.ctx=(c&&c.getContext&&typeof Path2D!=="undefined"&&c.getContext("2d"))||null}catch(e){PXC.ctx=null}return PXC.ctx}
@@ -869,13 +966,14 @@ function leagueTable(rows,form=true){
 
 /* ---------- views ---------- */
 function viewTable(){
+  if(tblTab==="records")return viewRecords();
   const tbl=computeTable(),done=seasonDone();
   const next=!done?state.fixtures[state.round]:null,last=state.round>0?state.fixtures[state.round-1]:null;
   const leaders=Object.values(state.players).filter(p=>p.s.goals>0).sort((a,b)=>b.s.goals-a.s.goals||b.s.assists-a.s.assists).slice(0,5);
   let banner="";
   if(state.draft){const t=team(state.draft.order[state.draft.pick]);banner=`<div class="banner">${badge(t,56)}<div class="grow"><h2>${state.draft.stage==="setup"?"Set up the opening draft":state.draft.type==="opening"?"The opening draft is underway":`The season ${state.season} draft is open`}</h2><p>${state.draft.stage==="setup"?"Edit the player pool, then start the draft.":`${esc(t.name)} are on the clock with pick ${state.draft.pick+1} of ${state.draft.order.length}.`}</p></div><button class="btn go" data-act="nav" data-v="draft">Go to the draft</button></div>`}
   if(done){const c=team(tbl[0].id);banner=`<div class="banner">${badge(c,64)}<div class="grow"><h2>${esc(c.name)} are champions</h2><p>Season ${state.season} is complete with ${tbl[0].pts} points.</p></div><button class="btn go" data-act="end-season">Start season ${state.season+1}</button></div>`}
-  return `${banner}<div class="grid2"><section class="card"><h2>Season ${state.season}</h2>${leagueTable(tbl)}</section><aside class="card">
+  return `${banner}${tableTabs()}<div class="grid2"><section class="card"><h2>Season ${state.season}</h2>${leagueTable(tbl)}</section><aside class="card">
     ${next?`<h3 style="margin-top:0">Matchday ${state.round+1} of ${state.fixtures.length}</h3>${next.map(fixtureRow).join("")}`:""}
     ${last?`<h3 ${next?"":`style="margin-top:0"`}>Latest results</h3>${last.map(resultRow).join("")}`:""}
     <h3>Top scorers</h3>${leaders.length?`<table><tbody>${leaders.map(p=>`<tr class="click" data-act="player" data-id="${p.id}"><td><span class="namecell">${flag(p.nat)}${esc(p.name)}</span></td><td>${badge(team(p.teamId),18)}</td><td class="r num pts">${p.s.goals}</td></tr>`).join("")}</tbody></table>`:`<p class="muted">Goals will show here once the first matchday is played.</p>`}
@@ -905,7 +1003,7 @@ function cupFixtures(i){
 }
 function viewPlayers(){
   const cols=[["apps","Apps"],["goals","Goals"],["assists","Assists"],["cs","Clean sheets"]],q=(ps.q||"").trim().toLowerCase();
-  let list=(ps.scope==="all"?everyone():Object.values(state.players)).filter(p=>ps.pos==="ALL"||p.pos===ps.pos).filter(p=>!q||p.name.toLowerCase().includes(q)||(team(p.teamId)&&team(p.teamId).name.toLowerCase().includes(q))||(NAT[p.nat]&&NAT[p.nat].n.toLowerCase().includes(q))).map(p=>({p,st:statsFor(p,ps.scope),rg:ringsOf(p)}));
+  let list=(ps.scope==="all"?everyone():Object.values(state.players)).filter(p=>ps.pos==="ALL"||p.pos===ps.pos).filter(p=>!q||p.name.toLowerCase().includes(q)||(team(p.teamId)&&team(p.teamId).name.toLowerCase().includes(q))||(NAT[p.nat]&&NAT[p.nat].n.toLowerCase().includes(q))).filter(p=>ps.comp!=="cup"||cv(statsFor(p,ps.scope),"apps","cup")>0).map(p=>({p,st:compStats(statsFor(p,ps.scope),ps.comp),rg:ringsOf(p)}));
   const key=ps.sort;
   list.sort((a,b)=>{let va,vb;if(key==="rating"){va=a.p.rating;vb=b.p.rating}else if(key==="pot"){va=a.p.retired?0:potSort(a.p);vb=b.p.retired?0:potSort(b.p)}else if(key==="age"){va=a.p.age;vb=b.p.age}else if(key==="titles"){va=a.rg.length;vb=b.rg.length}else if(key==="avg"){va=avgOf(a.st)??0;vb=avgOf(b.st)??0}else if(key==="awards"){va=(a.p.awards||[]).length;vb=(b.p.awards||[]).length}else if(key==="name"){return ps.dir*a.p.name.localeCompare(b.p.name)}else{va=a.st[key];vb=b.st[key]}return ps.dir*(va-vb)||b.p.rating-a.p.rating});
   const th=(k,l,r)=>`<th class="sortable ${r?"r":""} ${ps.sort===k?"on":""}" data-act="sort" data-v="${k}">${l}${ps.sort===k?(ps.dir<0?" ↓":" ↑"):""}</th>`;
@@ -916,7 +1014,7 @@ function viewPlayers(){
   const row=ps.edit?({p})=>`<tr><td><span class="namecell">${flag(p.nat)}<input type="text" data-pf="name" data-id="${p.id}" value="${esc(p.name)}" maxlength="40" aria-label="Player name"></span></td><td>${clubCell(p)}</td><td>${posSel(p)}</td><td>${natSel(p)}</td><td class="r"><input type="number" min="15" max="45" data-pf="age" data-id="${p.id}" value="${p.age}" aria-label="Age"></td><td>${stars(p.rating,p.id)}</td><td><input type="number" min="20" max="99" data-pf="rating" data-id="${p.id}" value="${p.rating}" aria-label="Exact ability"></td><td><button class="btn sm" data-act="player" data-id="${p.id}">Career</button></td></tr>`
     :({p,st,rg})=>`<tr class="click" data-act="player" data-id="${p.id}"><td><span class="namecell">${flag(p.nat)}${esc(p.name)}</span>${injTag(p)}${traitTags(p)}</td><td>${clubCell(p)}</td><td>${p.pos}</td><td class="r num">${p.age}</td><td>${stars(p.rating)}</td><td class="r num">${potText(p,true)}</td>${cols.map(([k])=>`<td class="r num">${st[k]}</td>`).join("")}<td class="r num">${fmtAvg(avgOf(st))}</td><td>${ringsHTML(rg)}</td><td>${awardsHTML(ps.scope==="season"?awardsOf(p).filter(a=>a.season===state.season):awardsOf(p))}</td></tr>`;
   return `<div class="phead"><h2 style="margin:0">Players</h2><button class="btn ${ps.edit?"go":""}" data-act="pedit">${ps.edit?"Done editing":"Edit players"}</button></div>
-  <div class="chips" style="align-items:center">${["season","all"].map(s=>`<button class="chip ${ps.scope===s?"on":""}" data-act="scope" data-v="${s}">${s==="season"?`Season ${state.season}`:"All time"}</button>`).join("")}<span style="width:8px"></span>${["ALL",...POS].map(p=>`<button class="chip ${ps.pos===p?"on":""}" data-act="pos" data-v="${p}">${p==="ALL"?"All positions":p}</button>`).join("")}<input type="search" data-pq placeholder="Search name, club or nation" value="${esc(ps.q||"")}" aria-label="Search players"></div>
+  <div class="chips" style="align-items:center">${["season","all"].map(s=>`<button class="chip ${ps.scope===s?"on":""}" data-act="scope" data-v="${s}">${s==="season"?`Season ${state.season}`:"All time"}</button>`).join("")}<span style="width:8px"></span>${["ALL",...POS].map(p=>`<button class="chip ${ps.pos===p?"on":""}" data-act="pos" data-v="${p}">${p==="ALL"?"All positions":p}</button>`).join("")}<input type="search" data-pq placeholder="Search name, club or nation" value="${esc(ps.q||"")}" aria-label="Search players"></div>${ps.edit?"":compChips(ps.comp,"pscomp")}
   ${ps.edit?`<p class="muted">Changes save as you type. Tap the stars for a quick level or enter an exact ability.</p>`:""}
   <div class="card scroll"><table><thead>${head}</thead><tbody>${list.slice(0,ps.lim).map(row).join("")||`<tr><td colspan="10" class="muted">No players match.</td></tr>`}</tbody></table></div>
   ${list.length>ps.lim?`<div class="toolbar"><button class="btn" data-act="pmore">Show ${Math.min(50,list.length-ps.lim)} more</button><span class="muted">Showing ${ps.lim} of ${list.length} players</span></div>`:""}`;
@@ -1001,7 +1099,7 @@ function shootout(){let a=0,b=0;for(let i=0;i<5;i++){if(rand()<.76)a++;if(a>b+5-
 function simCupTie(f,neutral){
   const ids=[...team(f.h).players,...team(f.a).players],before=new Map(ids.map(i=>[i,{...pl(i).s}])),S=state.settings,home=S.home;
   if(neutral)S.home=0;_cupNow=true;try{simMatch(f)}finally{S.home=home;_cupNow=false}
-  ids.forEach(i=>{const p=pl(i),o=before.get(i);p.s={...o,capps:(o.capps||0)+(p.s.apps-o.apps),cgoals:(o.cgoals||0)+(p.s.goals-o.goals),ht:p.s.ht||0}});
+  ids.forEach(i=>{const p=pl(i),o=before.get(i);p.s={...o,capps:(o.capps||0)+(p.s.apps-o.apps),cgoals:(o.cgoals||0)+(p.s.goals-o.goals),cas:(o.cas||0)+(p.s.assists-o.assists),ccs:(o.ccs||0)+(p.s.cs-o.cs),ht:p.s.ht||0}});
   if(f.hg===f.ag)f.pen=shootout();
   f.w=f.hg>f.ag||(f.pen&&f.pen[0]>f.pen[1])?f.h:f.a;
 }
@@ -1101,12 +1199,6 @@ function updateRivals(){
 }
 const rivalOf=id=>(state.rivals||[]).find(r=>r.a===id||r.b===id);
 const derbyOf=(h,a)=>(state.rivals||[]).find(r=>r.k===pairKey(h,a));
-function clubRecordsHTML(){
-  const runs=clubRuns(),best=k=>Object.entries(runs).filter(([,o])=>o[k].n>1).sort((a,b)=>b[1][k].n-a[1][k].n)[0];
-  const items=[["Longest winning run","w"],["Longest unbeaten run","u"],["Longest losing run","l"]].map(([l,k])=>[l,k,best(k)]).filter(x=>x[2]);
-  if(!items.length)return "";
-  return `<div class="card" style="margin-bottom:18px"><h3 style="margin-top:0">Club records</h3><p class="muted" style="margin-top:-.4em">League games only, across every season.</p><div class="records">${items.map(([l,k,[id,o]])=>`<button class="rec" data-act="club" data-id="${id}"><span class="muted">${l}</span><div class="v">${o[k].n}</div><div class="who">${esc(team(id).name)}</div><span class="muted">${o[k].s0===o[k].s1?`Season ${o[k].s0}`:`Seasons ${o[k].s0} to ${o[k].s1}`}</span></button>`).join("")}</div></div>`;
-}
 function rivalsHTML(){
   const R=state.rivals||[];
   return `<div class="card" style="margin-bottom:18px"><h3 style="margin-top:0">Rivalries</h3>${R.length?`<p class="muted" style="margin-top:-.4em">Rivalries grow out of title races, cup ties, close games and trades. You can rename them.</p>${R.map(r=>{const ms=meetings(r.a,r.b);let aw=0,d=0,bw=0;ms.forEach(m=>{const x=m.h===r.a?m.hg:m.ag,y=m.h===r.a?m.ag:m.hg;x>y?aw++:x<y?bw++:d++});
@@ -1188,7 +1280,7 @@ const msText=m=>m.k==="oneclub"?"One-club legend":`${m.n} ${MS_L[m.k]}`;
 let _msBatch=[];
 // Career totals across league and cup; checked after every match for the players who took part
 function checkMilestones(lu){
-  lu.forEach(({p})=>{const t=statsFor(p,"all"),tot={goals:t.goals+(t.cgoals||0),apps:t.apps+(t.capps||0),assists:t.assists,cs:t.cs};p.ms=p.ms||[];
+  lu.forEach(({p})=>{const t=statsFor(p,"all"),tot={goals:cv(t,"goals"),apps:cv(t,"apps"),assists:cv(t,"assists"),cs:cv(t,"cs")};p.ms=p.ms||[];
     for(const k in MILESTONES)for(const n of MILESTONES[k])if(tot[k]>=n&&!p.ms.some(m=>m.k===k&&m.n===n)){const m={k,n,s:state.season};p.ms.push(m);const e={id:p.id,name:p.name,team:team(p.teamId)?team(p.teamId).name:"",k,n};_msBatch.push(e);(state.msSeason=state.msSeason||[]).push(e)}});
 }
 function oneClubCheck(p){const ids=new Set(p.career.flatMap(c=>c.teamIds||[c.teamId]));if(p.career.length>=7&&ids.size===1){p.oneClub=[...ids][0];p.ms=p.ms||[];p.ms.push({k:"oneclub",n:p.career.length,s:state.season});(state.msSeason=state.msSeason||[]).push({id:p.id,name:p.name,team:team(p.oneClub)?team(p.oneClub).name:"",k:"oneclub",n:p.career.length})}}
@@ -1218,6 +1310,7 @@ function anSteps(h){
   if(h.tots&&h.tots.length)st.push({kind:"tots",title:"Team of the season"});
   if(h.mos)st.push({kind:"award",type:"mos",title:"Manager of the season",trophy:"mos",win:h.mos,noms:h.mosNoms||[],mgr:true});
   const m=aw("mvp");if(m)st.push({kind:"award",type:"mvp",title:"Most valuable player",trophy:"mvp",win:m,noms:(h.noms||{}).mvp||[]});
+  const fw=(h.retired||[]).map(r=>pl(r.id)).filter(notable);if(fw.length)st.push({kind:"farewell",title:"Farewells",ps:fw.slice(0,4)});
   if(h.cup)st.push({kind:"cup",title:`${h.cup.name} final`,trophy:"cup"});
   st.push({kind:"champ",title:`Season ${h.season} champions`,trophy:"league"});
   return st;
@@ -1231,6 +1324,7 @@ function anRender(){
   const who=(x,mgr)=>{const t=mgr?null:pl(x.id)&&team(pl(x.id).teamId);return win(t?badge(t,56):"",x.name,`${x.team}${x.val?`. ${x.val}`:""}`)};
   let body="";
   if(s.kind==="award")body=`${big(s.trophy)}${s.noms.length?`<p class="anlbl">${s.noms.length===1?"The only nominee":"The nominees"}</p><ul class="annoms">${s.noms.map(n=>`<li class="${shown&&n.id===s.win.id?"on":""}"><b>${esc(n.name)}</b><span>${esc(n.team)}. ${esc(n.val||"")}</span></li>`).join("")}</ul>`:""}${shown?`<p class="anlbl">The winner is</p>${who(s.win,s.mgr)}`:""}`;
+  else if(s.kind==="farewell")body=shown?`<div class="anfw">${s.ps.map(p=>tributeHTML(p,true)).join("")}</div>`:`<p class="anlbl">${s.ps.length===1?"One big name hangs up their boots":`${s.ps.length} big names hang up their boots`}</p>`;
   else if(s.kind==="tots")body=shown?totsHTML(h.tots):`<p class="anlbl">The best ${h.tots.length} players of the season, picked on average rating</p>`;
   else if(s.kind==="cup"){const f=h.cup.final,nm=id=>team(id)?team(id).name:"?";body=`${big("cup")}<p class="anlbl">${esc(nm(f.h))} v ${esc(nm(f.a))}</p>${shown?`<p class="anscore">${f.hg}–${f.ag}${f.pen?`<small>${f.pen[0]}–${f.pen[1]} on penalties</small>`:""}</p><p class="anlbl">The cup goes to</p>${win(badge(team(h.cup.winner.id)||h.cup.winner,56),h.cup.winner.name,h.cup.top?`Top cup scorer ${h.cup.top.name} with ${h.cup.top.n}`:"")}`:""}`}
   else{const t=h.table;body=`${big("league")}<ul class="annoms">${t.slice(0,3).map((r,k)=>`<li class="${shown&&k===0?"on":""}"><b>${esc(r.name)}</b><span>${r.pts} points</span></li>`).join("")}</ul>${shown?`<p class="anlbl">Champions</p>${win(badge(team(h.champion.id)||h.champion,72),h.champion.name,`${pluralN(t[0].w,"win")}, ${pluralN(t[0].d,"draw")}, ${pluralN(t[0].l,"loss","losses")}`)}`:""}`}
@@ -1240,6 +1334,23 @@ function anRender(){
 }
 function anAdvance(){if(!_an)return;if(!_an.shown)_an.shown=true;else if(_an.i<_an.steps.length-1){_an.i++;_an.shown=false}else return anClose();anRender()}
 document.addEventListener("keydown",e=>{if(!_an||$("#an").hidden)return;if(e.key==="Escape"){e.preventDefault();anClose()}else if(e.key===" "||e.key==="Enter"){e.preventDefault();anAdvance()}});
+/* ---------- retirement tributes ---------- */
+// Players worth a proper send-off: a real legacy, two titles, an award, a one-club career or ten seasons
+const notable=p=>!!p&&p.retired&&!p.released&&cv(statsFor(p,"all"),"apps")>=2*state.fixtures.length&&(legacy(p)>=hofBar()*.5||ringsOf(p).length>=2||(p.awards||[]).length>0||!!p.oneClub||p.career.length>=10);
+function tributeHTML(p,compact){
+  const t=compStats(statsFor(p,"all"),"all"),rg=ringsOf(p).length,cups=cupMedalsOf(p).length,aw={};(p.awards||[]).forEach(a=>{if(AWARDS[a.type])aw[a.type]=(aw[a.type]||0)+1});
+  const clubs=[...new Set(p.career.flatMap(c=>(c.teamIds||[c.teamId]).map(i=>team(i)?team(i).name:c.team)))],first=p.career[0]?p.career[0].season:p.retired;
+  const best=[...p.career].sort((a,b)=>p.pos==="GK"?cv(b,"cs")-cv(a,"cs")||(avgOf(b)||0)-(avgOf(a)||0):cv(b,"goals")*2+cv(b,"assists")-(cv(a,"goals")*2+cv(a,"assists"))||(avgOf(b)||0)-(avgOf(a)||0))[0];
+  const hon=[rg?pluralN(rg,"league title"):"",cups?pluralN(cups,"cup","cups"):"",...Object.entries(aw).map(([k,n])=>`${AWARDS[k].n}${n>1?` ×${n}`:""}`)].filter(Boolean);
+  const list=a=>a.length<2?a.join(""):a.slice(0,-1).join(", ")+" and "+a[a.length-1];
+  const lines=[`Retires at ${p.age} after ${pluralN(p.career.length,"season")}${p.oneClub?`, every one of them with ${esc(team(p.oneClub)?team(p.oneClub).name:clubs[0])}`:clubs.length===1?` with ${esc(clubs[0])}`:` with ${esc(list(clubs))}`}.`,
+    `${pluralN(t.apps,"appearance")}, ${pluralN(t.goals,"goal")} and ${pluralN(t.assists,"assist")}${p.pos==="GK"?`, ${pluralN(t.cs,"clean sheet")}`:""} in all competitions.`,
+    hon.length?`Won ${esc(list(hon))}.`:"",
+    best?`Best season: season ${best.season} with ${esc(best.team)}, ${p.pos==="GK"?pluralN(cv(best,"cs"),"clean sheet"):`${pluralN(cv(best,"goals"),"goal")} and ${pluralN(cv(best,"assists"),"assist")}`}${avgOf(best)?`, ${fmtAvg(avgOf(best))} average`:""}.`:"",
+    compact?"":`Legacy ${legacy(p)}. ${p.hof?`Inducted into the Hall of Fame in season ${p.hof}.`:`The Hall of Fame bar is ${hofBar()}.`}`].filter(Boolean);
+  const lt=team(p.oneClub)||team(p.teamId);
+  return `<div class="trib">${lt?badge(lt,compact?40:56):""}<div class="grow"><span class="muted">Seasons ${first} to ${p.retired}</span><b class="tribn"><span class="namecell">${flag(p.nat)}${esc(p.name)}</span></b>${lines.map(l=>`<p>${l}</p>`).join("")}${compact?`<button class="linkbtn" data-act="player" data-id="${p.id}">Full career</button>`:""}</div></div>`;
+}
 /* ---------- trophy cabinet ---------- */
 let pTab="car";
 // groups: [{label, items:[{img, w, lbl, tip}]}]. Each group gets its own run of wooden shelves.
@@ -1272,6 +1383,7 @@ function viewReview(season){
   ${h.hof&&h.hof.length?`<h3>Hall of Fame class</h3><div class="card"><div class="rvfacts">${h.hof.map(i=>pl(i)?`<div class="rvstat">${plink(i,pl(i).name)}<span class="muted">${esc(pl(i).lastTeam||"")}</span></div>`:"").join("")}</div></div>`:""}
   ${h.milestones&&h.milestones.length?`<h3>Milestones</h3><div class="card"><div class="rvfacts">${h.milestones.map(m=>`<div class="rvstat"><span class="muted">${msText(m)}</span>${pl(m.id)?`<button class="linkbtn" data-act="player" data-id="${m.id}">${esc(m.name)}</button>`:`<b>${esc(m.name)}</b>`}<span class="muted">${esc(m.team)}</span></div>`).join("")}</div></div>`:""}
   ${h.mgrMoves&&h.mgrMoves.length?`<h3>Manager changes</h3><div class="card"><div class="rvfacts">${h.mgrMoves.map(x=>`<div class="rvstat"><span class="muted">${x.type==="sacked"?"Sacked":x.type==="retired"?"Retired":x.exp?"Hired, former player":"Hired"}</span>${state.managers[x.mid]?`<button class="linkbtn" data-act="mgr" data-id="${x.mid}">${esc(x.name)}</button>`:`<b>${esc(x.name)}</b>`}<span class="muted">${esc(x.team)}</span></div>`).join("")}</div></div>`:""}
+  ${(()=>{const fw=h.retired.map(r=>pl(r.id)).filter(notable);return fw.length?`<h3>Farewells</h3>${fw.map(p=>tributeHTML(p,true)).join("")}`:""})()}
   ${h.retired.length?`<h3>Retired</h3><div class="card"><div class="rvfacts">${h.retired.map(r=>`<div class="rvstat">${plink(r.id,r.name)}<span class="muted">${esc(r.team)}, age ${r.age}. ${r.apps} apps, ${r.goals} goals</span></div>`).join("")}</div></div>`:""}`;
 }
 const pluralN=(n,one,many)=>`${n} ${n===1?one:many||one+"s"}`;
@@ -1337,14 +1449,13 @@ async function totsCard(season){
   return{url:c.toDataURL("image/png"),name:`${slug()}-season-${h.season}-team-of-the-season.png`};
 }
 function viewHistory(){
-  if(!state.history.length)return `<h2>History</h2>${recordsHTML()}<div class="empty">Finish a season to see champions, award winners and retirements here.</div>`;
+  if(!state.history.length)return `<h2>History</h2><div class="empty">Finish a season to see champions, award winners and retirements here.</div>`;
   const honours=state.teams.map(t=>({t,n:titles(t.id).length})).filter(x=>x.n).sort((a,b)=>b.n-a.n);
   const fact=(l,v)=>v?`<div><span class="muted">${l}</span><b>${esc(v.name)} (${v.n})</b><span class="muted">${esc(v.team)}</span></div>`:"";
   const awd=h=>(h.awards||[]).map(a=>`<div><span class="muted namecell">${pxCtx()?`<img class="px" src="${pxTrophy(a.type)}" width="23" alt="">`:""}${AWARDS[a.type].full}</span>${pl(a.id)?`<button class="linkbtn" data-act="player" data-id="${a.id}">${esc(a.name)}</button>`:`<b>${esc(a.name)}</b>`}<span class="muted">${esc(a.team)}, ${esc(a.val||"")}</span></div>`).join("");
   return `<h2>History</h2>
   <div class="card" style="margin-bottom:18px"><h3 style="margin-top:0">Roll of honour</h3><table><tbody>${honours.map(x=>`<tr class="click" data-act="club" data-id="${x.t.id}"><td>${clubLabel(x.t)}</td><td class="r">${trophies(x.t.id,24)}</td></tr>`).join("")}</tbody></table></div>
-  ${recordsHTML()}
-  ${clubRecordsHTML()}
+  ${(()=>{const E=allEras().sort((a,b)=>b.from-a.from);return E.length?`<div class="card" style="margin-bottom:18px"><h3 style="margin-top:0">Eras and dynasties</h3><p class="muted" style="margin-top:-.4em">Three or more titles with no more than one season between them.</p>${E.map(e=>eraCard(e,true)).join("")}</div>`:""})()}
   ${rivalsHTML()}
   ${[...state.history].reverse().map(h=>`<div class="card hist"><div class="top">${badge(h.champion,48)}<div class="grow"><h3 style="margin:0">Season ${h.season}: ${esc(h.champion.name)}</h3><span class="muted">Runners-up ${esc(h.runnerUp.name)}</span></div><button class="btn sm" data-act="nav" data-v="review:${h.season}">Season review</button></div>
     <div class="facts">${h.awards&&h.awards.length?awd(h)+fact("Most assists",h.topAssist):fact("Top scorer",h.topScorer)+fact("Most assists",h.topAssist)+fact("Most clean sheets",h.topCS)}${h.hof&&h.hof.length?`<div><span class="muted">Hall of Fame inductees</span>${h.hof.map(i=>pl(i)?`<button class="linkbtn" data-act="player" data-id="${i}">${esc(pl(i).name)}</button>`:"").join("")}</div>`:""}
@@ -1381,7 +1492,7 @@ function viewSettings(){
   <section class="card"><h3>AI trades</h3><p>How many trades AI clubs try to make in each window. Windows open at the end of each season and again after the draft. A player who has been traded sits out the next few windows.</p><div class="seg">${[["off","Off"],["low","Low"],["normal","Normal"],["high","High"]].map(([k,l])=>`<button class="${S.aiTrades===k?"on":""}" data-act="ai-trades" data-v="${k}">${l}</button>`).join("")}</div></section>
   <section class="card"><h3>Your save file</h3><p>Use <b>Save</b> to write the league to a file on your laptop, and <b>Open</b> to load one. In Chrome or Edge, Save writes back to the same file each time. In other browsers it downloads a fresh copy.</p><p class="muted">Settings, including colours, are stored in the save file.</p></section>
   <section class="card"><h3>App version</h3><p>You are on version <b>${APP_VERSION}</b>.</p><p class="muted">If a new feature does not show up, press the button below. It clears the app's stored copy and loads the latest one. Your leagues and save files are not touched.</p><button class="btn" data-act="check-updates">Check for updates</button></section>
-  <section class="card"><h3>Delete league</h3><p class="muted">Clears this league from the app. Your save files are not touched.</p><button class="btn danger" data-act="delete">Delete league</button></section>
+  <section class="card"><h3>Delete league</h3><p class="muted">Removes this league and its save from the app. Files you exported are not touched.</p><button class="btn danger" data-act="delete">Delete league</button></section>
   </div>`;
 }
 function lum(h){const m=String(h||"#000").replace("#","");const n=parseInt(m.length===3?m.split("").map(c=>c+c).join(""):m,16)||0;const f=c=>c<=.03928?c/12.92:Math.pow((c+.055)/1.055,2.4);return .2126*f((n>>16&255)/255)+.7152*f((n>>8&255)/255)+.0722*f((n&255)/255)}
@@ -1594,7 +1705,7 @@ function customAwardsCard(){
   ${L.some(c=>c.off)?`<p class="muted">Removed awards that were already won stay in the record books but are not given out any more.</p>`:""}
   <div class="toolbar"><button class="btn" data-act="ca-add">Add an award</button></div></section>`;
 }
-const APP_VERSION="2026.10.25-10";
+const APP_VERSION="2026.10.25-11";
 async function checkUpdates(){try{if(window.caches)for(const k of await caches.keys())await caches.delete(k);if(navigator.serviceWorker)for(const r of await navigator.serviceWorker.getRegistrations())await r.unregister()}catch(e){}location.reload()}
 let trophyTab="league";
 function trophyCard(){
@@ -1666,7 +1777,8 @@ function raceCard(){
 function clubHistoryPanel(t){
   const ph=posByRound()[t.id]||[],T=state.teams.length,me=[{id:t.id,color:lineCol(t),pts:ph}];
   const fin=state.history.map(h=>{const i=h.table.findIndex(r=>r.id===t.id);return i<0?null:i+1});
-  return `<div class="grid2 even"><section class="card"><h3 style="margin-top:0">Season ${state.season} by matchday</h3>${ph.length?chartImg(me,T,ph.length<2?[1,""]:ph.map((_,i)=>i+1),null,"Position by matchday"):`<div class="empty">Play a matchday to start the line.</div>`}</section>
+  const E=erasOf(t);
+  return `${E.length?`<section class="card" style="margin-bottom:16px"><h3 style="margin-top:0">Eras</h3>${E.map(e=>eraCard(e)).join("")}</section>`:""}<div class="grid2 even"><section class="card"><h3 style="margin-top:0">Season ${state.season} by matchday</h3>${ph.length?chartImg(me,T,ph.length<2?[1,""]:ph.map((_,i)=>i+1),null,"Position by matchday"):`<div class="empty">Play a matchday to start the line.</div>`}</section>
   <section class="card"><h3 style="margin-top:0">Final position by season</h3>${fin.length?chartImg([{id:t.id,color:lineCol(t),pts:fin}],T,fin.length<2?[state.history[0].season,""]:state.history.map(h=>h.season),null,"Final position by season"):`<div class="empty">Finish a season to start the line.</div>`}
   ${fin.length?`<table><tbody>${state.history.map((h,i)=>`<tr><td>Season ${h.season}</td><td class="r num">${ordinal(fin[i])}</td><td class="r">${h.champion.id===t.id?trophies(t.id,18).replace(/×\d+/,""):""}</td></tr>`).join("")}</tbody></table>`:""}</section></div>`;
 }
@@ -1699,7 +1811,7 @@ const backTo=()=>navStack.pop()||(view.startsWith("mgr:")?"managers":view.starts
 function viewPlayer(id){
   const p=pl(id);if(!p)return `<div class="empty">That player could not be found.</div>`;
   const t=team(p.teamId)||{name:p.lastTeam||"",c1:"#888",c2:"#fff",crest:{},short:"",kit:{home:{style:"plain",a:"#888",b:"#fff",sleeves:"#888",trim:"#fff",shorts:"#fff",socks:"#888"}}};
-  const rows=[...p.career,...(p.retired?[]:[{season:state.season,team:t.name,...p.s,rating:p.rating,age:p.age,current:true}])],rg=ringsOf(p),aw=awardsOf(p),tot=statsFor(p,"all"),avg=avgOf(tot);
+  const rows=[...p.career,...(p.retired?[]:[{season:state.season,team:t.name,...p.s,rating:p.rating,age:p.age,current:true}])],rg=ringsOf(p),aw=awardsOf(p),tot=compStats(statsFor(p,"all"),pComp),avg=avgOf(tot);
   const tile=(l,v)=>`<div class="tile"><span class="muted">${l}</span><b class="num">${v}</b></div>`;
   return `<button class="btn sm" data-act="back">‹ Back</button>
   <div class="phero"><div class="pkit">${t.kit?kitSvg(t.kit.home,true,64):""}</div><div class="pinfo"><h1 class="namecell" style="display:flex;margin:0">${flag(p.nat,32)}${esc(p.name)}</h1>
@@ -1707,18 +1819,18 @@ function viewPlayer(id){
    <p class="ptraits">${(p.tr||[]).map(k=>TRAITS[k]?`<span class="trt big" title="${esc(TRAITS[k].d)}">${TRAITS[k].n}${p.retired?"":`<button data-act="trait-del" data-id="${p.id}" data-v="${k}" aria-label="Remove ${TRAITS[k].n}">×</button>`}</span>`:"").join("")}${!p.retired&&(p.tr||[]).length<2?`<select data-trait-add="${p.id}" aria-label="Add a trait"><option value="">Add a trait</option>${Object.keys(TRAITS).filter(k=>traitOk(p,k,p.tr||[])).map(k=>`<option value="${k}">${TRAITS[k].n}</option>`).join("")}</select>`:""}</p>
    ${(p.tr||[]).length?`<p class="muted" style="margin:0 0 .4em;font-size:.88rem">${p.tr.map(k=>TRAITS[k]?`${TRAITS[k].n}: ${TRAITS[k].d}`:"").join(" ")}</p>`:""}
    <p style="margin:0">${stars(p.rating)}${p.retired?"":` <span class="muted" style="margin-left:6px">${potText(p)}</span>`}${p.mgr&&state.managers&&state.managers[p.mgr]?` <button class="linkbtn inl" data-act="mgr" data-id="${p.mgr}">Now a manager</button>`:""}${p.hof?` <span class="hoftag">Hall of Fame, class of season ${p.hof}</span>`:""}</p></div><div class="pbadge">${p.teamId&&team(p.teamId)?badge(team(p.teamId),76):""}</div></div>
-  ${pTabs()}${pTab==="cab"?playerCabinet(p):`<div class="grid2 even" style="margin-bottom:16px"><section class="card"><h3 style="margin-top:0">Honours</h3>
+  ${pTabs()}${pTab==="cab"?playerCabinet(p):`${notable(p)?`<h3 style="margin-top:0">Tribute</h3>${tributeHTML(p)}`:""}<div class="grid2 even" style="margin-bottom:16px"><section class="card"><h3 style="margin-top:0">Honours</h3>
     <p style="margin:0 0 10px">${[pluralN(rg.length,"league title"),pluralN(cupMedalsOf(p).length,"cup win"),pluralN(aw.length,"award")].join(", ")}.</p>${rg.length?ringsHTML(rg,true):""}
     <div class="toolbar"><button class="btn sm" data-act="ptab" data-v="cab">Open the trophy cabinet</button></div>
     ${(p.ms||[]).length?`<p class="muted" style="margin:16px 0 6px">Milestones</p>${msHTML(p)}`:""}</section>
-   <section class="card"><h3 style="margin-top:0">Career</h3><div class="tiles">${tile("Apps",tot.apps)}${tile("Goals",tot.goals)}${tile("Assists",tot.assists)}${tile("Clean sheets",tot.cs)}${tile("Avg rating",fmtAvg(avg))}${tile("Cup goals",tot.cgoals||0)}${tile("Hat-tricks",tot.ht||0)}${tile("Team of the season",(p.tots||[]).length)}${tile("Legacy",legacy(p))}</div>${p.retired&&!p.hof?`<p class="muted">Hall of Fame bar is ${hofBar()} legacy points.</p>`:""}</section></div>
-  <div class="card scroll"><table><thead><tr><th>Season</th><th>Club</th><th class="r">Age</th><th class="r">Ability</th><th class="r">Apps</th><th class="r">Goals</th><th class="r">Assists</th><th class="r">CS</th><th class="r">Avg</th><th class="r">Cup goals</th><th>Awards</th></tr></thead><tbody>
-  ${rows.map(r=>{const a=aw.filter(x=>x.season===r.season);return `<tr><td>${r.season}${r.current?" (now)":""}</td><td>${esc(r.team)}</td><td class="r num">${r.age}</td><td class="r num">${r.rating}</td><td class="r num">${r.apps}</td><td class="r num">${r.goals}</td><td class="r num">${r.assists}</td><td class="r num">${r.cs}</td><td class="r num">${fmtAvg(avgOf(r))}</td><td class="r num">${r.cgoals||0}</td><td>${awardsHTML(a,false)}</td></tr>`}).join("")}
-  <tr><td colspan="4"><b>Career</b></td><td class="r num"><b>${tot.apps}</b></td><td class="r num"><b>${tot.goals}</b></td><td class="r num"><b>${tot.assists}</b></td><td class="r num"><b>${tot.cs}</b></td><td class="r num"><b>${fmtAvg(avg)}</b></td><td class="r num"><b>${tot.cgoals||0}</b></td><td></td></tr></tbody></table></div>${movesHTML(p)}`}`;
+   <section class="card"><h3 style="margin-top:0">Career</h3>${compChips(pComp,"pcomp")}<div class="tiles">${tile("Apps",tot.apps)}${tile("Goals",tot.goals)}${tile("Assists",tot.assists)}${tile("Clean sheets",tot.cs)}${tile("Avg rating",fmtAvg(avg))}${tile("Hat-tricks",tot.ht||0)}${tile("Team of the season",(p.tots||[]).length)}${tile("Legacy",legacy(p))}</div>${p.retired&&!p.hof?`<p class="muted">Hall of Fame bar is ${hofBar()} legacy points.</p>`:""}</section></div>
+  <div class="card scroll"><table><thead><tr><th>Season</th><th>Club</th><th class="r">Age</th><th class="r">Ability</th><th class="r">Apps</th><th class="r">Goals</th><th class="r">Assists</th><th class="r">CS</th><th class="r">Avg</th><th>Awards</th></tr></thead><tbody>
+  ${rows.map(r0=>{const r=compStats(r0,pComp),a=aw.filter(x=>x.season===r.season);return `<tr><td>${r.season}${r.current?" (now)":""}</td><td>${esc(r.team)}</td><td class="r num">${r.age}</td><td class="r num">${r.rating}</td><td class="r num">${r.apps}</td><td class="r num">${r.goals}</td><td class="r num">${r.assists}</td><td class="r num">${r.cs}</td><td class="r num">${fmtAvg(avgOf(r))}</td><td>${awardsHTML(a,false)}</td></tr>`}).join("")}
+  <tr><td colspan="4"><b>Career</b></td><td class="r num"><b>${tot.apps}</b></td><td class="r num"><b>${tot.goals}</b></td><td class="r num"><b>${tot.assists}</b></td><td class="r num"><b>${tot.cs}</b></td><td class="r num"><b>${fmtAvg(avg)}</b></td><td></td></tr></tbody></table></div>${movesHTML(p)}`}`;
 }
 function viewHof(){
   const next=Math.ceil((state.season)/3)*3,ballot=Object.values(state.retired).filter(p=>!p.hof).map(p=>({p,s:legacy(p)})).sort((a,b)=>b.s-a.s).slice(0,6);
-  const plaque=p=>{const tt=statsFor(p,"all");return `<button class="plaque" data-act="player" data-id="${p.id}"><span class="namecell">${flag(p.nat,22)}<b>${esc(p.name)}</b></span><span class="muted">${p.pos}, ${esc(p.lastTeam||"")}. Seasons ${p.career[0]?p.career[0].season:"?"} to ${p.retired}</span><span class="num">${tt.apps} apps, ${tt.goals} goals, ${tt.assists} assists${p.pos==="GK"?`, ${tt.cs} clean sheets`:""}</span><span>${ringsHTML(ringsOf(p))} ${awardsHTML(awardsOf(p))}</span><span class="muted">Legacy ${legacy(p)}</span></button>`};
+  const plaque=p=>{const tt=compStats(statsFor(p,"all"),"all");return `<button class="plaque" data-act="player" data-id="${p.id}"><span class="namecell">${flag(p.nat,22)}<b>${esc(p.name)}</b></span><span class="muted">${p.pos}, ${esc(p.lastTeam||"")}. Seasons ${p.career[0]?p.career[0].season:"?"} to ${p.retired}</span><span class="num">${tt.apps} apps, ${tt.goals} goals, ${tt.assists} assists${p.pos==="GK"?`, ${tt.cs} clean sheets`:""}</span><span>${ringsHTML(ringsOf(p))} ${awardsHTML(awardsOf(p))}</span><span class="muted">Legacy ${legacy(p)}</span></button>`};
   const classes=[...state.hof].reverse();
   return `<h2>Hall of Fame</h2><div class="banner">${pxCtx()?`<img class="px" src="${pxTrophy("league")}" width="46" alt="">`:""}<div class="grow"><h2>${state.hof.reduce((a,c)=>a+c.ids.length,0)} inducted</h2><p>A new class is chosen after season ${next}. Retired players need ${hofBar()} legacy points, built from appearances, goals, assists, clean sheets, titles and awards. Up to two go in each time.</p></div></div>
   ${classes.length?classes.map(c=>`<div class="card hist"><h3 style="margin-top:0">Class of season ${c.season}</h3>${c.ids.length?`<div class="plaques">${c.ids.map(i=>pl(i)).filter(Boolean).map(plaque).join("")}</div>`:`<p class="muted">No retired player reached the bar this time.</p>`}</div>`).join(""):`<div class="empty">The first class is chosen after season ${next}.</div>`}
@@ -1742,17 +1854,17 @@ function render(){
   if(!state){renderSetup();return}
   syncCustom();ensureCup();if(!state.rivals)updateRivals();ensureManagers();state.teams.forEach(ensureGround);
   const done=seasonDone();
-  const views=[["table","Table"],["fixtures","Fixtures"],...(cupOn()||state.history.some(h=>h.cup)?[["cup","Cup"]]:[]),["players","Players"],["clubs","Clubs"],["managers","Managers"],["draft","Draft"],["trades","Trades"],["history","History"],["hof","Hall of Fame"],["settings","Settings"]];
+  const views=[["table","Table"],["fixtures","Fixtures"],...(cupOn()||state.history.some(h=>h.cup)?[["cup","Cup"]]:[]),["players","Players"],["clubs","Clubs"],["managers","Managers"],["draft","Draft"],["trades","Trades"],["history","History"],["hof","Hall of Fame"],["saves","Saves"],["settings","Settings"]];
   const cur=view.startsWith("club:")?"clubs":view.startsWith("player:")?"players":view.startsWith("review:")?"history":view.startsWith("mgr:")?"managers":view;
   let body;
   if(view==="table")body=viewTable();else if(view==="fixtures")body=viewFixtures();else if(view==="players")body=viewPlayers();
-  else if(view==="clubs")body=viewClubs();else if(view.startsWith("club:"))body=viewClub(view.slice(5));else if(view==="history")body=viewHistory();else if(view==="hof")body=viewHof();else if(view.startsWith("player:"))body=viewPlayer(view.slice(7));else if(view.startsWith("review:"))body=viewReview(view.slice(7));else if(view==="draft")body=viewDraft();else if(view==="cup")body=viewCup();else if(view==="managers")body=viewManagers();else if(view.startsWith("mgr:"))body=viewManager(view.slice(4));else if(view==="trades")body=viewTrades();else body=viewSettings();
+  else if(view==="clubs")body=viewClubs();else if(view.startsWith("club:"))body=viewClub(view.slice(5));else if(view==="history")body=viewHistory();else if(view==="hof")body=viewHof();else if(view.startsWith("player:"))body=viewPlayer(view.slice(7));else if(view.startsWith("review:"))body=viewReview(view.slice(7));else if(view==="draft")body=viewDraft();else if(view==="cup")body=viewCup();else if(view==="managers")body=viewManagers();else if(view.startsWith("mgr:"))body=viewManager(view.slice(4));else if(view==="trades")body=viewTrades();else if(view==="saves")body=viewSaves();else body=viewSettings();
   $("#app").innerHTML=`<div class="shell"><aside class="side">
     <div class="hd"><div class="lg">${esc(state.name)}</div><div class="meta">${FORMATS[state.format].label}. Season ${state.season}, ${state.draft?"draft in progress":done?"complete":`matchday ${state.round+1} of ${state.fixtures.length}`}</div></div>
     <nav class="nav">${views.map(([k,l])=>`<button class="${cur===k?"on":""}" data-act="nav" data-v="${k}">${l}</button>`).join("")}</nav>
     <div class="simbox">${state.draft&&state.draft.stage==="setup"?`<button class="btn go" data-act="draft-start">Start the draft</button><button class="btn ghost" data-act="nav" data-v="draft">Edit the player pool</button>`:state.draft?`<button class="btn go" data-act="nav" data-v="draft">Go to the draft</button><button class="btn ghost" data-act="draft-auto-all">Auto-draft the rest</button>`:done?`<button class="btn go" data-act="end-season">Start season ${state.season+1}</button>`:`<button class="btn go" data-act="sim-round">Sim matchday</button><button class="btn ghost" data-act="sim-season">Sim rest of season</button>`}</div>
-    <div class="filebox"><div class="row"><button class="btn ghost" data-act="save">Save</button><button class="btn ghost" data-act="saveas">Save as</button><button class="btn ghost" data-act="load">Open</button></div>
-    <div class="savestate ${dirty?"dirty":""}">${dirty?"Unsaved changes":fileHandle?`Saved to ${esc(fileHandle.name)}`:"Saved"}</div>
+    <div class="filebox"><div class="row"><button class="btn ghost" data-act="save">Save</button><button class="btn ghost" data-act="nav" data-v="saves">Saves</button></div>
+    <div class="savestate ${dirty?"dirty":""}">${dirty?(autosaveOn()?"Saving soon":"Unsaved changes"):savedAt?`Saved ${whenTxt(savedAt)}`:"Saved"}</div>
     <button class="btn ghost" data-act="new">New league</button></div>
   </aside><main>${body}</main></div>`;
 }
@@ -1770,7 +1882,7 @@ function resizeSetup(n){
 }
 function renderSetup(){
   if(!setup)setup=newSetup();
-  $("#app").innerHTML=`<div class="setup"><h1>Start a league</h1><p class="lede">Pick a format, name your clubs and the squads are generated for you. You can rename players, change positions and set ability on each club page afterwards.</p>
+  $("#app").innerHTML=`<div class="setup">${slots&&slots.length?`<h1>Your leagues</h1>${slotCards()}<div class="toolbar"><button class="btn" data-act="import">Import a save file</button></div>`:""}<h1>Start a league</h1><p class="lede">Pick a format, name your clubs and the squads are generated for you. You can rename players, change positions and set ability on each club page afterwards.</p>
   <div class="step"><h2>League</h2><label class="f">League name<input type="text" data-sf="league" value="${esc(setup.name)}" maxlength="40" style="max-width:360px"></label></div>
   <div class="step"><h2>Format</h2><div class="seg">${[5,7,11].map(f=>`<button class="${setup.format===f?"on":""}" data-act="fmt" data-v="${f}">${FORMATS[f].label}</button>`).join("")}</div>
   <p class="muted">Squads of ${Object.values(FORMATS[setup.format].squad).reduce((a,b)=>a+b,0)} players. Matches last ${FORMATS[setup.format].mins} minutes.</p></div>
@@ -1780,7 +1892,7 @@ function renderSetup(){
   <div class="step"><h2>Players</h2><div class="seg">${[["generated","Generated squads"],["draft","Opening draft"]].map(([k,l])=>`<button class="${setup.mode===k?"on":""}" data-act="smode" data-v="${k}">${l}</button>`).join("")}</div>
   <p class="muted">${setup.mode==="draft"?"Every club starts empty. A snake draft runs through the whole player pool, and AI clubs chase the positions they still need. You can make any pick yourself.":"Each club gets a full squad straight away, with a slight difference in strength between clubs."}</p>
   <div class="fields"><label class="f">Nationalities<select data-sf="home"><option value="">Mixed from every nation</option>${NATIONS.map(n=>`<option value="${n.c}" ${setup.home===n.c?"selected":""}>Mostly ${n.n}</option>`).join("")}</select></label>${setup.home?`<label class="f">Share from ${esc(NAT[setup.home].n)}<select data-sf="share">${[25,50,75,90].map(v=>`<option value="${v}" ${setup.homeShare===v?"selected":""}>${v}%</option>`).join("")}</select></label>`:""}</div></div>
-  <div class="toolbar"><button class="btn go" data-act="create">Create league</button><button class="btn" data-act="load">Open a save file</button></div></div>`;
+  <div class="toolbar"><button class="btn go" data-act="create">Create league</button><button class="btn" data-act="import">Import a save file</button></div></div>`;
 }
 function createLeague(){
   const mode=setup.mode;
@@ -1793,38 +1905,88 @@ function createLeague(){
   }
   state.fixtures=makeFixtures();
   if(mode==="draft")startOpeningDraft();
-  migrate(state);fileHandle=null;setup=null;view=mode==="draft"?"draft":"table";persist();render();
-  toast(mode==="draft"?"League created. Edit the player pool, then start the draft.":"League created. Save it to a file to keep it safe.");
+  migrate(state);setSlotId(null);setup=null;navStack=[];view=mode==="draft"?"draft":"table";persist();render();saveNow(true);
+  toast(mode==="draft"?"League created. Edit the player pool, then start the draft.":"League created and saved.");
 }
 
-/* ---------- files ---------- */
+/* ---------- save slots ---------- */
+// Leagues are saved inside the app with IndexedDB: "meta" holds each slot's card, "data" holds its save text.
+// The localStorage backup stays as a crash copy of the open league. Files are only for export and import.
 const slug=()=>(state.name||"league").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"league";
-async function saveFile(asNew){
-  const data=saveText();
-  if(window.showSaveFilePicker){
-    try{
-      if(!fileHandle||asNew)fileHandle=await window.showSaveFilePicker({suggestedName:`${slug()}.json`,types:[{description:"League save",accept:{"application/json":[".json"]}}]});
-      const w=await fileHandle.createWritable();await w.write(data);await w.close();
-      dirty=false;toast(`Saved to ${fileHandle.name}`);render();return;
-    }catch(e){if(e.name==="AbortError")return;console.warn(e)}
-  }
-  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([data],{type:"application/json"}));a.download=`${slug()}-s${state.season}.json`;document.body.appendChild(a);a.click();a.remove();
-  setTimeout(()=>URL.revokeObjectURL(a.href),2000);dirty=false;toast("Save file downloaded");render();
+let slots=null,slotId=null,savedAt=0,_asT=null,storeSafe=null;
+try{slotId=localStorage.getItem("leaguesim-slot")}catch(e){}
+const autosaveOn=()=>{try{return localStorage.getItem("leaguesim-autosave")!=="0"}catch(e){return true}};
+let _db=null;
+function sdb(){return _db||(_db=new Promise((res,rej)=>{const r=indexedDB.open("leaguesim",1);r.onupgradeneeded=()=>{const d=r.result;d.createObjectStore("meta",{keyPath:"id"});d.createObjectStore("data")};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}))}
+async function sdo(mode,fn){const d=await sdb();return new Promise((res,rej)=>{const tx=d.transaction(["meta","data"],mode),out={};fn(tx.objectStore("meta"),tx.objectStore("data"),out);tx.oncomplete=()=>res(out.v);tx.onerror=tx.onabort=()=>rej(tx.error)})}
+async function listSlots(){try{slots=(await sdo("readonly",(m,d,o)=>{m.getAll().onsuccess=e=>o.v=e.target.result}))||[];slots.sort((a,b)=>b.saved-a.saved)}catch(e){slots=[];console.warn(e)}return slots}
+const setSlotId=id=>{slotId=id;try{id?localStorage.setItem("leaguesim-slot",id):localStorage.removeItem("leaguesim-slot")}catch(e){}};
+function slotMeta(id,name){
+  const ch=state.history.length?team(state.history[state.history.length-1].champion.id):null,b=ch||state.teams[0];
+  return{id,name,league:state.name,season:state.season,where:state.draft?"draft in progress":seasonDone()?"season complete":`matchday ${state.round+1} of ${state.fixtures.length}`,fmt:FORMATS[state.format].label,clubs:state.teams.length,
+    champ:ch?ch.name:"",badge:b?{id:b.id,name:b.name,short:b.short,c1:b.c1,c2:b.c2,crest:{...b.crest,img:undefined}}:null,saved:Date.now()};
 }
-async function loadFile(){
-  if(dirty&&state&&!confirm("You have unsaved changes. Open another file anyway?"))return;
-  if(window.showOpenFilePicker){
-    try{const [h]=await window.showOpenFilePicker({types:[{description:"League save",accept:{"application/json":[".json"]}}]});const txt=await (await h.getFile()).text();if(applyLoad(txt))fileHandle=h,render();return}
-    catch(e){if(e.name==="AbortError")return;console.warn(e)}
-  }
-  const inp=document.createElement("input");inp.type="file";inp.accept=".json,application/json";
-  inp.onchange=async()=>{const f=inp.files[0];if(f&&applyLoad(await f.text())){fileHandle=null;render()}};inp.click();
+async function writeSlot(id,name){
+  const text=saveText(),meta={...slotMeta(id,name),kb:Math.round(text.length/1024)};
+  await sdo("readwrite",(m,d)=>{m.put(meta);d.put(text,id)});
+  setSlotId(id);dirty=false;savedAt=meta.saved;await listSlots();
+}
+// Slot writes run one at a time so an autosave and a button press never write two slots
+let _saveQ=Promise.resolve();
+const queued=fn=>{const run=_saveQ.then(fn);_saveQ=run.catch(()=>{});return run};
+const saveNow=quiet=>queued(()=>saveNowRun(quiet));
+async function saveNowRun(quiet){
+  if(!state)return;clearTimeout(_asT);
+  try{if(slots===null)await listSlots();const cur=slots.find(x=>x.id===slotId);await writeSlot(cur?cur.id:uid(),cur?cur.name:state.name);if(!quiet)toast("Saved");render()}
+  catch(e){console.warn(e);toast("Could not save inside the app. Export a file from the Saves page to keep your league.")}
+}
+async function saveAsNew(){
+  const n=prompt("Name for the new save",`${state.name}, season ${state.season}`);if(n===null)return;
+  try{await queued(()=>writeSlot(uid(),n.trim().slice(0,60)||state.name));toast("Saved to a new slot");render()}catch(e){console.warn(e);toast("Could not save inside the app.")}
+}
+// Called from persist(): saves a moment after the last change so a run of edits is one write
+function autosaveSoon(){if(!autosaveOn()||!window.indexedDB)return;clearTimeout(_asT);_asT=setTimeout(()=>{if(state&&dirty)saveNow(true)},1500)}
+async function loadSlot(id){
+  if(dirty&&state&&!autosaveOn()&&!confirm("You have unsaved changes. Load another save anyway?"))return;
+  if(dirty&&state&&autosaveOn())await saveNow(true);
+  const text=await sdo("readonly",(m,d,o)=>{d.get(id).onsuccess=e=>o.v=e.target.result});
+  if(text&&applyLoad(text)){setSlotId(id);const mt=slots&&slots.find(x=>x.id===id);savedAt=mt?mt.saved:0;navStack=[];render()}
+}
+async function renameSlot(id){const mt=slots.find(x=>x.id===id);if(!mt)return;const n=prompt("Rename this save",mt.name);if(n===null||!n.trim())return;mt.name=n.trim().slice(0,60);await sdo("readwrite",m=>{m.put(mt)});await listSlots();render()}
+async function deleteSlot(id){const mt=slots.find(x=>x.id===id);if(!mt||!confirm(`Delete the save "${mt.name}"? This cannot be undone.`))return;await sdo("readwrite",(m,d)=>{m.delete(id);d.delete(id)});if(id===slotId){setSlotId(null);if(state)dirty=true}await listSlots();toast("Save deleted");render()}
+async function exportText(name,text){
+  if(window.showSaveFilePicker){try{const h=await window.showSaveFilePicker({suggestedName:name,types:[{description:"League save",accept:{"application/json":[".json"]}}]});const w=await h.createWritable();await w.write(text);await w.close();toast(`Exported to ${h.name}`);return}catch(e){if(e.name==="AbortError")return;console.warn(e)}}
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type:"application/json"}));a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),2000);toast("Save file downloaded");
+}
+async function exportSlot(id){const text=id?await sdo("readonly",(m,d,o)=>{d.get(id).onsuccess=e=>o.v=e.target.result}):saveText();const mt=slots&&slots.find(x=>x.id===id);if(text)exportText(`${(mt?mt.name:state.name).toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"league"}.json`,text)}
+// Import opens a .json save and gives it its own slot
+async function importFile(){
+  if(dirty&&state&&autosaveOn())await saveNow(true);
+  else if(dirty&&state&&!confirm("You have unsaved changes. Import another league anyway?"))return;
+  const go=async txt=>{if(applyLoad(txt)){navStack=[];await queued(()=>writeSlot(uid(),state.name));render()}};
+  if(window.showOpenFilePicker){try{const [h]=await window.showOpenFilePicker({types:[{description:"League save",accept:{"application/json":[".json"]}}]});return go(await (await h.getFile()).text())}catch(e){if(e.name==="AbortError")return;console.warn(e)}}
+  const inp=document.createElement("input");inp.type="file";inp.accept=".json,application/json";inp.onchange=async()=>{const f=inp.files[0];if(f)go(await f.text())};inp.click();
 }
 function applyLoad(txt){
-  try{const d=JSON.parse(txt);if(d.app!=="leaguesim"||!Array.isArray(d.teams))throw 0;state=migrate(d);dirty=false;view="table";setup=null;try{localStorage.setItem("leaguesim-backup",txt)}catch(e){}if(state.__traitsAdded){delete state.__traitsAdded;persist();toast(`Opened ${d.name}. Your players now have traits. Save to keep them.`)}else toast(`Opened ${d.name}`);return true}
+  try{const d=JSON.parse(txt);if(d.app!=="leaguesim"||!Array.isArray(d.teams))throw 0;state=migrate(d);dirty=false;view="table";setup=null;try{localStorage.setItem("leaguesim-backup",txt)}catch(e){}if(state.__traitsAdded){delete state.__traitsAdded;persist();toast(`Opened ${d.name}. Your players now have traits.`)}else toast(`Opened ${d.name}`);return true}
   catch(e){toast("That file is not a League Sim save. Pick a .json file saved from this app.");return false}
 }
-
+const whenTxt=t=>{if(!t)return "";const s=(Date.now()-t)/1000;return s<60?"just now":s<3600?`${Math.floor(s/60)} min ago`:new Date(t).toLocaleString([],{dateStyle:"medium",timeStyle:"short"})};
+function slotCards(){
+  if(slots===null)return `<p class="muted">Loading saves...</p>`;
+  if(!slots.length)return `<div class="empty">No saves yet.</div>`;
+  return `<div class="slots">${slots.map(m=>{const cur=state&&m.id===slotId;return `<div class="slot ${cur?"cur":""}">${m.badge?badge(m.badge,44):""}<div class="grow"><b class="slotn">${esc(m.name)}</b>${cur?`<span class="eratag live">Open now</span>`:""}
+    <span class="muted">${m.name!==m.league?`${esc(m.league)}. `:""}Season ${m.season}, ${esc(m.where)}</span><span class="muted">${esc(m.fmt)}, ${m.clubs} clubs${m.champ?`. Last champions ${esc(m.champ)}`:""}</span><span class="muted">Saved ${whenTxt(m.saved)}${m.kb?`, ${m.kb} KB`:""}</span>
+    <div class="row"><button class="btn sm ${cur?"":"go"}" data-act="slot-load" data-id="${m.id}">${cur?"Reload":"Load"}</button><button class="btn sm" data-act="slot-ren" data-id="${m.id}">Rename</button><button class="btn sm" data-act="slot-exp" data-id="${m.id}">Export</button><button class="btn sm" data-act="slot-del" data-id="${m.id}">Delete</button></div></div></div>`}).join("")}</div>`;
+}
+function viewSaves(){
+  const on=autosaveOn();
+  return `<h2>Saves</h2><p class="muted">Your leagues are kept inside the app on this computer. ${on?"Autosave is on, so changes are saved a moment after they happen.":"Autosave is off. Press Save to keep your changes."}</p>
+  <div class="toolbar"><button class="btn go" data-act="save">Save now</button><button class="btn" data-act="saveas">Save as a new slot</button><button class="btn" data-act="import">Import a save file</button><button class="btn" data-act="slot-exp">Export this league to a file</button></div>
+  <div class="chips" style="margin-bottom:14px"><button class="chip ${on?"on":""}" data-act="autosave" data-v="1">Autosave on</button><button class="chip ${on?"":"on"}" data-act="autosave" data-v="0">Autosave off</button></div>
+  ${slotCards()}
+  <p class="muted" style="margin-top:18px">${storeSafe?"Chrome has marked this app's storage as protected, so it is not cleared to free up space.":"Chrome may clear this app's storage if your disk runs very low, or if you clear site data for it."} Export a file now and then if you want a copy outside the app, for a backup or another computer.</p>`;
+}
 /* ---------- events ---------- */
 document.addEventListener("click",async e=>{
   const b=e.target.closest("[data-act]");if(!b)return;
@@ -1835,7 +1997,11 @@ document.addEventListener("click",async e=>{
   if(a==="reroll"){const used=[];setup.teams.forEach(t=>{t.name=teamNameGen(used);used.push(t.name)});return renderSetup()}
   if(a==="smode"){setup.mode=v;return renderSetup()}
   if(a==="create")return createLeague();
-  if(a==="load")return loadFile();
+  if(a==="import")return importFile();
+  if(a==="slot-load")return loadSlot(id);
+  if(a==="slot-ren")return renameSlot(id);
+  if(a==="slot-del")return deleteSlot(id);
+  if(a==="slot-exp")return exportSlot(id);
   if(!state)return;
   const was=view;
   switch(a){
@@ -1901,12 +2067,17 @@ document.addEventListener("click",async e=>{
     case "tb-clear":tb.ga=[];tb.gb=[];break;
     case "tb-do":{const A=team(tb.a),B=team(tb.b),min=lineupSize();if(A.players.length-tb.ga.length+tb.gb.length<min||B.players.length-tb.gb.length+tb.ga.length<min){toast(`Each squad needs at least ${min} players after the trade`);return}doTrade(tb.a,tb.b,tb.ga,tb.gb,false);tb.ga=[];tb.gb=[];persist();toast("Trade completed");break}
     case "trade-now":{const n=tradeWindow("Extra window",2);toast(n?`${n} ${n===1?"trade":"trades"} completed`:"No AI clubs found a fair trade right now");if(n)persist();break}
-    case "save":return saveFile(false);
-    case "saveas":return saveFile(true);
-    case "new":if(dirty&&!confirm("You have unsaved changes. Start a new league anyway?"))return;state=null;setup=null;fileHandle=null;dirty=false;break;
-    case "delete":if(!confirm(`Delete ${state.name}? Save files on your laptop are not affected.`))return;try{localStorage.removeItem("leaguesim-backup")}catch(e){}state=null;setup=null;fileHandle=null;dirty=false;break;
+    case "save":return saveNow();
+    case "saveas":return saveAsNew();
+    case "autosave":try{localStorage.setItem("leaguesim-autosave",v)}catch(e){}if(v==="1"&&dirty)autosaveSoon();break;
+    case "new":if(dirty&&autosaveOn())await saveNow(true);else if(dirty&&!confirm("You have unsaved changes. Start a new league anyway?"))return;try{localStorage.removeItem("leaguesim-backup")}catch(e){}state=null;setup=null;setSlotId(null);dirty=false;await listSlots();break;
+    case "delete":{if(!confirm(`Delete ${state.name}? Its save inside the app is deleted too. Files you exported are not affected.`))return;clearTimeout(_asT);try{localStorage.removeItem("leaguesim-backup")}catch(e){}const sid=slotId;if(sid)try{await sdo("readwrite",(m,d)=>{m.delete(sid);d.delete(sid)})}catch(e){}state=null;setup=null;setSlotId(null);dirty=false;await listSlots();break}
     case "sort":if(ps.sort===v)ps.dir*=-1;else{ps.sort=v;ps.dir=v==="name"?1:-1}ps.lim=50;break;
     case "scope":ps.scope=v;ps.lim=50;break;
+    case "pscomp":ps.comp=v;ps.lim=50;break;
+    case "pcomp":pComp=v;break;
+    case "rec-comp":recComp=v;break;
+    case "tbltab":tblTab=v;break;
     case "pos":ps.pos=v;ps.lim=50;break;
     case "pmore":ps.lim+=50;break;
     case "star":{const p=pl(id);p.rating=tierRating(+v);persist();break}
@@ -1959,12 +2130,22 @@ document.addEventListener("change",e=>{
   if(el.dataset.pf){const p=pl(el.dataset.id),k=el.dataset.pf;if(k==="name")p.name=el.value.trim()||p.name;else if(k==="pos")p.pos=el.value;else if(k==="age")p.age=clamp(parseInt(el.value)||p.age,15,45);else if(k==="nat")p.nat=el.value;else if(k==="rating"){p.rating=clamp(parseInt(el.value)||p.rating,20,99);if(p.pot!==undefined)p.pot=Math.max(p.pot,p.rating)}persist();render()}
 });
 $("#modal").addEventListener("click",e=>{if(e.target.id==="modal")closeModal()});
-window.addEventListener("beforeunload",e=>{if(dirty&&state){e.preventDefault();e.returnValue=""}});
+window.addEventListener("beforeunload",e=>{if(dirty&&state&&!autosaveOn()){e.preventDefault();e.returnValue=""}});
+// Leaving or hiding the app saves straight away rather than waiting for the autosave timer
+document.addEventListener("visibilitychange",()=>{if(document.hidden&&dirty&&state&&autosaveOn())saveNow(true)});
 
 let tt;function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("show"),3200)}
 
 /* ---------- start ---------- */
-try{const b=localStorage.getItem("leaguesim-backup");if(b){const d=JSON.parse(b);if(d&&d.app==="leaguesim"){state=migrate(d);if(state.__traitsAdded){delete state.__traitsAdded;persist()}dirty=true;setTimeout(()=>toast("Restored your last session. Save to a file to keep it."),300)}}}catch(e){}
+let _boot=null;try{const b=localStorage.getItem("leaguesim-backup");if(b){const d=JSON.parse(b);if(d&&d.app==="leaguesim"){state=migrate(d);if(state.__traitsAdded){delete state.__traitsAdded;persist()}dirty=true;_boot=b}}}catch(e){}
+// Slots load in the background. A league open from before slots existed gets one straight away.
+if(window.indexedDB)listSlots().then(async()=>{
+  if(state&&_boot){const cur=slots.find(x=>x.id===slotId);
+    if(!cur){await saveNow(true);toast("Your league is now saved inside the app. Find all your saves on the Saves page.")}
+    else{savedAt=cur.saved;const txt=await sdo("readonly",(m,d,o)=>{d.get(cur.id).onsuccess=e=>o.v=e.target.result});dirty=txt!==_boot;if(dirty)autosaveSoon()}}
+  if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().then(v=>{storeSafe=v}).catch(()=>{});
+  render();
+});
 render();
 
 /* ---------- installable app ---------- */

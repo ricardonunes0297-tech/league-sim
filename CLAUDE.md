@@ -6,7 +6,9 @@ A pure-simulation football league game. The user sets up clubs and players, then
 
 - The game lives in one file: `index.html` in `~/Documents/league-sim-app` (this folder replaced the numbered `league-sim-N.html` copies in Downloads) (HTML, CSS and vanilla JS, no build step, no dependencies apart from optional Google Fonts with fallbacks).
 - It runs offline by double-clicking the file.
-- Saves are JSON files written with the File System Access API (Chrome and Edge overwrite the same file), with a download fallback. A backup also goes to `localStorage` under `leaguesim-backup`.
+- Saves live in save slots inside the app (IndexedDB database `leaguesim`, stores `meta` for slot cards and `data` for save text). The Saves page lists them with Load, Rename, Export and Delete, plus Save now, Save as a new slot, Import a save file and Export. The setup screen lists them too when no league is open.
+- Autosave (on by default, stored in `localStorage` `leaguesim-autosave`) writes the open slot 1.5 seconds after the last `persist()`, and straight away when the app is hidden. All slot writes go through `queued()` so they never overlap. `slotId` (also in `localStorage` `leaguesim-slot`) is the open slot.
+- `localStorage` `leaguesim-backup` is still written on every change as a crash copy and is what the app reopens on start. A league reopened with no slot gets one automatically. The app asks Chrome for persistent storage. Files (.json) are only for export and import, and old files import into a new slot.
 - Older saves must always keep loading. All schema changes go through `migrate(d)`, which fills in missing fields with defaults.
 - Saves are compact: `saveText()` runs `packState()`, which turns career rows and archived results into short arrays (marked `packed:1`) and writes JSON without whitespace. `migrate()` calls `unpackState()` first, so in memory everything stays as objects. New fields on career rows or results are safe: rows with unknown keys are left as objects.
 - Keep the save small as features grow: about 30KB per season for a 10 club 11 a side league. Store ids, not copies of names, wherever history allows.
@@ -114,6 +116,17 @@ A pure-simulation football league game. The user sets up clubs and players, then
 
 - Plain, natural English. No em dashes. Simple words.
 
+## League and cup stats
+
+- League stats are `apps/goals/assists/cs`, cup stats are `capps/cgoals/cas/ccs` (cup assists and clean sheets only exist from version 2026.10.25-11, older seasons read 0). `simCupTie` restores league stats after the tie and adds the difference to the cup fields.
+- `cv(stats, key, comp)` reads "lg", "cup" or "all"; `compStats()` returns a stats object for one competition. The player page career and the players list have All competitions / League / Cup chips (`pComp`, `ps.comp`, default all). Milestones, tributes and eras count all competitions.
+
+## Records tab, eras and tributes
+
+- The Table page has Table and Records tabs (`tblTab`). `viewRecords()` builds club records (league seasons from `clubSeasons()`, matches from `allMatches()`, runs from `clubRuns()`), player all-time and single-season records for the chosen competition (`recComp`), and top 10 leaderboards. The old records cards on History were folded into it.
+- `erasOf(team)` groups a club's titles into runs with no more than one season between titles; three or more titles make an era (a dynasty at four titles or three in a row). It is named after the manager who won at least two thirds of those titles, otherwise the core player with most appearances. Shown on History and in the club History tab, plus a Greatest dynasty record.
+- `notable(p)` picks retired players worth a tribute (enough appearances plus a legacy of half the Hall of Fame bar, two titles, an award, a one-club career or ten seasons). `tributeHTML(p)` writes the card live from the player's data. Tributes show on the player page, in the season review (Farewells) and as an awards night step.
+
 ## Ideas not built yet
 
 - News feed with auto-written headlines.
@@ -126,4 +139,4 @@ A pure-simulation football league game. The user sets up clubs and players, then
 - `manifest.webmanifest` holds the name, colours and icons. Icons are pixel art PNGs in `icons/`.
 - `sw.js` is the offline worker. The game page is network first with a 4 second fallback to cache, so an update is just uploading a new `index.html`. Fonts and other files are cached and refreshed in the background. Bump `CACHE` only if cached files other than the page need forcing.
 - The worker registers only over http(s), so double-clicking `index.html` still works.
-- Save files stay on disk through the File System Access API. The `localStorage` backup is tied to the web address, so the installed app has its own backup slot.
+- Save slots and the `localStorage` backup are tied to the web address, so the installed app and the site share them (same origin). Export files for copies outside the app.
