@@ -270,6 +270,13 @@ tr.sel td{background:color-mix(in srgb,var(--flood) 20%,transparent)}
 .h2hbar{display:flex;height:10px;border-radius:5px;overflow:hidden;margin-top:12px;background:var(--line)}
 .empty{color:var(--muted);padding:30px;text-align:center;border:2px dashed var(--line);border-radius:10px}
 .hist{margin-bottom:16px}
+.trt{display:inline-flex;align-items:center;gap:3px;margin-left:6px;padding:1px 6px;border-radius:999px;background:color-mix(in srgb,var(--turf) 12%,var(--surface));border:1px solid var(--line);font:600 .7rem/1.4 var(--bd);color:var(--ink);vertical-align:middle;white-space:nowrap}
+.trts{display:flex;gap:4px;margin-top:3px}
+.trts .trt{margin-left:0}
+.trt.big{font-size:.85rem;padding:3px 9px;margin:0 6px 0 0}
+.trt button{background:none;border:0;cursor:pointer;color:var(--muted);font-size:1rem;line-height:1;padding:0 0 0 2px}
+.ptraits{margin:.2em 0 .4em;display:flex;flex-wrap:wrap;align-items:center;gap:4px}
+.ptraits select{font-size:.85rem}
 .derby{display:inline-block;background:var(--loss);color:#fff;font:700 .72rem/1 var(--hd);text-transform:uppercase;letter-spacing:.04em;padding:3px 6px;border-radius:4px;vertical-align:middle}
 .rivrow{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
 .rivrow input{max-width:200px;font-family:var(--hd);font-weight:700}
@@ -447,12 +454,12 @@ function unpackState(d){
   delete d.packed;return d;
 }
 const saveText=()=>JSON.stringify(packState(state));
-const migrate=d=>{unpackState(d);d.retired=d.retired||{};(d.teams||[]).forEach(t=>{t.crest=t.crest||{shape:"shield",pattern:"plain",emblem:"none",text:"initials",c3:t.c2};t.kit=t.kit||randomKit(t.c1,t.c2);t.ground=t.ground||randomGround(t.name)});d.trades=d.trades||[];d.draftHistory=d.draftHistory||[];const S0=JSON.parse(JSON.stringify(DEFAULT_SETTINGS));d.settings={...S0,...(d.settings||{})};d.settings.theme={...S0.theme,...(d.settings.theme||{})};d.settings.ring={...S0.ring,...(d.settings.ring||{})};d.settings.cup={...S0.cup,...(d.settings.cup||{})};d.hof=d.hof||[];d.results=d.results||[];[...Object.values(d.players||{}),...Object.values(d.retired||{})].forEach(p=>{p.nat=p.nat||guessNat(p.name);p.inj=p.inj||0;p.awards=p.awards||[]});if(d.draft===undefined)d.draft=null;Object.values(d.players||{}).forEach(p=>{p.moves=p.moves||[];p.seasonTeams=p.seasonTeams||[p.teamId]});return d};
+const migrate=d=>{unpackState(d);d.retired=d.retired||{};(d.teams||[]).forEach(t=>{t.crest=t.crest||{shape:"shield",pattern:"plain",emblem:"none",text:"initials",c3:t.c2};t.kit=t.kit||randomKit(t.c1,t.c2);t.ground=t.ground||randomGround(t.name)});d.trades=d.trades||[];d.draftHistory=d.draftHistory||[];const S0=JSON.parse(JSON.stringify(DEFAULT_SETTINGS));d.settings={...S0,...(d.settings||{})};d.settings.theme={...S0.theme,...(d.settings.theme||{})};d.settings.ring={...S0.ring,...(d.settings.ring||{})};d.settings.cup={...S0.cup,...(d.settings.cup||{})};d.hof=d.hof||[];d.results=d.results||[];[...Object.values(d.players||{}),...Object.values(d.retired||{})].forEach(p=>{p.nat=p.nat||guessNat(p.name);p.inj=p.inj||0;p.awards=p.awards||[]});if(d.draft===undefined)d.draft=null;[...Object.values(d.players||{}),...(d.draft&&d.draft.pool||[])].forEach(p=>{if(!p.tr){p.tr=rollTraits(p);d.__traitsAdded=true}});Object.values(d.players||{}).forEach(p=>{p.moves=p.moves||[];p.seasonTeams=p.seasonTeams||[p.teamId]});return d};
 let clubTab="squad",kitSide="home",_bid=0;
 const pname=id=>pl(id)?pl(id).name:"Unknown";
 
 function genName(nat){const N=NAT[nat]||NAT[pickNation()];const used=new Set(state?[...Object.values(state.players),...(state.draft?state.draft.pool:[])].map(p=>p.name):[]);let n;for(let i=0;i<30;i++){n=pick(N.f)+" "+pick(N.l);if(!used.has(n))return n}return n}
-function newPlayer(pos,teamId,o={}){const nat=o.nat||pickNation();return{id:uid(),nat,inj:0,name:o.name||genName(nat),pos,age:o.age??randInt(18,33),rating:o.rating??tierRating(randTier()),teamId,s:blank(),career:[],moves:[],seasonTeams:[teamId]}}
+function newPlayer(pos,teamId,o={}){const nat=o.nat||pickNation();const p={id:uid(),nat,inj:0,name:o.name||genName(nat),pos,age:o.age??randInt(18,33),rating:o.rating??tierRating(randTier()),teamId,s:blank(),career:[],moves:[],seasonTeams:[teamId]};p.tr=rollTraits(p);return p}
 
 function roundRobin(ids){let t=[...ids];if(t.length%2)t.push(null);const n=t.length,out=[];for(let r=0;r<n-1;r++){const rd=[];for(let i=0;i<n/2;i++){const a=t[i],b=t[n-1-i];if(a&&b)rd.push(r%2?[b,a]:[a,b])}out.push(rd);t=[t[0],t[n-1],...t.slice(1,n-1)]}return out}
 function makeFixtures(){const rr=roundRobin(shuffle(state.teams.map(t=>t.id)));const back=rr.map(r=>r.map(([h,a])=>[a,h]));return[...rr,...back].map(r=>r.map(([h,a])=>({h,a,hg:0,ag:0,played:false,ev:[]})))}
@@ -461,7 +468,30 @@ const seasonDone=()=>state.round>=state.fixtures.length;
 function persist(){dirty=true;try{localStorage.setItem("leaguesim-backup",saveText())}catch(e){}}
 
 /* ---------- simulation ---------- */
-const eff=x=>x.p.rating-(x.p.pos===x.role?0:8);
+const eff=x=>x.p.rating-(x.p.pos===x.role?0:8)+(_bigGame&&hasT(x.p,"big")?5:0);
+/* ---------- player traits ---------- */
+const TRAITS={
+  clinical:{n:"Clinical",d:"Finishes more of the chances that fall to them.",pos:["FW","MF"]},
+  playmaker:{n:"Playmaker",d:"Sets up far more goals.",pos:["MF","FW","DF"]},
+  wall:{n:"Wall",d:"Hard to get past. Lifts the whole defence.",pos:["DF"]},
+  stopper:{n:"Shot stopper",d:"A keeper who keeps more clean sheets.",pos:["GK"]},
+  leader:{n:"Leader",d:"Lifts every teammate on the pitch.",pos:POS},
+  big:{n:"Big game player",d:"Raises their level in cup ties and derbies.",pos:POS},
+  iron:{n:"Iron man",d:"Rarely injured, and back quickly when they are.",pos:POS},
+  prone:{n:"Injury prone",d:"Picks up injuries more often.",pos:POS},
+  learner:{n:"Fast learner",d:"Improves quickly while young.",pos:POS},
+  bloomer:{n:"Late bloomer",d:"Keeps improving into their late twenties.",pos:POS},
+  evergreen:{n:"Evergreen",d:"Ages slowly and plays on longer.",pos:POS},
+  steady:{n:"Steady",d:"Rarely has a bad game.",pos:POS},
+  flair:{n:"Flair",d:"Brilliant or frustrating, rarely in between.",pos:["MF","FW"]},
+  loyal:{n:"Loyal",d:"AI clubs will not trade them away.",pos:POS}
+};
+const TRAIT_CLASH=[["iron","prone"],["steady","flair"],["learner","bloomer"]];
+const hasT=(p,k)=>!!(p&&p.tr&&p.tr.includes(k));
+const traitOk=(p,k,list)=>TRAITS[k].pos.includes(p.pos)&&!list.includes(k)&&!TRAIT_CLASH.some(c=>c.includes(k)&&c.some(o=>o!==k&&list.includes(o)));
+function rollTraits(p){const n=rand()<.3?0:rand()<.22?2:1,out=[];for(let i=0;i<n;i++){const ok=Object.keys(TRAITS).filter(k=>traitOk(p,k,out));if(ok.length)out.push(pick(ok))}return out}
+const traitTags=p=>(p.tr||[]).length?`<span class="trts">${p.tr.map(k=>TRAITS[k]?`<span class="trt" title="${esc(TRAITS[k].d)}">${TRAITS[k].n}</span>`:"").join("")}</span>`:"";
+let _bigGame=false,_cupNow=false;
 function lineup(t,noise=true){
   const fmt=FORMATS[state.format];
   const squad=t.players.map(pl).filter(Boolean).map(p=>({p,k:p.rating+(noise?rand()*8:0)})).sort((a,b)=>b.k-a.k).map(x=>x.p);
@@ -474,14 +504,14 @@ function lineup(t,noise=true){
   }
   return lu;
 }
-function strength(lu){const g=r=>{const a=lu.filter(x=>x.role===r).map(eff);return a.length?a.reduce((s,v)=>s+v,0)/a.length:45};const GK=g("GK"),DF=g("DF"),MF=g("MF"),FW=g("FW");return{att:.55*FW+.45*MF,def:.5*DF+.3*GK+.2*MF}}
+function strength(lu){const g=r=>{const a=lu.filter(x=>x.role===r).map(x=>eff(x)+((r==="DF"&&hasT(x.p,"wall"))||(r==="GK"&&hasT(x.p,"stopper"))?(r==="GK"?10:5):0));return a.length?a.reduce((s,v)=>s+v,0)/a.length:45};const GK=g("GK"),DF=g("DF"),MF=g("MF"),FW=g("FW");const ld=lu.some(x=>hasT(x.p,"leader"))?1.5:0;return{att:.55*FW+.45*MF+ld,def:.5*DF+.3*GK+.2*MF+ld}}
 const SW={GK:.05,DF:1,MF:3,FW:6},AW={GK:.3,DF:1.5,MF:5,FW:3};
 function goals(lu,n,teamId){
   const ev=[];
   for(let i=0;i<n;i++){
-    const s=wpick(lu,x=>SW[x.role]*Math.pow(eff(x)/60,2));
+    const s=wpick(lu,x=>SW[x.role]*Math.pow(eff(x)/60,2)*(hasT(x.p,"clinical")?1.45:1));
     let a=null;
-    if(rand()<.72){const o=lu.filter(x=>x!==s);if(o.length)a=wpick(o,x=>AW[x.role]*Math.pow(eff(x)/60,2))}
+    if(rand()<.72){const o=lu.filter(x=>x!==s);if(o.length)a=wpick(o,x=>AW[x.role]*Math.pow(eff(x)/60,2)*(hasT(x.p,"playmaker")?1.45:1))}
     s.p.s.goals++;if(a)a.p.s.assists++;
     ev.push({t:teamId,s:s.p.id,a:a?a.p.id:null,m:randInt(1,FORMATS[state.format].mins)});
   }
@@ -489,7 +519,7 @@ function goals(lu,n,teamId){
 }
 const _newInj=new Set();
 function simMatch(f){
-  const fmt=FORMATS[state.format],S=state.settings,H=team(f.h),A=team(f.a);
+  const fmt=FORMATS[state.format],S=state.settings,H=team(f.h),A=team(f.a);_bigGame=_cupNow||!!derbyOf(f.h,f.a);
   const lh=lineup(H),la=lineup(A),sh=strength(lh),sa=strength(la),k=22,base=fmt.base*S.goals/100;
   const lamH=clamp(base*Math.exp((sh.att-sa.def)/k)*(1+S.home/100),.1,9);
   const lamA=clamp(base*Math.exp((sa.att-sh.def)/k)*(1-S.home/250),.1,9);
@@ -499,15 +529,16 @@ function simMatch(f){
   if(f.hg===0)la.filter(x=>x.role==="GK").forEach(x=>x.p.s.cs++);
   const ev=goals(lh,f.hg,f.h).concat(goals(la,f.ag,f.a));
   const gl={},as={};ev.forEach(e=>{gl[e.s]=(gl[e.s]||0)+1;if(e.a)as[e.a]=(as[e.a]||0)+1});let best=null;
-  const rate=(lu,gf,ga)=>lu.forEach(x=>{const p=x.p;let r=6.2+(gf>ga?.5:gf<ga?-.45:0)+(eff(x)-65)/30+(gl[p.id]||0)*1.05+(as[p.id]||0)*.6+(rand()-.5)*1.1;if(x.role==="GK")r+=ga===0?1:-.3*Math.max(0,ga-1);else if(x.role==="DF")r+=ga===0?.5:-.15*Math.max(0,ga-1);r=clamp(Math.round(r*10)/10,3,10);p.s.rsum=(p.s.rsum||0)+r;p.s.rapps=(p.s.rapps||0)+1;if(!best||r>best.r)best={id:p.id,r}});
+  const rate=(lu,gf,ga)=>lu.forEach(x=>{const p=x.p;let r=6.2+(gf>ga?.5:gf<ga?-.45:0)+(eff(x)-65)/30+(gl[p.id]||0)*1.05+(as[p.id]||0)*.6+(rand()-.5)*1.1*(hasT(p,"steady")?.5:hasT(p,"flair")?1.8:1);if(x.role==="GK")r+=ga===0?1:-.3*Math.max(0,ga-1);else if(x.role==="DF")r+=ga===0?.5:-.15*Math.max(0,ga-1);r=clamp(Math.round(r*10)/10,3,10);p.s.rsum=(p.s.rsum||0)+r;p.s.rapps=(p.s.rapps||0)+1;if(!best||r>best.r)best={id:p.id,r}});
   rate(lh,f.hg,f.ag);rate(la,f.ag,f.hg);f.motm=best;
   const ir=.014*S.injury/100;
-  if(ir>0)for(const x of lh.concat(la)){if(rand()<ir){const n=wpick([1,2,3,4,6,10],d=>({1:30,2:25,3:18,4:12,6:9,10:6})[d]);x.p.inj=n;x.p.injCount=(x.p.injCount||0)+1;_newInj.add(x.p.id);ev.push({t:lh.includes(x)?f.h:f.a,inj:x.p.id,n,m:randInt(1,fmt.mins)})}}
+  if(ir>0)for(const x of lh.concat(la)){if(rand()<ir*(hasT(x.p,"prone")?2.2:hasT(x.p,"iron")?.35:1)){let n=wpick([1,2,3,4,6,10],d=>({1:30,2:25,3:18,4:12,6:9,10:6})[d]);if(hasT(x.p,"iron"))n=Math.max(1,Math.ceil(n/2));x.p.inj=n;x.p.injCount=(x.p.injCount||0)+1;_newInj.add(x.p.id);ev.push({t:lh.includes(x)?f.h:f.a,inj:x.p.id,n,m:randInt(1,fmt.mins)})}}
   f.ev=ev.sort((a,b)=>a.m-b.m);trackMatch(f,lh.concat(la));
   f.played=true;
 }
 function simRound(){if(seasonDone())return;if(state.draft){state.draft.stage="live";autoDraftAll()}_newInj.clear();state.fixtures[state.round].forEach(simMatch);if(cupOn()&&state.cup&&state.cup.season===state.season&&!state.cup.winner&&state.cup.sched[state.cup.cur]===state.round)playCupRound();Object.values(state.players).forEach(p=>{if(p.inj>0&&!_newInj.has(p.id))p.inj--});state.round++}
-function prog(age){return age<=21?randInt(1,6):age<=24?randInt(0,4):age<=28?randInt(-1,2):age<=31?randInt(-3,1):randInt(-6,-1)}
+function prog(age,p){let d=age<=21?randInt(1,6):age<=24?randInt(0,4):age<=28?randInt(-1,2):age<=31?randInt(-3,1):randInt(-6,-1);
+  if(hasT(p,"learner")&&age<=23)d+=randInt(1,3);if(hasT(p,"bloomer"))d+=age<=21?-1:age>=25&&age<=30?randInt(1,2):0;if(hasT(p,"evergreen")&&age>=29&&d<0)d=Math.ceil(d/2);return d}
 
 function endSeason(){
   const tbl=computeTable();
@@ -522,10 +553,10 @@ function endSeason(){
   for(const p of all){
     const ids=[...new Set([...(p.seasonTeams||[]),p.teamId])].filter(i=>team(i));
     p.career.push({season:state.season,team:ids.map(i=>team(i).name).join(" / "),teamId:p.teamId,teamIds:ids,...p.s,rating:p.rating,age:p.age});
-    p.s=blank();p.seasonTeams=[p.teamId];p.inj=0;p.age++;p.rating=clamp(p.rating+prog(p.age),30,95);
+    p.s=blank();p.seasonTeams=[p.teamId];p.inj=0;p.age++;p.rating=clamp(p.rating+prog(p.age,p),30,95);
   }
   for(const p of all){
-    const RA=state.settings.retireAge;if(p.age>=RA&&rand()<(p.age-RA+1)*.22){
+    const RA=state.settings.retireAge+(hasT(p,"evergreen")?3:0);if(p.age>=RA&&rand()<(p.age-RA+1)*.22){
       const tot=p.career.reduce((a,c)=>({apps:a.apps+c.apps,goals:a.goals+c.goals,assists:a.assists+c.assists}),{apps:0,goals:0,assists:0});
       const t=team(p.teamId);
       h.retired.push({id:p.id,name:p.name,pos:p.pos,team:t.name,age:p.age,...tot});
@@ -817,7 +848,7 @@ function viewPlayers(){
   const posSel=p=>`<select data-pf="pos" data-id="${p.id}" aria-label="Position">${POS.map(x=>`<option ${x===p.pos?"selected":""}>${x}</option>`).join("")}</select>`;
   const head=ps.edit?`<tr>${th("name","Player")}<th>Club</th><th>Pos</th><th>Nation</th>${th("age","Age",1)}${th("rating","Ability")}<th>Exact</th><th></th></tr>`:`<tr>${th("name","Player")}<th>Club</th><th>Pos</th>${th("age","Age",1)}${th("rating","Ability")}${cols.map(([k,l])=>th(k,l,1)).join("")}${th("avg","Avg",1)}${th("titles","Titles")}${th("awards","Awards")}</tr>`;
   const row=ps.edit?({p})=>`<tr><td><span class="namecell">${flag(p.nat)}<input type="text" data-pf="name" data-id="${p.id}" value="${esc(p.name)}" maxlength="40" aria-label="Player name"></span></td><td>${clubCell(p)}</td><td>${posSel(p)}</td><td>${natSel(p)}</td><td class="r"><input type="number" min="15" max="45" data-pf="age" data-id="${p.id}" value="${p.age}" aria-label="Age"></td><td>${stars(p.rating,p.id)}</td><td><input type="number" min="20" max="99" data-pf="rating" data-id="${p.id}" value="${p.rating}" aria-label="Exact ability"></td><td><button class="btn sm" data-act="player" data-id="${p.id}">Career</button></td></tr>`
-    :({p,st,rg})=>`<tr class="click" data-act="player" data-id="${p.id}"><td><span class="namecell">${flag(p.nat)}${esc(p.name)}</span>${injTag(p)}</td><td>${clubCell(p)}</td><td>${p.pos}</td><td class="r num">${p.age}</td><td>${stars(p.rating)}</td>${cols.map(([k])=>`<td class="r num">${st[k]}</td>`).join("")}<td class="r num">${fmtAvg(avgOf(st))}</td><td>${ringsHTML(rg)}</td><td>${awardsHTML(ps.scope==="season"?awardsOf(p).filter(a=>a.season===state.season):awardsOf(p))}</td></tr>`;
+    :({p,st,rg})=>`<tr class="click" data-act="player" data-id="${p.id}"><td><span class="namecell">${flag(p.nat)}${esc(p.name)}</span>${injTag(p)}${traitTags(p)}</td><td>${clubCell(p)}</td><td>${p.pos}</td><td class="r num">${p.age}</td><td>${stars(p.rating)}</td>${cols.map(([k])=>`<td class="r num">${st[k]}</td>`).join("")}<td class="r num">${fmtAvg(avgOf(st))}</td><td>${ringsHTML(rg)}</td><td>${awardsHTML(ps.scope==="season"?awardsOf(p).filter(a=>a.season===state.season):awardsOf(p))}</td></tr>`;
   return `<div class="phead"><h2 style="margin:0">Players</h2><button class="btn ${ps.edit?"go":""}" data-act="pedit">${ps.edit?"Done editing":"Edit players"}</button></div>
   <div class="chips" style="align-items:center">${["season","all"].map(s=>`<button class="chip ${ps.scope===s?"on":""}" data-act="scope" data-v="${s}">${s==="season"?`Season ${state.season}`:"All time"}</button>`).join("")}<span style="width:8px"></span>${["ALL",...POS].map(p=>`<button class="chip ${ps.pos===p?"on":""}" data-act="pos" data-v="${p}">${p==="ALL"?"All positions":p}</button>`).join("")}<input type="search" data-pq placeholder="Search name, club or nation" value="${esc(ps.q||"")}" aria-label="Search players"></div>
   ${ps.edit?`<p class="muted">Changes save as you type. Tap the stars for a quick level or enter an exact ability.</p>`:""}
@@ -839,7 +870,7 @@ function squadPanel(t){
   const id=t.id,ps2=t.players.map(pl).filter(Boolean).sort((a,b)=>POS.indexOf(a.pos)-POS.indexOf(b.pos)||b.rating-a.rating);
   return `<div class="toolbar" style="margin-top:0"><button class="btn" data-act="add-player" data-id="${id}">Add player</button><button class="btn" data-act="paste-open" data-id="${id}">Paste names</button><button class="btn" data-act="rename-squad" data-id="${id}">Generate new names</button></div>
   <div class="card scroll"><table><thead><tr><th>Name</th><th>Pos</th><th>Nation</th><th class="r">Age</th><th>Ability</th><th class="r">Apps</th><th class="r">Goals</th><th class="r">Assists</th><th class="r">CS</th><th>Titles</th><th></th></tr></thead><tbody>
-  ${ps2.map(p=>`<tr><td><span class="namecell">${flag(p.nat)}<input type="text" data-pf="name" data-id="${p.id}" value="${esc(p.name)}" maxlength="40" aria-label="Player name"></span>${injTag(p)}</td>
+  ${ps2.map(p=>`<tr><td><span class="namecell">${flag(p.nat)}<input type="text" data-pf="name" data-id="${p.id}" value="${esc(p.name)}" maxlength="40" aria-label="Player name"></span>${injTag(p)}${traitTags(p)}</td>
     <td><select data-pf="pos" data-id="${p.id}" aria-label="Position">${POS.map(x=>`<option ${x===p.pos?"selected":""}>${x}</option>`).join("")}</select></td>
     <td><select data-pf="nat" data-id="${p.id}" aria-label="Nationality" style="max-width:130px">${NATIONS.map(n=>`<option value="${n.c}" ${p.nat===n.c?"selected":""}>${n.n}</option>`).join("")}</select></td>
     <td class="r"><input type="number" min="15" max="45" data-pf="age" data-id="${p.id}" value="${p.age}" aria-label="Age"></td>
@@ -903,7 +934,7 @@ function ensureCup(){if(cupOn()&&state.round===0&&(!state.cup||state.cup.season!
 function shootout(){let a=0,b=0;for(let i=0;i<5;i++){if(rand()<.76)a++;if(a>b+5-i||b>a+4-i)break;if(rand()<.76)b++;if(Math.abs(a-b)>4-i)break}while(a===b){if(rand()<.76)a++;if(rand()<.76)b++}return[a,b]}
 function simCupTie(f,neutral){
   const ids=[...team(f.h).players,...team(f.a).players],before=new Map(ids.map(i=>[i,{...pl(i).s}])),S=state.settings,home=S.home;
-  if(neutral)S.home=0;try{simMatch(f)}finally{S.home=home}
+  if(neutral)S.home=0;_cupNow=true;try{simMatch(f)}finally{S.home=home;_cupNow=false}
   ids.forEach(i=>{const p=pl(i),o=before.get(i);p.s={...o,capps:(o.capps||0)+(p.s.apps-o.apps),cgoals:(o.cgoals||0)+(p.s.goals-o.goals),ht:p.s.ht||0}});
   if(f.hg===f.ag)f.pen=shootout();
   f.w=f.hg>f.ag||(f.pen&&f.pen[0]>f.pen[1])?f.h:f.a;
@@ -1182,7 +1213,7 @@ function aiTrade(label){
     const A=pick(ts),B=pick(ts.filter(t=>t!==A));if(!B)return null;
     const wa=weakPos(A),wb=weakPos(B);if(!wa.pos||!wb.pos||wa.pos===wb.pos)continue;
     if(posCount(A,wb.pos)-1<need[wb.pos]||posCount(B,wa.pos)-1<need[wa.pos])continue;
-    if(_winPairs.has([A.id,B.id].sort().join()))continue;const fresh=p=>!(p.lastTrade>=state.season-1);
+    if(_winPairs.has([A.id,B.id].sort().join()))continue;const fresh=p=>!(p.lastTrade>=state.season-1)&&!hasT(p,"loyal");
     const fromB=B.players.map(pl).filter(p=>fresh(p)&&p.pos===wa.pos&&p.rating>wa.min),fromA=A.players.map(pl).filter(p=>fresh(p)&&p.pos===wb.pos&&p.rating>wb.min);
     let best=null,bd=.18;
     for(const x of fromA)for(const y of fromB){const vx=pValue(x),vy=pValue(y),d=Math.abs(vx-vy)/Math.max(vx,vy);if(d<bd){bd=d;best=[x,y]}}
@@ -1266,7 +1297,7 @@ function viewDraft(){
     const lo=Math.max(0,d.pick-4),hi=Math.min(d.order.length,d.pick+(op?10:T));
     cur=`<div class="banner">${badge(t,64)}<div class="grow"><h2>${esc(t.name)} are on the clock</h2><p>${op?`Opening draft, round ${Math.floor(d.pick/T)+1} of ${d.rounds}. `:""}Pick ${d.pick+1} of ${d.order.length}. ${op?"Snake order, so it flips every round.":"The lowest finisher picks first."}</p><div class="needs" title="Players held against the standard squad. Red means a starting place is still empty.">${needs}</div></div><div class="bbtns"><button class="btn go" data-act="draft-auto">Auto-pick for ${esc(t.short)}</button>${op?`<button class="btn ghost" data-act="draft-auto-round">Auto-draft this round</button>`:""}<button class="btn ghost" data-act="draft-auto-all">Auto-draft the rest</button></div></div>
     <div class="grid2"><section class="card"><div class="phead" style="margin-bottom:8px"><h3 style="margin:0">${op?"Player pool":"Prospects"} <span class="muted" style="font-size:1rem;font-weight:500">${d.pool.length} left</span></h3><div class="chips" style="margin:0">${["ALL",...POS].map(x=>`<button class="chip ${draftPos===x?"on":""}" data-act="dpos" data-v="${x}">${x==="ALL"?"All":x}</button>`).join("")}</div></div>
-    <div class="scroll"><table><thead><tr><th>Name</th><th>Pos</th><th class="r">Age</th><th>Ability</th><th class="r">Value</th><th></th></tr></thead><tbody>${pool.map(p=>`<tr><td><span class="namecell">${flag(p.nat)}${esc(p.name)}</span></td><td>${p.pos}</td><td class="r num">${p.age}</td><td>${stars(p.rating)}</td><td class="r num">${pValue(p)}</td><td><button class="btn sm" data-act="draft-pick" data-id="${p.id}" aria-label="Draft ${esc(p.name)} to ${esc(t.name)}">Draft</button></td></tr>`).join("")}</tbody></table></div></section>
+    <div class="scroll"><table><thead><tr><th>Name</th><th>Pos</th><th class="r">Age</th><th>Ability</th><th class="r">Value</th><th></th></tr></thead><tbody>${pool.map(p=>`<tr><td><span class="namecell">${flag(p.nat)}${esc(p.name)}</span>${traitTags(p)}</td><td>${p.pos}</td><td class="r num">${p.age}</td><td>${stars(p.rating)}</td><td class="r num">${pValue(p)}</td><td><button class="btn sm" data-act="draft-pick" data-id="${p.id}" aria-label="Draft ${esc(p.name)} to ${esc(t.name)}">Draft</button></td></tr>`).join("")}</tbody></table></div></section>
     <aside class="card"><h3 style="margin-top:0">${op?"Pick tracker":"Draft order"}</h3>${d.order.slice(lo,hi).map((id,j)=>{const i=lo+j,k=d.picks[i];return `<div class="fx ${i===d.pick?"onclock":""}" style="grid-template-columns:30px 1fr auto"><span class="num">${i+1}</span>${clubLabel(team(id),20)}<span class="${k?"":"muted"}">${k?`${esc(k.name)} <span class="muted">${k.pos}</span>`:i===d.pick?"On the clock":""}</span></div>`}).join("")}
     ${op?`<h3>Squads so far</h3>${state.teams.map(x=>`<div class="fx" style="grid-template-columns:1fr auto"><span>${clubLabel(x,20)}</span><span class="muted num">${POS.map(p=>`${p} ${posCount(x,p)}`).join(" &nbsp;")}</span></div>`).join("")}`:""}</aside></div>`}
   const tbl=h=>`<div class="scroll"><table><tbody>${h.picks.map(k=>{const p=pl(k.id);return `<tr class="click" data-act="player" data-id="${k.id}"><td class="num">${k.n}</td><td>${clubOr(k.team,k.teamName)}</td><td><span class="namecell">${p?flag(p.nat):""}${esc(k.name)}</span></td><td>${k.pos}</td><td class="muted">Drafted at ${k.rating}${p?`, now ${p.rating}${p.retired?(p.released?", released":", retired"):p.teamId!==k.team?`, now at ${esc(team(p.teamId).name)}`:""}`:""}</td></tr>`}).join("")}</tbody></table></div>`;
@@ -1283,7 +1314,7 @@ function viewTrades(){
   const side=k=>{const t=team(tb[k]),ch=tb["g"+k],o=tb[k==="a"?"b":"a"];
     return `<section class="card"><label class="f">Club<select data-tb="${k}">${state.teams.map(x=>`<option value="${x.id}" ${x.id===tb[k]?"selected":""} ${x.id===o?"disabled":""}>${esc(x.name)}</option>`).join("")}</select></label>
     <div class="clubhead" style="margin:12px 0">${badge(t,40)}<div><b>${esc(t.name)}</b><br><span class="muted">Gives ${ch.length} ${ch.length===1?"player":"players"}, value ${val(ch)}</span></div></div>
-    <div class="scroll"><table><thead><tr><th></th><th>Name</th><th>Pos</th><th class="r">Age</th><th>Ability</th><th class="r">Value</th></tr></thead><tbody>${t.players.map(pl).sort((x,y)=>POS.indexOf(x.pos)-POS.indexOf(y.pos)||y.rating-x.rating).map(p=>`<tr class="click ${ch.includes(p.id)?"sel":""}" data-act="tb-toggle" data-side="${k}" data-id="${p.id}"><td><input type="checkbox" tabindex="-1" ${ch.includes(p.id)?"checked":""} aria-label="Select ${esc(p.name)}"></td><td><span class="namecell">${flag(p.nat)}${esc(p.name)}</span>${injTag(p)}</td><td>${p.pos}</td><td class="r num">${p.age}</td><td>${stars(p.rating)}</td><td class="r num">${pValue(p)}</td></tr>`).join("")}</tbody></table></div></section>`};
+    <div class="scroll"><table><thead><tr><th></th><th>Name</th><th>Pos</th><th class="r">Age</th><th>Ability</th><th class="r">Value</th></tr></thead><tbody>${t.players.map(pl).sort((x,y)=>POS.indexOf(x.pos)-POS.indexOf(y.pos)||y.rating-x.rating).map(p=>`<tr class="click ${ch.includes(p.id)?"sel":""}" data-act="tb-toggle" data-side="${k}" data-id="${p.id}"><td><input type="checkbox" tabindex="-1" ${ch.includes(p.id)?"checked":""} aria-label="Select ${esc(p.name)}"></td><td><span class="namecell">${flag(p.nat)}${esc(p.name)}</span>${injTag(p)}${traitTags(p)}</td><td>${p.pos}</td><td class="r num">${p.age}</td><td>${stars(p.rating)}</td><td class="r num">${pValue(p)}</td></tr>`).join("")}</tbody></table></div></section>`};
   const lst=a=>a.map(x=>`${plink(x)} <span class="muted">${x.pos}</span>`).join(", ");
   const log=state.trades.length?[...state.trades].reverse().map(r=>`<div class="card" style="margin-bottom:10px"><div class="muted" style="font-size:.85rem">Season ${r.season}, ${esc(r.when)}${r.ai?"":", made by you"}</div><div class="fx" style="border:0"><span class="h">${clubOr(r.a.id,r.a.name)}<br>${lst(r.aGive)}</span><span class="vs">⇄</span><span>${clubOr(r.b.id,r.b.name)}<br>${lst(r.bGive)}</span></div></div>`).join(""):`<div class="empty">No trades yet. AI clubs trade at the end of each season and after the draft, or make one yourself above.</div>`;
   return `<h2>Trades</h2><div class="card" style="margin-bottom:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap"><span style="flex:1;min-width:200px">${verdict}</span><button class="btn" data-act="tb-clear">Clear</button><button class="btn go" data-act="tb-do" ${ready?"":"disabled"}>Complete trade</button></div>
@@ -1456,6 +1487,8 @@ function viewPlayer(id){
   return `<button class="btn sm" data-act="back">‹ Back</button>
   <div class="phero"><div class="pkit">${t.kit?kitSvg(t.kit.home,true,64):""}</div><div class="pinfo"><h1 class="namecell" style="display:flex;margin:0">${flag(p.nat,32)}${esc(p.name)}</h1>
    <p class="muted" style="margin:.4em 0">${NAT[p.nat]?NAT[p.nat].n+". ":""}${p.pos}, age ${p.age}. ${p.retired?`${p.released?"Released":"Retired"} after season ${p.retired}, last club ${esc(p.lastTeam)}.`:`<button class="linkbtn inl" data-act="club" data-id="${t.id}">${esc(t.name)}</button>`}${p.inj>0?` <b style="color:var(--loss)">Injured, out for ${p.inj} ${p.inj===1?"matchday":"matchdays"}.</b>`:""}</p>
+   <p class="ptraits">${(p.tr||[]).map(k=>TRAITS[k]?`<span class="trt big" title="${esc(TRAITS[k].d)}">${TRAITS[k].n}${p.retired?"":`<button data-act="trait-del" data-id="${p.id}" data-v="${k}" aria-label="Remove ${TRAITS[k].n}">×</button>`}</span>`:"").join("")}${!p.retired&&(p.tr||[]).length<2?`<select data-trait-add="${p.id}" aria-label="Add a trait"><option value="">Add a trait</option>${Object.keys(TRAITS).filter(k=>traitOk(p,k,p.tr||[])).map(k=>`<option value="${k}">${TRAITS[k].n}</option>`).join("")}</select>`:""}</p>
+   ${(p.tr||[]).length?`<p class="muted" style="margin:0 0 .4em;font-size:.88rem">${p.tr.map(k=>TRAITS[k]?`${TRAITS[k].n}: ${TRAITS[k].d}`:"").join(" ")}</p>`:""}
    <p style="margin:0">${stars(p.rating)}${p.hof?` <span class="hoftag">Hall of Fame, class of season ${p.hof}</span>`:""}</p></div><div class="pbadge">${p.teamId&&team(p.teamId)?badge(team(p.teamId),76):""}</div></div>
   <div class="grid2 even" style="margin-bottom:16px"><section class="card"><h3 style="margin-top:0">Trophy cabinet</h3>
     <p class="muted" style="margin:0 0 6px">Championship rings</p>${rg.length?ringsHTML(rg,true):`<p class="muted">No titles yet.</p>`}
@@ -1571,7 +1604,7 @@ async function loadFile(){
   inp.onchange=async()=>{const f=inp.files[0];if(f&&applyLoad(await f.text())){fileHandle=null;render()}};inp.click();
 }
 function applyLoad(txt){
-  try{const d=JSON.parse(txt);if(d.app!=="leaguesim"||!Array.isArray(d.teams))throw 0;state=migrate(d);dirty=false;view="table";setup=null;try{localStorage.setItem("leaguesim-backup",txt)}catch(e){}toast(`Opened ${d.name}`);return true}
+  try{const d=JSON.parse(txt);if(d.app!=="leaguesim"||!Array.isArray(d.teams))throw 0;state=migrate(d);dirty=false;view="table";setup=null;try{localStorage.setItem("leaguesim-backup",txt)}catch(e){}if(state.__traitsAdded){delete state.__traitsAdded;persist();toast(`Opened ${d.name}. Your players now have traits. Save to keep them.`)}else toast(`Opened ${d.name}`);return true}
   catch(e){toast("That file is not a League Sim save. Pick a .json file saved from this app.");return false}
 }
 
@@ -1606,6 +1639,7 @@ document.addEventListener("click",async e=>{
     case "nat-all":state.settings.nations=NATIONS.map(x=>x.c);persist();break;
     case "nat-none":state.settings.nations=[];persist();break;
     case "crest-img-clear":delete team(id).crest.img;persist();break;
+    case "trait-del":{const p=pl(id);if(p)p.tr=(p.tr||[]).filter(k=>k!==v);persist();break}
     case "club":{closeModal();view="club:"+id;clubTab="squad";const rv=rivalOf(id);if(rv)h2h.b=rv.a===id?rv.b:rv.a;break}
     case "ctab":clubTab=v;break;
     case "kside":kitSide=v;break;
@@ -1678,6 +1712,7 @@ document.addEventListener("change",e=>{
   if(el.dataset.setw){const S=state.settings;S[el.dataset.setw][+el.dataset.i]=clamp(parseInt(el.value)||0,0,100);persist();render();return}
   if(el.dataset.nat){const S=state.settings,c=el.dataset.nat;S.nations=el.checked?[...new Set([...S.nations,c])]:S.nations.filter(x=>x!==c);persist();render();return}
   if(el.dataset.themeK){persist();render();return}
+  if(el.dataset.traitAdd){const p=pl(el.dataset.traitAdd);if(p&&el.value&&traitOk(p,el.value,p.tr||[])&&(p.tr||[]).length<2)p.tr=[...(p.tr||[]),el.value];persist();render();return}
   if(el.dataset.rvname){const r=(state.rivals||[]).find(x=>x.k===el.dataset.rvname);if(r&&el.value.trim())r.name=el.value.trim().slice(0,30);persist();render();return}
   if(el.dataset.cupset){const c=state.settings.cup;if(el.dataset.cupset==="on")c.on=el.checked;else c.name=el.value.trim();persist();render();return}
   if(el.dataset.tro){const TS=state.settings.trophies=state.settings.trophies||{};TS[trophyTab]={...trophySpec(trophyTab),accent:el.value};persist();render();return}
@@ -1695,7 +1730,7 @@ window.addEventListener("beforeunload",e=>{if(dirty&&state){e.preventDefault();e
 let tt;function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("show"),3200)}
 
 /* ---------- start ---------- */
-try{const b=localStorage.getItem("leaguesim-backup");if(b){const d=JSON.parse(b);if(d&&d.app==="leaguesim"){state=migrate(d);dirty=true;setTimeout(()=>toast("Restored your last session. Save to a file to keep it."),300)}}}catch(e){}
+try{const b=localStorage.getItem("leaguesim-backup");if(b){const d=JSON.parse(b);if(d&&d.app==="leaguesim"){state=migrate(d);if(state.__traitsAdded){delete state.__traitsAdded;persist()}dirty=true;setTimeout(()=>toast("Restored your last session. Save to a file to keep it."),300)}}}catch(e){}
 render();
 
 /* ---------- installable app ---------- */

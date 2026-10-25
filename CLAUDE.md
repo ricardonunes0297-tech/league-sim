@@ -37,6 +37,12 @@ A pure-simulation football league game. The user sets up clubs and players, then
 - `endSeason()` stores `h.cup` (`cupSummary()`), archives cup ties in `results` with `c:1`, and `ensureCup()` draws next season's cup. `ensureCup()` also runs in `render()`, so an old save gets a cup from the next season start.
 - Settings: `settings.cup` = `{on, name}`. Cup medals for players are worked out from career rows (`cupMedalsOf`), not stored.
 
+## Player traits
+
+- `TRAITS` lists each trait with its plain-English description and the positions it suits. Players hold up to two in `p.tr`. `rollTraits()` gives new players 0 to 2 (about 70% get one), and `TRAIT_CLASH` stops opposites pairing up.
+- Effects: Clinical and Playmaker weight scorer and assister picks in `goals()`. Wall (DF) and Shot stopper (GK) add to defence in `strength()`, Leader adds to both sides. Big game player adds to `eff()` when `_bigGame` is set (cup ties and derbies). Iron man and Injury prone change injury odds and length. Fast learner, Late bloomer and Evergreen change `prog()`, and Evergreen also retires later. Steady and Flair change match rating spread. Loyal players are skipped by AI trades.
+- Older saves get traits once in `migrate()`; the load path then persists the backup so they are not rolled again. Traits can be added or removed on the player page.
+
 ## Records and rivalries
 
 - `trackMatch()` runs at the end of every match: hat-tricks go into `s.ht` (career rows keep them), scoring runs into `p.sk` and the best into `p.skBest`. Both only count from the version that added them.
@@ -67,7 +73,8 @@ A pure-simulation football league game. The user sets up clubs and players, then
 
 - News feed with auto-written headlines.
 - Second division with promotion and relegation.
-- Hidden potential and player traits.
+- Hidden potential.
+- Managers (to be discussed: styles, skills, hiring and firing, ex-players becoming managers).
 - Sim several seasons at once.
 
 ## Installable app
