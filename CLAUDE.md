@@ -37,10 +37,17 @@ A pure-simulation football league game. The user sets up clubs and players, then
 - `endSeason()` stores `h.cup` (`cupSummary()`), archives cup ties in `results` with `c:1`, and `ensureCup()` draws next season's cup. `ensureCup()` also runs in `render()`, so an old save gets a cup from the next season start.
 - Settings: `settings.cup` = `{on, name}`. Cup medals for players are worked out from career rows (`cupMedalsOf`), not stored.
 
+## Records and rivalries
+
+- `trackMatch()` runs at the end of every match: hat-tricks go into `s.ht` (career rows keep them), scoring runs into `p.sk` and the best into `p.skBest`. Both only count from the version that added them.
+- `clubRuns()` works out winning, unbeaten and losing runs from archived league results, so it covers every season.
+- `pickTots()` picks the team of the season at the end of each season in the format's lineup shape (regulars only, best average rating) and stores it in `h.tots`; players keep a list of seasons in `p.tots`.
+- `updateRivals()` scores every pair of clubs from results (close games and cup ties count more), title races, cup finals and trades, with older seasons weighted down by 0.85 a season. Pairs well above average become rivalries (`state.rivals`), each club has at most one, and established rivalries hold on unless they fade well below the bar. Names come from `DERBY_NAMES` and can be renamed on the History page.
+
 ## Season review
 
 - `viewReview(season)` opens straight after `endSeason()` and from each season on the History page: champions, award winners, leaders, final table, Hall of Fame class and retirements.
-- `reviewCard(season)` draws a 1080 x 1350 PNG card on a canvas (theme colours, pixel trophies at whole number scales). The Image card dialog can save or copy it.
+- `reviewCard(season)` and `totsCard(season)` draw 1080 x 1350 PNG cards on a canvas (theme colours, pixel trophies at whole number scales). The Image card dialog can save or copy it.
 
 ## Visual style
 
@@ -61,7 +68,6 @@ A pure-simulation football league game. The user sets up clubs and players, then
 - News feed with auto-written headlines.
 - Second division with promotion and relegation.
 - Hidden potential and player traits.
-- Team of the season, streak records, hat-tricks, derbies.
 - Sim several seasons at once.
 
 ## Installable app
