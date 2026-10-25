@@ -14,7 +14,7 @@ A pure-simulation football league game. The user sets up clubs and players, then
 ## Architecture notes
 
 - Global `state` holds the league: `teams`, `players` (active), `retired` (retired and released players, kept for history), `fixtures` (current season rounds), `history` (one entry per finished season), `results` (archived matches for head to head), `trades`, `draftHistory`, `draft` (active draft or null), `hof`, `settings`.
-- `render()` rebuilds the whole view from `state`. Long lists are paged (the players list shows 50 at a time via `ps.lim`). Views: table, fixtures, players, clubs, `club:<id>`, `player:<id>`, draft, trades, history, hof, settings.
+- `render()` rebuilds the whole view from `state`. Long lists are paged (the players list shows 50 at a time via `ps.lim`). Views: table, fixtures, players, clubs, `club:<id>`, `player:<id>`, draft, trades, history, `review:<season>`, hof, settings.
 - Events use delegated `data-act` click handlers and `data-*` change and input handlers at the bottom of the script.
 - `persist()` marks unsaved changes and writes the browser backup.
 - Formats: 5, 7 and 11 a side (`FORMATS`), each with lineup shape, squad shape, match length and base goal rate.
@@ -28,6 +28,11 @@ A pure-simulation football league game. The user sets up clubs and players, then
 - AI trades: 1 for 1 swaps that fix each club's weakest position at similar value. Windows run only at the end of the season and after the draft. Players traded recently are excluded, and each pair of clubs trades once per window.
 - Awards each season: MVP (best average rating among regulars), Golden Boot, Golden Glove (keeper clean sheets), Rookie (first season, age 23 or under).
 - Hall of Fame: legacy points from apps, goals, assists, clean sheets, titles and awards. Up to two retired players per class, one class every three seasons.
+
+## Season review
+
+- `viewReview(season)` opens straight after `endSeason()` and from each season on the History page: champions, award winners, leaders, final table, Hall of Fame class and retirements.
+- `reviewCard(season)` draws a 1080 x 1350 PNG card on a canvas (theme colours, pixel trophies at whole number scales). The Image card dialog can save or copy it.
 
 ## Visual style
 
@@ -50,7 +55,7 @@ A pure-simulation football league game. The user sets up clubs and players, then
 - Second division with promotion and relegation.
 - Hidden potential and player traits.
 - Team of the season, streak records, hat-tricks, derbies.
-- Sim several seasons at once, and a season review screen.
+- Sim several seasons at once.
 
 ## Installable app
 

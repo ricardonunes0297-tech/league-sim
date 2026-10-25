@@ -257,7 +257,16 @@ tr.sel td{background:color-mix(in srgb,var(--flood) 20%,transparent)}
 .h2hbar{display:flex;height:10px;border-radius:5px;overflow:hidden;margin-top:12px;background:var(--line)}
 .empty{color:var(--muted);padding:30px;text-align:center;border:2px dashed var(--line);border-radius:10px}
 .hist{margin-bottom:16px}
+.rvawards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.rvaward{display:flex;gap:18px;align-items:center}
+.rvaward>div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.rvaward .linkbtn,.rvaward b{font-family:var(--hd);font-size:1.4rem;font-weight:700}
+.rvfacts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.rvstat{display:flex;flex-direction:column;gap:2px}
+.rvstat b{font-family:var(--hd);font-size:1.15rem}
+.rvimg{width:100%;max-width:540px;display:block;border-radius:8px;margin:8px auto}
 .hist .top{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.hist .top .grow{flex:1;min-width:200px}
 .hist .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:12px;font-size:.92rem}
 .hist .facts b{display:block;font-family:var(--hd);font-size:1.05rem}
 .muted{color:var(--muted)}
@@ -842,6 +851,58 @@ function groundEditor(t){const g=t.ground;
   <h4>Mowing pattern</h4><div class="opts">${Object.keys(MOW).map(v=>opt(t,"mow","mow",v,MOW[v],pitchSvg({...g,mow:v},[],null,44),g.mow===v)).join("")}</div>
   <div class="toolbar"><button class="btn" data-act="rand-ground" data-id="${t.id}">Randomise pitch</button></div></div></div>`;
 }
+/* ---------- season review ---------- */
+function viewReview(season){
+  const h=state.history.find(x=>x.season===+season);if(!h)return `<div class="empty">That season has not finished yet.</div>`;
+  const latest=h===state.history[state.history.length-1],ch=h.table[0],gap=ch.pts-h.table[1].pts;
+  const plink=(id,name)=>id&&pl(id)?`<button class="linkbtn" data-act="player" data-id="${id}">${esc(name)}</button>`:`<b>${esc(name)}</b>`;
+  const lead=(l,v)=>v?`<div class="rvstat"><span class="muted">${l}</span><b>${esc(v.name)}</b><span class="muted">${esc(v.team)}, ${v.n}</span></div>`:"";
+  return `<div class="phead"><h2 style="margin:0">Season ${h.season} review</h2><div class="toolbar" style="margin:0">${pxCtx()?`<button class="btn" data-act="review-img" data-v="${h.season}">Image card</button>`:""}${latest&&state.draft?`<button class="btn go" data-act="nav" data-v="draft">Go to the draft</button>`:`<button class="btn" data-act="nav" data-v="history">All seasons</button>`}</div></div>
+  <div class="banner">${pxCtx()?`<img class="px" src="${pxTrophy("league")}" width="69" alt="">`:""}${badge(team(h.champion.id)||h.champion,72)}<div class="grow"><p>Champions</p><h2>${esc(h.champion.name)}</h2><p>${pluralN(ch.w,"win")}, ${pluralN(ch.d,"draw")} and ${pluralN(ch.l,"loss","losses")} for ${pluralN(ch.pts,"point")}. ${gap?`${gap} ${gap===1?"point":"points"} clear of ${esc(h.runnerUp.name)}.`:`Level on points with ${esc(h.runnerUp.name)}, won on the tie-breaker.`}</p></div></div>
+  ${h.awards&&h.awards.length?`<h3>Awards</h3><div class="rvawards">${h.awards.map(a=>`<div class="card rvaward">${pxCtx()?`<img class="px" src="${pxTrophy(a.type)}" width="69" alt="">`:""}<div><span class="muted">${AWARDS[a.type].full}</span>${plink(a.id,a.name)}<span class="muted">${esc(a.team)}</span><span class="num">${esc(a.val||"")}</span></div></div>`).join("")}</div>`:""}
+  <h3>Season leaders</h3><div class="card"><div class="rvfacts">${lead("Top scorer",h.topScorer)}${lead("Most assists",h.topAssist)}${lead("Most clean sheets",h.topCS)}</div></div>
+  <h3>Final table</h3><div class="card">${leagueTable(h.table,false)}</div>
+  ${h.hof&&h.hof.length?`<h3>Hall of Fame class</h3><div class="card"><div class="rvfacts">${h.hof.map(i=>pl(i)?`<div class="rvstat">${plink(i,pl(i).name)}<span class="muted">${esc(pl(i).lastTeam||"")}</span></div>`:"").join("")}</div></div>`:""}
+  ${h.retired.length?`<h3>Retired</h3><div class="card"><div class="rvfacts">${h.retired.map(r=>`<div class="rvstat">${plink(r.id,r.name)}<span class="muted">${esc(r.team)}, age ${r.age}. ${r.apps} apps, ${r.goals} goals</span></div>`).join("")}</div></div>`:""}`;
+}
+const pluralN=(n,one,many)=>`${n} ${n===1?one:many||one+"s"}`;
+let _rvImg=null;
+async function reviewCard(season){
+  const h=state.history.find(x=>x.season===+season);if(!h)return null;
+  const W=1080,H=1350,c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d");
+  const th=state.settings.theme||{},turf=th.turf||DEFAULT_SETTINGS.theme.turf,light=lum(turf)>.35,turf2=mix(turf,light?"#000000":"#ffffff",.14);
+  const chalk=light?"#14201A":"#F4F6F2",dim=light?"#3B4A41":"#C3CFC7",acc=th.accent||DEFAULT_SETTINGS.theme.accent;
+  const HD='"Barlow Condensed","Arial Narrow",sans-serif',BD='Barlow,system-ui,sans-serif';
+  try{await Promise.all([document.fonts.load(`700 40px "Barlow Condensed"`),document.fonts.load(`500 24px Barlow`)])}catch(e){}
+  const img=u=>new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=u});
+  const txt=(s,X,Y,size,col,font=HD,weight=700,maxW=0,align="left")=>{s=String(s);let z=size;do{x.font=`${weight} ${z}px ${font}`;z--}while(maxW&&x.measureText(s).width>maxW&&z>10);x.fillStyle=col;x.textAlign=align;x.fillText(s,X,Y)};
+  const sprite=(im,X,Y,k)=>{if(im)x.drawImage(im,X,Y,im.naturalWidth*k,im.naturalHeight*k)};
+  x.imageSmoothingEnabled=false;
+  for(let y=0;y<H;y+=90){x.fillStyle=(y/90)%2?turf2:turf;x.fillRect(0,y,W,90)}
+  x.strokeStyle=chalk;x.globalAlpha=.35;x.lineWidth=4;x.strokeRect(28,28,W-56,H-56);x.strokeRect(W/2-320,28,640,180);x.beginPath();x.arc(W/2,208,60,0,Math.PI);x.stroke();x.globalAlpha=1;
+  txt(state.name.toUpperCase(),W/2,100,40,dim,HD,700,600,"center");txt(`SEASON ${h.season} REVIEW`,W/2,178,76,chalk,HD,700,600,"center");
+  const [tro,bdg]=await Promise.all([img(pxTrophy("league")),team(h.champion.id)?img(pxBadge(team(h.champion.id))):null]);
+  sprite(tro,80,290,6);
+  if(bdg){const k=Math.max(1,Math.floor(150/bdg.naturalHeight));sprite(bdg,240,320+(150-bdg.naturalHeight*k)/2,k)}
+  const ch=h.table[0],gap=ch.pts-h.table[1].pts;
+  txt("CHAMPIONS",420,340,36,acc);txt(h.champion.name,420,430,92,chalk,HD,700,W-420-70);
+  txt(`${pluralN(ch.pts,"point")}. ${ch.w} won, ${ch.d} drawn, ${ch.l} lost`,420,480,30,dim,BD,500,W-490);
+  txt(gap?`${pluralN(gap,"point")} clear of ${h.runnerUp.name}`:`Level on points with ${h.runnerUp.name}`,420,520,30,dim,BD,500,W-490);
+  const aw=h.awards||[];
+  if(aw.length){txt("AWARDS",80,610,36,acc);const cw=(W-160-24)/2,chh=190;
+    const ims=await Promise.all(aw.map(a=>img(pxTrophy(a.type))));
+    aw.slice(0,4).forEach((a,i)=>{const X=80+(i%2)*(cw+24),Y=634+Math.floor(i/2)*(chh+20);
+      x.fillStyle="rgba(0,0,0,.2)";x.beginPath();x.roundRect?x.roundRect(X,Y,cw,chh,18):x.rect(X,Y,cw,chh);x.fill();
+      sprite(ims[i],X+24,Y+(chh-128)/2,4);
+      txt(AWARDS[a.type].full.toUpperCase(),X+140,Y+48,26,acc,HD,700,cw-160);txt(a.name,X+140,Y+100,46,chalk,HD,700,cw-160);
+      txt(a.team,X+140,Y+138,24,dim,BD,500,cw-160);txt(a.val||"",X+140,Y+170,26,chalk,HD,600,cw-160)})}
+  const ly=aw.length?634+Math.ceil(Math.min(4,aw.length)/2)*210+56:640;
+  txt("SEASON LEADERS",80,ly,36,acc);
+  [["Top scorer",h.topScorer],["Most assists",h.topAssist],["Most clean sheets",h.topCS]].filter(z=>z[1]).forEach(([l,v],i)=>{const X=80+i*(W-160)/3,mw=(W-160)/3-24;
+    txt(l,X,ly+44,24,dim,BD,500,mw);txt(v.name,X,ly+90,40,chalk,HD,700,mw);txt(`${v.team}, ${v.n}`,X,ly+124,24,dim,BD,500,mw)});
+  txt("LEAGUE SIM",80,H-56,24,dim);txt(`${FORMATS[state.format].label}. ${h.table.length} clubs`,W-80,H-56,24,dim,HD,700,0,"right");
+  return{url:c.toDataURL("image/png"),name:`${slug()}-season-${h.season}-review.png`};
+}
 function viewHistory(){
   if(!state.history.length)return `<h2>History</h2>${recordsHTML()}<div class="empty">Finish a season to see champions, award winners and retirements here.</div>`;
   const honours=state.teams.map(t=>({t,n:titles(t.id).length})).filter(x=>x.n).sort((a,b)=>b.n-a.n);
@@ -850,7 +911,7 @@ function viewHistory(){
   return `<h2>History</h2>
   <div class="card" style="margin-bottom:18px"><h3 style="margin-top:0">Roll of honour</h3><table><tbody>${honours.map(x=>`<tr class="click" data-act="club" data-id="${x.t.id}"><td>${clubLabel(x.t)}</td><td class="r">${trophies(x.t.id,24)}</td></tr>`).join("")}</tbody></table></div>
   ${recordsHTML()}
-  ${[...state.history].reverse().map(h=>`<div class="card hist"><div class="top">${badge(h.champion,48)}<div><h3 style="margin:0">Season ${h.season}: ${esc(h.champion.name)}</h3><span class="muted">Runners-up ${esc(h.runnerUp.name)}</span></div></div>
+  ${[...state.history].reverse().map(h=>`<div class="card hist"><div class="top">${badge(h.champion,48)}<div class="grow"><h3 style="margin:0">Season ${h.season}: ${esc(h.champion.name)}</h3><span class="muted">Runners-up ${esc(h.runnerUp.name)}</span></div><button class="btn sm" data-act="nav" data-v="review:${h.season}">Season review</button></div>
     <div class="facts">${h.awards&&h.awards.length?awd(h)+fact("Most assists",h.topAssist):fact("Top scorer",h.topScorer)+fact("Most assists",h.topAssist)+fact("Most clean sheets",h.topCS)}${h.hof&&h.hof.length?`<div><span class="muted">Hall of Fame inductees</span>${h.hof.map(i=>pl(i)?`<button class="linkbtn" data-act="player" data-id="${i}">${esc(pl(i).name)}</button>`:"").join("")}</div>`:""}
     ${h.retired.length?`<div><span class="muted">Retired</span>${h.retired.map(r=>`${r.id&&pl(r.id)?`<button class="linkbtn" data-act="player" data-id="${r.id}">${esc(r.name)}</button>`:`<b>${esc(r.name)}</b>`}<span class="muted">${esc(r.team)}, ${r.apps} apps, ${r.goals} goals</span>`).join("")}</div>`:""}</div>
     <details style="margin-top:12px"><summary>Final table</summary>${leagueTable(h.table,false)}</details></div>`).join("")}`;
@@ -1235,10 +1296,10 @@ function render(){
   if(!state){renderSetup();return}
   const done=seasonDone();
   const views=[["table","Table"],["fixtures","Fixtures"],["players","Players"],["clubs","Clubs"],["draft","Draft"],["trades","Trades"],["history","History"],["hof","Hall of Fame"],["settings","Settings"]];
-  const cur=view.startsWith("club:")?"clubs":view.startsWith("player:")?"players":view;
+  const cur=view.startsWith("club:")?"clubs":view.startsWith("player:")?"players":view.startsWith("review:")?"history":view;
   let body;
   if(view==="table")body=viewTable();else if(view==="fixtures")body=viewFixtures();else if(view==="players")body=viewPlayers();
-  else if(view==="clubs")body=viewClubs();else if(view.startsWith("club:"))body=viewClub(view.slice(5));else if(view==="history")body=viewHistory();else if(view==="hof")body=viewHof();else if(view.startsWith("player:"))body=viewPlayer(view.slice(7));else if(view==="draft")body=viewDraft();else if(view==="trades")body=viewTrades();else body=viewSettings();
+  else if(view==="clubs")body=viewClubs();else if(view.startsWith("club:"))body=viewClub(view.slice(5));else if(view==="history")body=viewHistory();else if(view==="hof")body=viewHof();else if(view.startsWith("player:"))body=viewPlayer(view.slice(7));else if(view.startsWith("review:"))body=viewReview(view.slice(7));else if(view==="draft")body=viewDraft();else if(view==="trades")body=viewTrades();else body=viewSettings();
   $("#app").innerHTML=`<div class="shell"><aside class="side">
     <div class="hd"><div class="lg">${esc(state.name)}</div><div class="meta">${FORMATS[state.format].label}. Season ${state.season}, ${state.draft?"draft in progress":done?"complete":`matchday ${state.round+1} of ${state.fixtures.length}`}</div></div>
     <nav class="nav">${views.map(([k,l])=>`<button class="${cur===k?"on":""}" data-act="nav" data-v="${k}">${l}</button>`).join("")}</nav>
@@ -1369,7 +1430,10 @@ document.addEventListener("click",async e=>{
     case "trophy-reset":delete (state.settings.trophies||{})[trophyTab];persist();break;
     case "sim-round":simRound();fxRound=null;persist();break;
     case "sim-season":while(!seasonDone())simRound();fxRound=null;persist();break;
-    case "end-season":endSeason();fxRound=null;view="draft";break;
+    case "end-season":endSeason();fxRound=null;view="review:"+(state.season-1);break;
+    case "review-img":reviewCard(v).then(r=>{if(!r)return;_rvImg=r;openModal(`<button class="btn sm x" data-act="close">Close</button><h2>Season ${esc(v)} image card</h2><img class="rvimg" src="${r.url}" alt="Season ${esc(v)} review card"><div class="toolbar"><button class="btn go" data-act="review-save">Save image</button><button class="btn" data-act="review-copy">Copy image</button></div>`)});return;
+    case "review-save":{if(!_rvImg)return;const l=document.createElement("a");l.href=_rvImg.url;l.download=_rvImg.name;document.body.appendChild(l);l.click();l.remove();toast("Image saved to your Downloads");return}
+    case "review-copy":if(_rvImg)fetch(_rvImg.url).then(r=>r.blob()).then(bl=>navigator.clipboard.write([new ClipboardItem({"image/png":bl})])).then(()=>toast("Image copied. Paste it anywhere.")).catch(()=>toast("Copying is not available here. Use Save image instead."));return;
     case "draft-pick":makePick(id);persist();break;
     case "draft-auto":autoPick();persist();break;
     case "draft-auto-all":autoDraftAll();persist();break;
