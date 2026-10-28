@@ -29,7 +29,7 @@ A pure-simulation football league game. The user sets up clubs and players, then
 - `endSeason()` archives the season (table, matchday positions, awards, results), pushes career rows, ages players, runs progression, handles retirements and youth replacements, runs the end of season trade window, inducts the Hall of Fame every third season, then opens the yearly draft.
 - Draft: lowest finisher picks first. The opening draft (new league option) is a snake draft over a big pool, with a setup stage where the pool can be edited first. AI picks fill starting positions, then bench, with small per-club positional tastes.
 - AI trades: 1 for 1 swaps that fix each club's weakest position at similar value. Windows run only at the end of the season and after the draft. Players traded recently are excluded, and each pair of clubs trades once per window.
-- Awards each season: MVP (best average rating among regulars), Golden Boot, Golden Glove (keeper clean sheets), Rookie (first season, age 23 or under).
+- Awards each season: MVP (best average rating among regulars), Golden Boot, Golden Glove (keeper clean sheets), Young Player of the season (age 21 or under, at least 40% of the top appearances; stored under the old `rookie` key so older winners keep it).
 - Hall of Fame: legacy points from apps, goals, assists, clean sheets, titles and awards. Up to two retired players per class, one class every three seasons.
 
 ## Domestic cup
@@ -58,13 +58,13 @@ A pure-simulation football league game. The user sets up clubs and players, then
 
 ## Releases
 
-- Bump `APP_VERSION` in index.html with every push, so the user can confirm in Settings which version they are on. Settings also has a Check for updates button (`checkUpdates`) that clears the offline cache and service worker, then reloads.
+- `APP_VERSION` is a plain number (2.100 from 2026-10-28; earlier releases used dates like 2026.10.28-3). Raise it by 0.001 with every push (2.101, 2.102...) unless the user names a new number, so the user can confirm in Settings which version they are on. Settings also has a Check for updates button (`checkUpdates`) that clears the offline cache and service worker, then reloads.
 - sw.js is network first for the page and stores each fresh copy, even when the 4 second fallback was used. Bump `CACHE` in sw.js if its file list changes.
 
 ## Trophy cabinet
 
 - Clubs have a Trophy cabinet tab (`clubTab="cab"`); player and manager pages have Career and Trophy cabinet tabs (`pTab`, shared by both).
-- `cabinetPanel(name, groups)` draws a flat pixel wooden cabinet with a brass name plate, glass sheen and one run of shelves (a repeating CSS gradient; slots are a fixed 170px tall so they stand on them). Each group is one slot: the latest three wins stacked at 3x (`stackHTML`, fixed overlap) with a ×count plaque. A fanning bundle of every win was tried and removed at the user's request (felt laggy). Award slots (`g.aw`) link to that award's winners on History; on touch the first tap shows the tooltip and a second tap follows the link. A group with no wins but a `ghost` image shows as a dark silhouette (league and cup everywhere; MVP plus Golden Boot or Glove by position, and Rookie in a first season, for active players; Manager of the season for active managers).
+- `cabinetPanel(name, groups)` draws a flat pixel wooden cabinet with a brass name plate, glass sheen and one run of shelves (a repeating CSS gradient; slots are a fixed 170px tall so they stand on them). Each group is one slot: the latest three wins stacked at 3x (`stackHTML`, fixed overlap) with a ×count plaque. A fanning bundle of every win was tried and removed at the user's request (felt laggy). Award slots (`g.aw`) link to that award's winners on History; on touch the first tap shows the tooltip and a second tap follows the link. A group with no wins but a `ghost` image shows as a dark silhouette (league and cup everywhere; MVP plus Golden Boot or Glove by position, and Young Player while 21 or under, for active players; Manager of the season for active managers).
 - Trophy details use one shared pixel tooltip (`#tip`, `showTip`/`hideTip`) driven by `data-tip` (lines joined by newlines, first line is the title): mouse hover, keyboard focus, or tap on touch (tap again or elsewhere to close). Hovered slots lift with a stepped glow. Club cards on the Clubs page show a small league and cup row (`trophyRow`) with the same tooltips. `clubCabinet` (titles, cups, plus every individual award its players and managers won while there, via `clubAwards`), `playerCabinet` (rings, cup medals, team of the season picks, each award type, Hall of Fame) and `managerCabinet` (titles, cups, awards) build the groups. Team of the season (`tots`) and Hall of Fame (`hof`) have their own trophy looks in `TROPHY_DEF`.
 - In lists (players table, plaques) `ringsHTML` and `awardsHTML` show only the latest icon plus a count (class `flat`, no hover spread) so the table fits without side scrolling. The tooltip lists them all. Big versions on the player page still spread on hover.
 - Rafter banners were tried and removed at the user's request.
@@ -78,12 +78,12 @@ A pure-simulation football league game. The user sets up clubs and players, then
 ## History page
 
 - Tabs (`histTab`): Seasons, Roll of honour (`rollHTML`), the cup (`cupHistoryHTML`, shared with the Cup page), Awards, Records (`viewRecords`), Eras and dynasties, Rivalries.
-- Awards tab (`awardsHistHTML`, chips set `awHist`): every winner of one award from `awardWinners(k)` (POTY, MVP, Boot, Glove, Rookie, custom awards, Manager of the season, Team of the season, Hall of Fame) plus most wins. `data-act="awhist"` opens it from History seasons, season reviews and cabinet slots.
+- Awards tab (`awardsHistHTML`, chips set `awHist`): every winner of one award from `awardWinners(k)` (POTY, MVP, Boot, Glove, Young Player, custom awards, Manager of the season, Team of the season, Hall of Fame) plus most wins. `data-act="awhist"` opens it from History seasons, season reviews and cabinet slots.
 
 ## Player of the Year
 
 - A year is three seasons (`yearOf`). `awardPoty(h)` runs in `endSeason()` on the same seasons as the Hall of Fame (`season%3===0`), after the history entry is pushed, and stores `h.poty` = {year, from, to, win, noms}; the winner also gets `{type:"poty"}` in `p.awards` (so cabinets, lists and `legacy()` see it).
-- `decidePoty(to)` works only from career rows, rings, cup medals, awards and `p.tots`, so `ensurePoty()` (called in `render`) fills in every finished year on older saves. Eligible: half the top appearances across the three seasons. Four parts, each divided by the best eligible value: average rating, goals plus assists in all competitions (keepers: clean sheets, scored against other keepers), team trophies (title 2, cup 1), individual awards (MVP 3, Boot and Glove 2, Rookie 1, team of the season 1). Weighted by `settings.potyW` (Settings, Awards tab); `redoPoty()` recalculates every past year.
+- `decidePoty(to)` works only from career rows, rings, cup medals, awards and `p.tots`, so `ensurePoty()` (called in `render`) fills in every finished year on older saves. Eligible: half the top appearances across the three seasons. Four parts, each divided by the best eligible value: average rating, goals plus assists in all competitions (keepers: clean sheets, scored against other keepers), team trophies (title 2, cup 1), individual awards (MVP 3, Boot and Glove 2, Young Player 1, team of the season 1). Weighted by `settings.potyW` (Settings, Awards tab); `redoPoty()` recalculates every past year.
 - Shown on awards night (after MVP), the season review, the History page and the player cabinet. Trophy `poty`.
 
 ## GOATs
@@ -100,7 +100,7 @@ A pure-simulation football league game. The user sets up clubs and players, then
 
 ## Awards night
 
-- When a season ends (`settings.awardsNight`, on by default) a full-screen overlay (`#an`) reveals the awards one at a time: Rookie, Golden Glove, Golden Boot, Team of the season, Manager of the season, MVP, cup final, champions. Built by `anSteps(h)`, drawn by `anRender()`; Space or Enter reveals and moves on, Escape skips to the season review.
+- When a season ends (`settings.awardsNight`, on by default) a full-screen overlay (`#an`) reveals the awards one at a time: Young Player, Golden Glove, Golden Boot, Team of the season, Manager of the season, MVP, cup final, champions. Built by `anSteps(h)`, drawn by `anRender()`; Space or Enter reveals and moves on, Escape skips to the season review.
 - `decideAwards` now keeps the top three for each award as nominees (`h.noms`); manager nominees go in `h.mosNoms`. Older seasons simply show no nominees.
 - Any season can be replayed from its review page with the Awards night button.
 
