@@ -315,16 +315,16 @@ tr.sel td{background:color-mix(in srgb,var(--flood) 20%,transparent)}
 .cabslot{position:relative;z-index:1;height:170px;width:124px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:14px;cursor:default;outline:none}
 .stk{display:flex;align-items:flex-end;justify-content:center;transition:transform .16s steps(3,end),filter .16s steps(2,end)}
 .stk img{filter:drop-shadow(2px 2px 0 rgba(0,0,0,.5))}
-.stk img+img{margin-left:calc(var(--st,25px) - var(--w,69px));transition:margin-left .16s steps(3,end)}
-.fan:hover .stk img+img,.fan:focus-visible .stk img+img,.fan.tipon .stk img+img{margin-left:calc(var(--sh,30px) - var(--w,69px))}
-.cabslot:hover,.cabslot:focus-visible,.cabslot.tipon{z-index:3}
-.stk img:not(:last-child){filter:brightness(var(--dk,.72)) drop-shadow(2px 2px 0 rgba(0,0,0,.5))}
+.stk img+img{margin-left:calc(var(--st,25px) - var(--w,69px))}
+.stk img:not(:last-child){filter:brightness(.72) drop-shadow(2px 2px 0 rgba(0,0,0,.5))}
 .cabslot:hover .stk,.cabslot:focus-visible .stk,.cabslot.tipon .stk{transform:translateY(-5px) scale(1.06);filter:drop-shadow(2px 0 0 rgba(255,214,102,.55)) drop-shadow(-2px 0 0 rgba(255,214,102,.55)) drop-shadow(0 -2px 0 rgba(255,214,102,.55)) drop-shadow(0 2px 0 rgba(255,214,102,.3))}
 .cabslot.sil img{filter:brightness(0) invert(.16);opacity:.75}
 .cabslot.sil:hover .stk,.cabslot.sil:focus-visible .stk,.cabslot.sil.tipon .stk{filter:drop-shadow(2px 0 0 rgba(255,255,255,.18)) drop-shadow(-2px 0 0 rgba(255,255,255,.18)) drop-shadow(0 -2px 0 rgba(255,255,255,.18))}
 .cabslot:focus-visible .plq{outline:2px solid var(--flood);outline-offset:1px}
 .plq{margin-top:5px;background:#E2B33C;color:#2e2006;font:600 .66rem/1.3 var(--bd);padding:1px 6px;border:1px solid #7A520A;box-shadow:inset 0 1px 0 #F6D46A;white-space:nowrap;max-width:118px;overflow:hidden;text-overflow:ellipsis}
 .plq b{font:600 .7rem var(--px)}
+.cabslot.link{cursor:pointer}
+.awt td:last-child{white-space:normal;font-size:.85rem;min-width:180px}
 .cabslot.sil .plq{background:#3a2a1d;color:#a08a6a;border-color:#2a170b;box-shadow:none}
 /* cabinet comparison: one shelf per honour, side A stands to the left of the counts and side B to the right */
 .cmpcrown{gap:10px;align-items:center;flex-wrap:wrap}
@@ -385,7 +385,7 @@ tr.sel td{background:color-mix(in srgb,var(--flood) 20%,transparent)}
 #tip .tw{color:#B8A98A;font-size:.78rem}
 #tip::after{content:"";position:absolute;left:calc(var(--ax,50%) - 6px);top:100%;margin-top:2px;width:12px;height:6px;background:#E2B33C;clip-path:polygon(0 0,100% 0,100% 34%,84% 34%,84% 67%,67% 67%,67% 100%,33% 100%,33% 67%,16% 67%,16% 34%,0 34%)}
 #tip.below::after{top:auto;bottom:100%;margin:0 0 2px;transform:scaleY(-1)}
-@media (prefers-reduced-motion:reduce){.stk,.tmini,.stk img+img{transition:none}.cmpside:hover .stk,.cmpside.tipon .stk{transform:none}.cabslot:hover .stk,.cabslot:focus-visible .stk,.cabslot.tipon .stk{transform:none}.tmini:hover,.tmini:focus-visible,.tmini.tipon{transform:none}}
+@media (prefers-reduced-motion:reduce){.stk,.tmini{transition:none}.cmpside:hover .stk,.cmpside.tipon .stk{transform:none}.cabslot:hover .stk,.cabslot:focus-visible .stk,.cabslot.tipon .stk{transform:none}.tmini:hover,.tmini:focus-visible,.tmini.tipon{transform:none}}
 .caedit{display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
 .caedit.off{opacity:.55}
 .caedit>img{flex:none;width:46px}
@@ -836,7 +836,7 @@ function viewRecords(){
   const boards=[board(`All time top scorers`,pRows(car,x=>cv(x.st,"goals",C),x=>whoTag(x.p)),v),board(`All time top assists`,pRows(car,x=>cv(x.st,"assists",C),x=>whoTag(x.p)),v),
     board(`Most goals in a season`,pRows(seas,x=>cv(x.c,"goals",C),x=>`Season ${x.c.season}${x.c.now?" (now)":""}`),v),board(`Most assists in a season`,pRows(seas,x=>cv(x.c,"assists",C),x=>`Season ${x.c.season}${x.c.now?" (now)":""}`),v),
     board(`Most points in a season`,[...cs].sort((a,b)=>b.pts-a.pts||(b.gf-b.ga)-(a.gf-a.ga)).slice(0,10).map(r=>({act:"club",id:r.id,name:tname(r.id,r.name),flag:team(r.id)?badge(team(r.id),18):"",sub:`Season ${r.season}, ${ordinal(r.pos)}`,v:r.pts})),v,1)];
-  return `${tableTabs()}<div class="phead"><h2 style="margin:0">Records</h2></div><p class="muted">Includes retired players. Player records count ${C==="all"?"league and cup games together":C==="lg"?"league games only":"cup games only"}. Club records are from the league${cups?", apart from the biggest wins and cup counts":""}.</p>
+  return `<p class="muted" style="margin-top:0">Includes retired players. Player records count ${C==="all"?"league and cup games together":C==="lg"?"league games only":"cup games only"}. Club records are from the league${cups?", apart from the biggest wins and cup counts":""}.</p>
   ${compChips(C,"rec-comp")}
   ${club.length?`<h3>Clubs</h3><div class="records">${club.join("")}</div>`:""}
   ${pRec.length?`<h3>Players, all time <small class="muted">${cl}</small></h3><div class="records">${pRec.join("")}</div>`:""}
@@ -1060,7 +1060,6 @@ function leagueTable(rows,form=true){
 
 /* ---------- views ---------- */
 function viewTable(){
-  if(tblTab==="records")return viewRecords();
   const tbl=computeTable(),done=seasonDone(),cal=calendar(),ni=nextDay(cal),nd=cal[ni],ld=cal[ni-1];
   const C=curCup(),dayTitle=d=>d.cup!=null?`${esc(cupName())}: ${cupRoundName(d.cup,C.sched.length)}`:`Matchday ${d.lg+1} of ${state.fixtures.length}`,dayGames=d=>d.cup!=null?(C.rounds[d.cup]||{ties:[]}).ties:state.fixtures[d.lg];
   const next=!done&&nd?dayGames(nd):null,last=ld?dayGames(ld):null;
@@ -1068,7 +1067,7 @@ function viewTable(){
   let banner="";
   if(state.draft){const t=team(state.draft.order[state.draft.pick]);banner=`<div class="banner">${badge(t,56)}<div class="grow"><h2>${state.draft.stage==="setup"?"Set up the opening draft":state.draft.type==="opening"?"The opening draft is underway":`The season ${state.season} draft is open`}</h2><p>${state.draft.stage==="setup"?"Edit the player pool, then start the draft.":`${esc(t.name)} are on the clock with pick ${state.draft.pick+1} of ${state.draft.order.length}.`}</p></div><button class="btn go" data-act="nav" data-v="draft">Go to the draft</button></div>`}
   if(done){const c=team(tbl[0].id);banner=`<div class="banner">${badge(c,64)}<div class="grow"><h2>${esc(c.name)} are champions</h2><p>Season ${state.season} is complete with ${tbl[0].pts} points.</p></div><button class="btn go" data-act="end-season">Start season ${state.season+1}</button></div>`}
-  return `${banner}${tableTabs()}<div class="grid2"><section class="card"><h2>Season ${state.season}</h2>${leagueTable(tbl)}</section><aside class="card">
+  return `${banner}<div class="grid2"><section class="card"><h2>Season ${state.season}</h2>${leagueTable(tbl)}</section><aside class="card">
     ${next?`<h3 style="margin-top:0">${dayTitle(nd)}</h3>${next.map(fixtureRow).join("")}`:""}
     ${last?`<h3 ${next?"":`style="margin-top:0"`}>Latest results${ld.cup!=null?`, ${esc(cupRoundName(ld.cup,C.sched.length).toLowerCase())}`:""}</h3>${last.map(resultRow).join("")}`:""}
     <h3>Top scorers</h3>${leaders.length?`<table><tbody>${leaders.map(p=>`<tr class="click" data-act="player" data-id="${p.id}"><td><span class="namecell">${flag(p.nat)}${esc(p.name)}</span></td><td>${badge(team(p.teamId),18)}</td><td class="r num pts">${p.s.goals}</td></tr>`).join("")}</tbody></table>`:`<p class="muted">Goals will show here once the first matchday is played.</p>`}
@@ -1240,11 +1239,15 @@ function viewCup(){
     body=`<div class="bracket">${Array.from({length:R},(_,k)=>{const r=C.rounds[k],done=k<C.cur;
       return `<section class="bround"><h4>${cupRoundName(k,R)}</h4><p class="muted">${k===R-1?`${done?"Played":"Plays"} after the last matchday`:`Own day after matchday ${C.sched[k]+1}`}</p>
       ${r?r.ties.map(f=>cupTieRow(f,done)).join("")+(r.byes.length?`<p class="muted">Byes: ${r.byes.map(i=>esc(team(i).name)).join(", ")}</p>`:""):`<div class="ctie tbd"><span class="muted">Drawn after the ${cupRoundName(k-1,R).toLowerCase()}</span></div>`}</section>`}).join("")}</div>`}
-  const wins={};past.forEach(h=>{wins[h.cup.winner.id]=(wins[h.cup.winner.id]||0)+1});
-  const scorers=everyone().map(p=>({p,n:(p.career||[]).reduce((s,c)=>s+(c.cgoals||0),0)+(p.retired?0:p.s.cgoals||0)})).filter(x=>x.n).sort((a,b)=>b.n-a.n).slice(0,10);
   return `<div class="banner">${pxCtx()?`<img class="px" src="${pxTrophy("cup")}" width="46" alt="">`:""}<div class="grow"><h2>${esc(cupName())}</h2><p>${C&&C.season===state.season?C.winner?`Season ${state.season} winners: ${esc(team(C.winner).name)}`:`Season ${state.season}. ${cupRoundName(C.cur,C.sched.length)} ${C.cur===C.sched.length-1?"after the last matchday":`after matchday ${C.sched[C.cur]+1}`}`:"Single matches, penalties if level, final on neutral ground."}</p></div></div>
   ${body}
-  <div class="grid2 even" style="margin-top:18px"><section class="card"><h3 style="margin-top:0">Winners</h3>${past.length?`<table><tbody>${[...past].reverse().map(h=>`<tr><td class="muted">S${h.season}</td><td>${clubLabel(team(h.cup.winner.id)||h.cup.winner,20)}</td><td class="muted">${esc(finalLine(h.cup.final,id=>team(id)?team(id).short:"?"))}</td></tr>`).join("")}</tbody></table>`:`<p class="muted">The first final is at the end of this season.</p>`}</section>
+  <div style="margin-top:18px">${cupHistoryHTML()}</div>`;
+}
+function cupHistoryHTML(){
+  const past=state.history.filter(h=>h.cup);
+  const wins={};past.forEach(h=>{wins[h.cup.winner.id]=(wins[h.cup.winner.id]||0)+1});
+  const scorers=everyone().map(p=>({p,n:(p.career||[]).reduce((s,c)=>s+(c.cgoals||0),0)+(p.retired?0:p.s.cgoals||0)})).filter(x=>x.n).sort((a,b)=>b.n-a.n).slice(0,10);
+  return `<div class="grid2 even"><section class="card"><h3 style="margin-top:0">Winners</h3>${past.length?`<table><tbody>${[...past].reverse().map(h=>`<tr><td class="muted">S${h.season}</td><td>${clubLabel(team(h.cup.winner.id)||h.cup.winner,20)}</td><td class="muted">${esc(finalLine(h.cup.final,id=>team(id)?team(id).short:"?"))}</td></tr>`).join("")}</tbody></table>`:`<p class="muted">The first final is at the end of this season.</p>`}</section>
   <section class="card"><h3 style="margin-top:0">Most cup wins</h3>${Object.keys(wins).length?`<table><tbody>${Object.entries(wins).sort((a,b)=>b[1]-a[1]).map(([id,n])=>team(id)?`<tr class="click" data-act="club" data-id="${id}"><td>${clubLabel(team(id),20)}</td><td class="r">${cupTrophies(id,20)}</td></tr>`:"").join("")}</tbody></table>`:`<p class="muted">No winners yet.</p>`}
   <h3>All time cup scorers</h3>${scorers.length?`<table><tbody>${scorers.map(x=>`<tr class="click" data-act="player" data-id="${x.p.id}"><td><span class="namecell">${flag(x.p.nat)}${esc(x.p.name)}</span></td><td class="r num"><b>${x.n}</b></td></tr>`).join("")}</tbody></table>`:`<p class="muted">No cup goals yet.</p>`}</section></div>`;
 }
@@ -1467,16 +1470,15 @@ const wonN=(n,verb="Won")=>`${verb} ${n===1?"once":n===2?"twice":n+" times"}`;
 function tipAttr(lines,focus=true){return ` data-tip="${lines.map(esc).join("&#10;")}" role="img"${focus?` tabindex="0"`:""}`}
 function groupTip(g){const n=g.items.length,seasons=g.items.map(i=>i.s),who=g.items.filter(i=>i.who).slice(-6).reverse().map(i=>`S${i.s}  ${i.who}`);
   return n?[g.label,wonN(n,g.verb),`${seasons.length>1?"Seasons":"Season"} ${seasons.join(", ")}`,...who]:[g.label,"Not won yet"]}
-// Every win is drawn as one bundle (up to 8, the count says the rest), each one further back a step darker. --st is the gap between trophies at rest, sized so the
-// bundle fits its space, and --sh the wider gap they fan out to on hover, focus or tap. They may still overlap when fanned.
+// The latest three wins stand in a fixed overlap, the ×count says the rest. --st is the visible width of each trophy behind the front one.
 function stackHTML(g,room,small){const n=g.items.length,px=pxCtx();if(!px)return "";
   if(!n){const w=small?(g.gw?g.gw:46):(g.gw||69);return `<span class="stk"><img class="px" src="${g.ghost()}" width="${w}" alt=""></span>`}
-  const top=g.items.slice(-8),k=top.length,w=small?top[0].cw||top[0].w:top[0].w,st=k>1?Math.max(3,Math.min(25,Math.floor((room-w)/(k-1)))):0,sh=k>1?Math.max(st+3,Math.min(30,Math.floor((room*1.6-w)/(k-1)))):0;
-  return `<span class="stk" style="--w:${w}px;--st:${st}px;--sh:${sh}px">${top.map((i,j)=>`<img class="px" src="${i.img()}" width="${w}" alt=""${j<k-1?` style="--dk:${(.42+.4*j/Math.max(1,k-2)).toFixed(2)}"`:""}>`).join("")}</span>`}
+  const top=g.items.slice(-3),w=small?top[0].cw||top[0].w:top[0].w;
+  return `<span class="stk" style="--w:${w}px;--st:${Math.round(w*.36)}px">${top.map(i=>`<img class="px" src="${i.img()}" width="${w}" alt="">`).join("")}</span>`}
 function cabinetPanel(name,groups){
   groups=groups.filter(g=>g.items.length||g.ghost);
-  const slot=g=>{const n=g.items.length,tip=groupTip(g);
-    return `<div class="cabslot fan${n?"":" sil"}"${tipAttr(tip)} aria-label="${esc(tip.join(". "))}">${stackHTML(g,116)}<span class="plq">${esc(g.short||g.label)}${n>1?` <b>×${n}</b>`:""}</span></div>`};
+  const slot=g=>{const n=g.items.length,tip=groupTip(g),link=g.aw&&state.history.length;if(link)tip.push(matchMedia("(hover: none)").matches?"Tap again to see every winner":"Click to see every winner");
+    return `<div class="cabslot${link?" link":""}${n?"":" sil"}"${tipAttr(tip)}${link?` data-act="awhist" data-v="${g.aw}"`:""} aria-label="${esc(tip.join(". "))}">${stackHTML(g,116)}<span class="plq">${esc(g.short||g.label)}${n>1?` <b>×${n}</b>`:""}</span></div>`};
   return `<div class="cabinet"><div class="cabcrown"><span class="cabplate">${esc(name)}</span></div><div class="cabin">${groups.length?`<div class="shelves">${groups.map(slot).join("")}</div>`:`<p class="cabempty">The cabinet is empty for now.</p>`}</div></div>`;
 }
 // Two cabinets on one set of shelves: a row per honour either side has, counts in the middle, the leader lit up
@@ -1485,14 +1487,14 @@ function cabCompare(nameA,nameB,gA,gB){
   const find=(G,k,other)=>G.find(g=>g.label===k)||{...other,items:[]};
   const rows=keys.map(k=>{const a=find(gA,k,gB.find(g=>g.label===k)),b=find(gB,k,gA.find(g=>g.label===k)),x=a.items.length,y=b.items.length;
     if(!x&&!y)return "";
-    const side=(g,n,cls)=>{const tip=groupTip(g);return `<div class="cmpside ${cls} fan${n?"":" sil"}"${tipAttr(tip)} aria-label="${esc(tip.join(". "))}">${g.ghost||n?stackHTML(g,150,true):""}</div>`};
+    const side=(g,n,cls)=>{const tip=groupTip(g);return `<div class="cmpside ${cls}${n?"":" sil"}"${tipAttr(tip)} aria-label="${esc(tip.join(". "))}">${g.ghost||n?stackHTML(g,150,true):""}</div>`};
     return `<div class="cmprow">${side(a,x,"l")}<div class="cmpmid"><b class="${x>y?"lead":""}">${x}</b><span class="plq">${esc(a.short||b.short||k)}</span><b class="${y>x?"lead":""}">${y}</b></div>${side(b,y,"r")}</div>`}).join("");
   return `<div class="cabinet cmpcab"><div class="cabcrown cmpcrown"><span class="cabplate">${esc(nameA)}</span><span class="cmpvs">vs</span><span class="cabplate">${esc(nameB)}</span></div><div class="cabin">${rows||`<p class="cabempty">Neither cabinet has anything in it yet.</p>`}</div></div>`;
 }
 const cabT=(k,s,who)=>({img:()=>pxTrophy(k),w:69,cw:46,s,who,k});
 const ghostT=k=>()=>pxTrophy(k);
 const cupGroupOn=()=>cupOn()||state.history.some(h=>h.cup);
-function awardGroups(list,ghosts=[]){const by={};list.forEach(a=>(by[a.type]=by[a.type]||[]).push(a));return Object.keys(AWARDS).filter(k=>by[k]||ghosts.includes(k)).map(k=>({label:AWARDS[k].full,short:AWARDS[k].s,ghost:ghostT(k),items:(by[k]||[]).sort((a,b)=>a.season-b.season).map(a=>cabT(k,a.season,a.who))}))}
+function awardGroups(list,ghosts=[]){const by={};list.forEach(a=>(by[a.type]=by[a.type]||[]).push(a));return Object.keys(AWARDS).filter(k=>by[k]||ghosts.includes(k)).map(k=>({aw:k,label:AWARDS[k].full,short:AWARDS[k].s,ghost:ghostT(k),items:(by[k]||[]).sort((a,b)=>a.season-b.season).map(a=>cabT(k,a.season,a.who))}))}
 // Individual awards won by a club's players and managers while they were there.
 function clubAwards(t){const out=[];state.history.forEach(h=>(h.awards||[]).forEach(a=>{const p=pl(a.id),r=p&&p.career.find(c=>c.season===h.season);if(r?r.teamId===t.id:a.team===t.name)out.push({type:a.type,season:h.season,who:a.name})}));Object.values(state.managers||{}).forEach(m=>(m.awards||[]).forEach(a=>{const r=m.hist.find(x=>x.season===a.season);if(r&&r.teamId===t.id)out.push({type:a.type,season:a.season,who:m.name})}));return out}
 const compGroups=(lg,cp)=>[{label:"League title",short:"League",ghost:ghostT("league"),items:lg},...(cupGroupOn()?[{label:cupName(),short:"Cup",ghost:ghostT("cup"),items:cp}]:[])];
@@ -1501,7 +1503,7 @@ function clubGroups(t){return [...compGroups(titles(t.id).map(s=>cabT("league",s
 // Silhouettes on a player's shelves only for awards that can still come their way at their position
 function playerGhosts(p){if(p.retired)return [];const g=["mvp"];g.push(p.pos==="GK"?"glove":"boot");if(!(p.career||[]).length&&p.age<=23)g.push("rookie");return g}
 function playerCabinet(p){return cabinetPanel(p.name,playerGroups(p))}
-function playerGroups(p){const t=team(p.teamId)||state.teams[0];return [{label:"Championship rings",short:"Rings",ghost:()=>pxRing(t.c1,state.season,t.id),gw:62,items:ringsOf(p).map(r=>({img:()=>pxRing(r.c1,r.season,r.tid),w:62,s:r.season,who:r.team,k:"ring",c1:r.c1}))},...(cupGroupOn()?[{label:`${cupName()} medals`,short:"Cup",ghost:ghostT("cup"),items:cupMedalsOf(p).map(a=>cabT("cup",a.season))}]:[]),{label:"Team of the season",short:"TOTS",verb:"Picked",items:(p.tots||[]).map(s=>cabT("tots",s))},...awardGroups(awardsOf(p),playerGhosts(p)),{label:"Hall of Fame",short:"Hall of Fame",verb:"Inducted",items:p.hof?[cabT("hof",p.hof)]:[]},{label:"Greatest of all time",short:"GOAT",verb:"Crowned",items:p.goat?[cabT("goat",p.goat)]:[]}]}
+function playerGroups(p){const t=team(p.teamId)||state.teams[0];return [{label:"Championship rings",short:"Rings",ghost:()=>pxRing(t.c1,state.season,t.id),gw:62,items:ringsOf(p).map(r=>({img:()=>pxRing(r.c1,r.season,r.tid),w:62,s:r.season,who:r.team,k:"ring",c1:r.c1}))},...(cupGroupOn()?[{label:`${cupName()} medals`,short:"Cup",ghost:ghostT("cup"),items:cupMedalsOf(p).map(a=>cabT("cup",a.season))}]:[]),{aw:"tots",label:"Team of the season",short:"TOTS",verb:"Picked",items:(p.tots||[]).map(s=>cabT("tots",s))},...awardGroups(awardsOf(p),playerGhosts(p)),{aw:"hof",label:"Hall of Fame",short:"Hall of Fame",verb:"Inducted",items:p.hof?[cabT("hof",p.hof)]:[]},{label:"Greatest of all time",short:"GOAT",verb:"Crowned",items:p.goat?[cabT("goat",p.goat)]:[]}]}
 function managerCabinet(m){return cabinetPanel(m.name,[...compGroups(m.hist.filter(r=>r.title).map(r=>cabT("league",r.season,r.team)),m.hist.filter(r=>r.cup).map(r=>cabT("cup",r.season,r.team))),...awardGroups(m.awards||[],m.retired?[]:["mos"])])}
 // Small league and cup row for club cards, like a cabinet in miniature
 function trophyRow(t){if(!pxOn())return "";const g=compGroups(titles(t.id),cupsOf(t.id)),kind=["league","cup"];
@@ -1517,8 +1519,8 @@ function viewReview(season){
   <div class="banner">${pxCtx()?`<img class="px" src="${pxTrophy("league")}" width="69" alt="">`:""}${badge(team(h.champion.id)||h.champion,72)}<div class="grow"><p>Champions</p><h2>${esc(h.champion.name)}</h2><p>${pluralN(ch.w,"win")}, ${pluralN(ch.d,"draw")} and ${pluralN(ch.l,"loss","losses")} for ${pluralN(ch.pts,"point")}. ${gap?`${gap} ${gap===1?"point":"points"} clear of ${esc(h.runnerUp.name)}.`:`Level on points with ${esc(h.runnerUp.name)}, won on the tie-breaker.`}</p></div></div>
   ${h.cup?`<div class="card rvaward" style="margin-bottom:8px">${pxCtx()?`<img class="px" src="${pxTrophy("cup")}" width="46" alt="">`:""}<div><span class="muted">${esc(h.cup.name)} winners</span><b>${esc(h.cup.winner.name)}</b><span class="muted">Final: ${esc(finalLine(h.cup.final,id=>team(id)?team(id).name:"?"))}${h.cup.top?`. Top cup scorer ${esc(h.cup.top.name)} with ${h.cup.top.n}`:""}</span></div></div>`:""}
   ${h.mos&&state.managers&&state.managers[h.mos.id]?`<div class="card rvaward" style="margin-bottom:8px">${pxCtx()?`<img class="px" src="${pxTrophy("mos")}" width="46" alt="">`:""}<div><span class="muted">Manager of the season</span><button class="linkbtn" data-act="mgr" data-id="${h.mos.id}">${esc(h.mos.name)}</button><span class="muted">${esc(h.mos.team)}. Finished ${esc(h.mos.val)}</span></div></div>`:""}
-  ${h.poty?`<div class="card rvaward" style="margin-bottom:8px">${pxCtx()?`<img class="px" src="${pxTrophy("poty")}" width="46" alt="">`:""}<div><span class="muted">Player of the Year, year ${h.poty.year} (seasons ${h.poty.from} to ${h.poty.to})</span>${plink(h.poty.win.id,h.poty.win.name)}<span class="muted">${esc(h.poty.win.team)}. ${esc(h.poty.win.val)}</span></div></div>`:""}
-  ${h.awards&&h.awards.length?`<h3>Awards</h3><div class="rvawards">${h.awards.map(a=>`<div class="card rvaward">${pxCtx()?`<img class="px" src="${pxTrophy(a.type)}" width="69" alt="">`:""}<div><span class="muted">${AWARDS[a.type].full}</span>${plink(a.id,a.name)}<span class="muted">${esc(a.team)}</span><span class="num">${esc(a.val||"")}</span></div></div>`).join("")}</div>`:""}
+  ${h.poty?`<div class="card rvaward" style="margin-bottom:8px">${pxCtx()?`<img class="px" src="${pxTrophy("poty")}" width="46" alt="">`:""}<div><button class="linkbtn inl muted" data-act="awhist" data-v="poty">Player of the Year, year ${h.poty.year} (seasons ${h.poty.from} to ${h.poty.to})</button>${plink(h.poty.win.id,h.poty.win.name)}<span class="muted">${esc(h.poty.win.team)}. ${esc(h.poty.win.val)}</span></div></div>`:""}
+  ${h.awards&&h.awards.length?`<h3>Awards</h3><div class="rvawards">${h.awards.map(a=>`<div class="card rvaward">${pxCtx()?`<img class="px" src="${pxTrophy(a.type)}" width="69" alt="">`:""}<div><button class="linkbtn inl muted" data-act="awhist" data-v="${a.type}">${AWARDS[a.type].full}</button>${plink(a.id,a.name)}<span class="muted">${esc(a.team)}</span><span class="num">${esc(a.val||"")}</span></div></div>`).join("")}</div>`:""}
   ${h.tots&&h.tots.length?`<h3>Team of the season</h3>${totsHTML(h.tots)}`:""}
   <h3>Season leaders</h3><div class="card"><div class="rvfacts">${lead("Top scorer",h.topScorer)}${lead("Most assists",h.topAssist)}${lead("Most clean sheets",h.topCS)}</div></div>
   <h3>Final table</h3><div class="card">${leagueTable(h.table,false)}</div>
@@ -1590,19 +1592,54 @@ async function totsCard(season){
       txt(p.name,cx,y0+50,36,chalk,HD,700,step-20,"center");txt(`${p.team}, ${p.avg.toFixed(2)}`,cx,y0+84,22,dim,BD,500,step-20,"center")})}
   return{url:c.toDataURL("image/png"),name:`${slug()}-season-${h.season}-team-of-the-season.png`};
 }
+let histTab="seasons",awHist=null;
+// Every award's winners, newest first: [{season, id, name, team, val, mgr}]. Team of the season and Hall of Fame list several per season.
+const AW_EXTRA={mos:"Manager of the season",tots:"Team of the season",hof:"Hall of Fame"};
+function awardList(){const ks=["poty","mvp","boot","glove","rookie",...Object.keys(AWARDS).filter(k=>k[0]==="x"&&state.history.some(h=>(h.awards||[]).some(a=>a.type===k))),"mos","tots","hof"];
+  return ks.filter(k=>k!=="poty"||state.history.some(h=>h.poty))}
+const awardName=k=>AW_EXTRA[k]||(AWARDS[k]?AWARDS[k].full:k);
+function awardWinners(k){const out=[];[...state.history].reverse().forEach(h=>{
+  if(k==="poty"){if(h.poty)out.push({season:h.season,...h.poty.win,val:`Year ${h.poty.year}, seasons ${h.poty.from} to ${h.poty.to}. ${h.poty.win.val}`})}
+  else if(k==="mos"){if(h.mos)out.push({season:h.season,...h.mos,mgr:1})}
+  else if(k==="tots")(h.tots||[]).forEach(x=>out.push({season:h.season,id:x.id,name:x.name,team:x.team,val:`${x.pos}, ${fmtAvg(x.avg)} average`}));
+  else if(k==="hof")(h.hof||[]).forEach(id=>{const p=pl(id);if(p)out.push({season:h.season,id,name:p.name,team:p.lastTeam||"",val:`Legacy ${legacy(p)}`})});
+  else (h.awards||[]).filter(a=>a.type===k).forEach(a=>out.push({season:h.season,...a}))});return out}
+function awardsHistHTML(){
+  const ks=awardList();if(!ks.includes(awHist))awHist=ks[0];const k=awHist,W=awardWinners(k),cnt={};
+  W.forEach(w=>{const key=(w.mgr?"m":"p")+w.id;cnt[key]=cnt[key]||{w,n:0,s:[]};cnt[key].n++;cnt[key].s.push(w.season)});
+  const most=Object.values(cnt).filter(x=>x.n>1).sort((a,b)=>b.n-a.n).slice(0,10);
+  const who=w=>w.mgr?(state.managers&&state.managers[w.id]?`<button class="linkbtn" data-act="mgr" data-id="${w.id}">${esc(w.name)}</button>`:`<b>${esc(w.name)}</b>`):pl(w.id)?`<button class="linkbtn namecell" data-act="player" data-id="${w.id}">${flag(pl(w.id).nat)}${esc(w.name)}</button>`:`<b>${esc(w.name)}</b>`;
+  const many=k==="tots"||k==="hof";
+  return `<div class="chips" style="margin-bottom:14px">${ks.map(x=>`<button class="chip ${x===k?"on":""}" data-act="awhist-tab" data-v="${x}">${pxCtx()?`<img class="px" src="${pxTrophy(x,true)}" width="23" alt="" style="vertical-align:middle;margin-right:4px">`:""}${esc(awardName(x))}</button>`).join("")}</div>
+  <div class="grid2"><section class="card"><h3 style="margin-top:0">${esc(awardName(k))}: ${many?"every pick":"every winner"}</h3>${k==="poty"?`<p class="muted" style="margin-top:-.4em">Every three seasons make a year. Weights are set in Settings, Awards.</p>`:""}
+   ${W.length?`<table class="awt"><tbody>${W.map((w,i)=>`<tr${many&&i&&W[i-1].season===w.season?' class="same"':""}><td class="muted num" style="white-space:nowrap">${many&&i&&W[i-1].season===w.season?"":"S"+w.season}</td><td>${who(w)}</td><td class="muted">${esc(w.team||"")}</td><td class="muted">${esc(w.val||"")}</td></tr>`).join("")}</tbody></table>`:`<p class="muted">Nobody yet.</p>`}</section>
+   <aside class="card"><h3 style="margin-top:0">${many?"Most picks":"Most wins"}</h3>${most.length?`<table><tbody>${most.map(x=>`<tr><td>${who(x.w)}</td><td class="muted">S${x.s.sort((a,b)=>a-b).join(", S")}</td><td class="r num"><b>${x.n}</b></td></tr>`).join("")}</tbody></table>`:`<p class="muted">Nobody has won it more than once yet.</p>`}</aside></div>`;
+}
+function rollHTML(){
+  const rows=state.teams.map(t=>({t,ti:titles(t.id).length,cu:cupsOf(t.id).length,aw:clubAwards(t).length})).sort((a,b)=>b.ti-a.ti||b.cu-a.cu||b.aw-a.aw),cup=state.history.some(h=>h.cup);
+  return `<section class="card"><h3 style="margin-top:0">Roll of honour</h3><table><thead><tr><th>Club</th><th class="r">League titles</th>${cup?`<th class="r">${esc(cupName())}</th><th class="r">Total</th>`:""}<th class="r">Player and manager awards</th><th></th></tr></thead><tbody>
+  ${rows.map(x=>`<tr class="click" data-act="club" data-id="${x.t.id}"><td>${clubLabel(x.t)}</td><td class="r num"><b>${x.ti}</b></td>${cup?`<td class="r num">${x.cu}</td><td class="r num">${x.ti+x.cu}</td>`:""}<td class="r num">${x.aw}</td><td class="r">${trophies(x.t.id,20)} ${cup?cupTrophies(x.t.id,20):""}</td></tr>`).join("")}</tbody></table></section>
+  <section class="card" style="margin-top:16px"><h3 style="margin-top:0">Champions by season</h3><table><tbody>${[...state.history].reverse().map(h=>`<tr><td class="muted num">S${h.season}</td><td>${clubLabel(team(h.champion.id)||h.champion,20)}</td><td class="muted">Runners-up ${esc(h.runnerUp.name)}</td>${cup?`<td>${h.cup?`<span class="muted">Cup: </span>${esc(h.cup.winner.name)}`:""}</td>`:""}</tr>`).join("")}</tbody></table></section>`;
+}
 function viewHistory(){
   if(!state.history.length)return `<h2>History</h2><div class="empty">Finish a season to see champions, award winners and retirements here.</div>`;
-  const honours=state.teams.map(t=>({t,n:titles(t.id).length})).filter(x=>x.n).sort((a,b)=>b.n-a.n);
   const fact=(l,v)=>v?`<div><span class="muted">${l}</span><b>${esc(v.name)} (${v.n})</b><span class="muted">${esc(v.team)}</span></div>`:"";
-  const awd=h=>(h.awards||[]).map(a=>`<div><span class="muted namecell">${pxCtx()?`<img class="px" src="${pxTrophy(a.type)}" width="23" alt="">`:""}${AWARDS[a.type].full}</span>${pl(a.id)?`<button class="linkbtn" data-act="player" data-id="${a.id}">${esc(a.name)}</button>`:`<b>${esc(a.name)}</b>`}<span class="muted">${esc(a.team)}, ${esc(a.val||"")}</span></div>`).join("");
-  return `<h2>History</h2>
-  <div class="card" style="margin-bottom:18px"><h3 style="margin-top:0">Roll of honour</h3><table><tbody>${honours.map(x=>`<tr class="click" data-act="club" data-id="${x.t.id}"><td>${clubLabel(x.t)}</td><td class="r">${trophies(x.t.id,24)}</td></tr>`).join("")}</tbody></table></div>
-  ${(()=>{const E=allEras().sort((a,b)=>b.from-a.from);return E.length?`<div class="card" style="margin-bottom:18px"><h3 style="margin-top:0">Eras and dynasties</h3><p class="muted" style="margin-top:-.4em">Three or more titles with no more than one season between them.</p>${E.map(e=>eraCard(e,true)).join("")}</div>`:""})()}
-  ${rivalsHTML()}
-  ${[...state.history].reverse().map(h=>`<div class="card hist"><div class="top">${badge(h.champion,48)}<div class="grow"><h3 style="margin:0">Season ${h.season}: ${esc(h.champion.name)}</h3><span class="muted">Runners-up ${esc(h.runnerUp.name)}</span></div><button class="btn sm" data-act="nav" data-v="review:${h.season}">Season review</button></div>
-    <div class="facts">${h.awards&&h.awards.length?awd(h)+fact("Most assists",h.topAssist):fact("Top scorer",h.topScorer)+fact("Most assists",h.topAssist)+fact("Most clean sheets",h.topCS)}${h.poty?`<div><span class="muted namecell">${pxCtx()?`<img class="px" src="${pxTrophy("poty")}" width="23" alt="">`:""}Player of the Year ${h.poty.year}</span>${pl(h.poty.win.id)?`<button class="linkbtn" data-act="player" data-id="${h.poty.win.id}">${esc(h.poty.win.name)}</button>`:`<b>${esc(h.poty.win.name)}</b>`}<span class="muted">${esc(h.poty.win.team)}, score ${h.poty.win.score}</span></div>`:""}${h.hof&&h.hof.length?`<div><span class="muted">Hall of Fame inductees</span>${h.hof.map(i=>pl(i)?`<button class="linkbtn" data-act="player" data-id="${i}">${esc(pl(i).name)}</button>`:"").join("")}</div>`:""}
+  const awd=h=>(h.awards||[]).map(a=>`<div><span class="muted namecell">${pxCtx()?`<img class="px" src="${pxTrophy(a.type)}" width="23" alt="">`:""}<button class="linkbtn inl" data-act="awhist" data-v="${a.type}">${AWARDS[a.type].full}</button></span>${pl(a.id)?`<button class="linkbtn" data-act="player" data-id="${a.id}">${esc(a.name)}</button>`:`<b>${esc(a.name)}</b>`}<span class="muted">${esc(a.team)}, ${esc(a.val||"")}</span></div>`).join("");
+  const T=[["seasons","Seasons"],["honours","Roll of honour"],...(state.history.some(h=>h.cup)?[["cup",cupName()]]:[]),["awards","Awards"],["records","Records"],["eras","Eras and dynasties"],["rivals","Rivalries"]];
+  if(!T.some(t=>t[0]===histTab))histTab="seasons";
+  const tabs=`<div class="chips tabs" role="tablist" style="margin-bottom:14px">${T.map(([k,l])=>`<button class="chip ${histTab===k?"on":""}" role="tab" aria-selected="${histTab===k}" data-act="htab" data-v="${k}">${esc(l)}</button>`).join("")}</div>`;
+  let body;
+  if(histTab==="honours")body=rollHTML();
+  else if(histTab==="cup")body=cupHistoryHTML();
+  else if(histTab==="awards")body=awardsHistHTML();
+  else if(histTab==="records")body=viewRecords();
+  else if(histTab==="eras")body=(()=>{const E=allEras().sort((a,b)=>b.from-a.from);return `<div class="card"><h3 style="margin-top:0">Eras and dynasties</h3><p class="muted" style="margin-top:-.4em">Three or more titles with no more than one season between them.</p>${E.length?E.map(e=>eraCard(e,true)).join(""):`<p class="muted">No club has built an era yet.</p>`}</div>`})();
+  else if(histTab==="rivals")body=rivalsHTML();
+  else body=`${[...state.history].reverse().map(h=>`<div class="card hist"><div class="top">${badge(h.champion,48)}<div class="grow"><h3 style="margin:0">Season ${h.season}: ${esc(h.champion.name)}</h3><span class="muted">Runners-up ${esc(h.runnerUp.name)}</span></div><button class="btn sm" data-act="nav" data-v="review:${h.season}">Season review</button></div>
+    <div class="facts">${h.awards&&h.awards.length?awd(h)+fact("Most assists",h.topAssist):fact("Top scorer",h.topScorer)+fact("Most assists",h.topAssist)+fact("Most clean sheets",h.topCS)}${h.poty?`<div><span class="muted namecell">${pxCtx()?`<img class="px" src="${pxTrophy("poty")}" width="23" alt="">`:""}<button class="linkbtn inl" data-act="awhist" data-v="poty">Player of the Year ${h.poty.year}</button></span>${pl(h.poty.win.id)?`<button class="linkbtn" data-act="player" data-id="${h.poty.win.id}">${esc(h.poty.win.name)}</button>`:`<b>${esc(h.poty.win.name)}</b>`}<span class="muted">${esc(h.poty.win.team)}, score ${h.poty.win.score}</span></div>`:""}${h.hof&&h.hof.length?`<div><span class="muted">Hall of Fame inductees</span>${h.hof.map(i=>pl(i)?`<button class="linkbtn" data-act="player" data-id="${i}">${esc(pl(i).name)}</button>`:"").join("")}</div>`:""}
     ${h.retired.length?`<div><span class="muted">Retired</span>${h.retired.map(r=>`${r.id&&pl(r.id)?`<button class="linkbtn" data-act="player" data-id="${r.id}">${esc(r.name)}</button>`:`<b>${esc(r.name)}</b>`}<span class="muted">${esc(r.team)}, ${r.apps} apps, ${r.goals} goals</span>`).join("")}</div>`:""}</div>
     <details style="margin-top:12px"><summary>Final table</summary>${leagueTable(h.table,false)}</details></div>`).join("")}`;
+  return `<h2>History</h2>${tabs}${body}`;
 }
 // Settings tabs: [key, label, cards in order]. The tab in view is kept for the session only.
 const SET_TABS=[["league","League",["league","matches","cup","mgrs","trades"]],["players","Players",["players","draft","pot"]],["awards","Awards",["night","poty","custom","trophies"]],["look","Look",["look","rings"]],["app","App",["file","version","delete"]]];
@@ -1858,7 +1895,7 @@ function customAwardsCard(){
   ${L.some(c=>c.off)?`<p class="muted">Removed awards that were already won stay in the record books but are not given out any more.</p>`:""}
   <div class="toolbar"><button class="btn" data-act="ca-add">Add an award</button></div></section>`;
 }
-const APP_VERSION="2026.10.28-2";
+const APP_VERSION="2026.10.28-3";
 async function checkUpdates(){try{if(window.caches)for(const k of await caches.keys())await caches.delete(k);if(navigator.serviceWorker)for(const r of await navigator.serviceWorker.getRegistrations())await r.unregister()}catch(e){}location.reload()}
 let trophyTab="league";
 function trophyCard(){
@@ -2325,6 +2362,9 @@ document.addEventListener("click",async e=>{
     case "ctab":clubTab=v;break;
     case "ptab":pTab=v;break;
     case "h2htab":h2hTab=v;break;
+    case "htab":histTab=v;break;
+    case "awhist-tab":awHist=v;break;
+    case "awhist":closeModal();awHist=v;histTab="awards";view="history";break;
     case "goat-on":{const p=pl(id);if(p)crownGoat(p);break}
     case "goat-off":{const p=pl(id);if(p)uncrownGoat(p);break}
     case "goat-del":{const g=goats.find(x=>x.key===v);if(!g||!confirm(`Remove ${g.snap.name} (${g.league}) from the GOAT gallery? Their save is not touched.`))return;goats=goats.filter(x=>x.key!==v);gdo(st=>st.delete(v)).catch(console.warn);break}
@@ -2446,7 +2486,7 @@ function showTip(el){const T=$("#tip"),L=(el.dataset.tip||"").split("\n");if(_ti
   if(y<8){y=Math.round(r.bottom+10);T.classList.add("below")}T.style.transform=`translate(${x}px,${y}px)`;T.style.setProperty("--ax",`${Math.round(cx-x)}px`)}
 function hideTip(){if(_tipEl)_tipEl.classList.remove("tipon");_tipEl=null;const T=$("#tip");if(T)T.hidden=true}
 document.addEventListener("pointerdown",e=>{_ptr=e.pointerType||"mouse"},true);
-document.addEventListener("click",e=>{const el=e.target.closest&&e.target.closest("[data-tip]");if(el&&_ptr!=="mouse"){if(_tipEl===el)hideTip();else showTip(el);e.stopPropagation();e.preventDefault()}else if(!el)hideTip()},true);
+document.addEventListener("click",e=>{const el=e.target.closest&&e.target.closest("[data-tip]");if(el&&_ptr!=="mouse"){if(_tipEl===el){hideTip();if(el.dataset.act)return}else showTip(el);e.stopPropagation();e.preventDefault()}else if(!el)hideTip()},true);
 document.addEventListener("pointerover",e=>{if(e.pointerType!=="mouse")return;const el=e.target.closest("[data-tip]");if(el&&el!==_tipEl)showTip(el)});
 document.addEventListener("pointerout",e=>{if(e.pointerType!=="mouse")return;const el=e.target.closest("[data-tip]");if(el&&el===_tipEl&&!el.contains(e.relatedTarget))hideTip()});
 document.addEventListener("focusin",e=>{const el=e.target.closest&&e.target.closest("[data-tip]");if(el)showTip(el)});
