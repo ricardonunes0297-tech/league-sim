@@ -75,6 +75,24 @@ A pure-simulation football league game. The user sets up clubs and players, then
 - Clubs: the Head to head card has Meetings and Compare tabs (`h2hTab`). `clubCompareHTML` adds a stat duel (`duelRow`, higher or lower wins, the winner marked) with titles, cups, awards, finishes, points, record, all-time top scorer and appearances (`clubLeader`), squad rating and ground.
 - Players: view `pcmp:<id>` (Compare button on the player page). Side B is `pc.b`, picked by search (`pc.q`, active and retired) or defaulting to the best active player at the same position; Swap flips sides without adding to the back stack. Career duel follows `pc.comp` (all, league, cup). Nothing new is saved.
 
+## Player of the Year
+
+- A year is three seasons (`yearOf`). `awardPoty(h)` runs in `endSeason()` on the same seasons as the Hall of Fame (`season%3===0`), after the history entry is pushed, and stores `h.poty` = {year, from, to, win, noms}; the winner also gets `{type:"poty"}` in `p.awards` (so cabinets, lists and `legacy()` see it).
+- `decidePoty(to)` works only from career rows, rings, cup medals, awards and `p.tots`, so `ensurePoty()` (called in `render`) fills in every finished year on older saves. Eligible: half the top appearances across the three seasons. Four parts, each divided by the best eligible value: average rating, goals plus assists in all competitions (keepers: clean sheets, scored against other keepers), team trophies (title 2, cup 1), individual awards (MVP 3, Boot and Glove 2, Rookie 1, team of the season 1). Weighted by `settings.potyW` (Settings, Awards tab); `redoPoty()` recalculates every past year.
+- Shown on awards night (after MVP), the season review, the History page and the player cabinet. Trophy `poty`.
+
+## GOATs
+
+- Commissioner only: Crown as GOAT on the player page. GOATs live outside saves in their own IndexedDB database `leaguesim-goats` (store `goats`, key `lid:pid`), loaded at boot into `goats`, so the GOATs page (menu, view `goat`) shows every league's GOATs, even after a save is deleted.
+- `state.lid` (made by `leagueId()` on first crowning) ties entries to a league. Each league has a line: `n`, `reign`, `season`, `until`, `recrowned`. Crowning a new one makes the last a former GOAT; taking the title away hands the reign back to the latest former one.
+- `snap` (`goatSnap`) is a self-contained copy: bio, main club badge, club names, totals, legacy and cabinet groups as plain data (items carry their trophy kind `k`, rings their colour). `snapGroups` redraws them. `refreshGoats()` updates the open league's snapshots at boot, at season end and on the GOATs page. `then` keeps their totals from the day they were crowned.
+- The player keeps `p.goat` (season first crowned), which gives a crown trophy (`TRO_MAPS.crown`, `goat` in `TROPHY_DEF`) in their cabinet.
+- The GOATs page compares any two GOATs from any leagues with `cabCompare` and `duelRow`, noting when formats differ.
+
+## Players list
+
+- Everyone, Active or Retired chips (`ps.status`). Retired forces All time, since retired players have no stats this season.
+
 ## Awards night
 
 - When a season ends (`settings.awardsNight`, on by default) a full-screen overlay (`#an`) reveals the awards one at a time: Rookie, Golden Glove, Golden Boot, Team of the season, Manager of the season, MVP, cup final, champions. Built by `anSteps(h)`, drawn by `anRender()`; Space or Enter reveals and moves on, Escape skips to the season review.

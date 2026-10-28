@@ -359,6 +359,18 @@ tr.sel td{background:color-mix(in srgb,var(--flood) 20%,transparent)}
 .pcres button{display:flex;gap:8px;align-items:center;text-align:left;padding:7px 10px;background:none;border:0;border-bottom:1px solid var(--line);cursor:pointer;color:var(--ink);font:inherit}
 .pcres button:hover,.pcres button:focus-visible{background:var(--paper)}
 @media (max-width:560px){.cmpside .stk{zoom:.5}.cmprow{min-height:60px}.cmpside{min-height:40px}.cmpmid b{font-size:1.15rem;min-width:1.2em}.cmpmid .plq{max-width:70px}.cmprow{gap:4px}.pcmphead .pc .nm{font-size:.95rem}}
+.chip:disabled{opacity:.45;cursor:not-allowed}
+.goatgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin-bottom:12px}
+.goatcard.reign{border-color:#B07D12;box-shadow:inset 0 0 0 2px #E2B33C,var(--px-sh)}
+.goatcard .gtop{display:flex;gap:10px;align-items:flex-start}
+.goatcard .grow{display:flex;flex-direction:column;gap:2px;min-width:0}
+.goatcard .gn{font:600 .8rem var(--px);color:var(--gold);text-transform:uppercase;letter-spacing:.04em}
+.goatcard .gname{font:600 1.2rem/1.2 var(--px);text-align:left}
+.gnums{display:flex;flex-wrap:wrap;gap:14px;margin-top:10px}
+.gnums div{display:flex;flex-direction:column}.gnums b{font:600 1.3rem/1 var(--px)}.gnums span{font-size:.78rem;color:var(--muted)}
+.gthen{font-size:.85rem;margin:8px 0 0}
+.goattag{display:inline-flex;align-items:center;gap:6px;font:600 .85rem var(--px);color:#3a2a08;background:#E2B33C;border:2px solid #7A520A;padding:2px 10px;box-shadow:inset 0 2px 0 #F6D46A}
+.potyw{width:100%;display:grid;grid-template-columns:1fr 70px 40px;align-items:center;gap:8px}
 .cabempty{color:#e9cf8a;opacity:.8;text-align:center;padding:30px 0 40px;margin:0}
 .trow{display:flex;gap:12px;margin-top:6px}
 .tmini{display:inline-flex;align-items:flex-end;gap:3px;font:600 .9rem/1 var(--px);color:var(--gold);transition:transform .12s steps(2,end),filter .12s steps(2,end);outline:none}
@@ -549,7 +561,7 @@ const FLAGS={
  UKR:`<rect width="30" height="10" fill="#0057B7"/><rect y="10" width="30" height="10" fill="#FFD700"/>`
 };
 function flag(c,w=18){const n=NAT[c];if(!n)return "";return `<svg class="flag" width="${w}" height="${Math.round(w*2/3)}" viewBox="0 0 30 20" role="img" aria-label="${n.n}"><title>${n.n}</title>${FLAGS[c]}<rect x=".25" y=".25" width="29.5" height="19.5" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".5"/></svg>`}
-const DEFAULT_SETTINGS={aiTrades:"normal",injury:100,goals:100,home:10,nations:NATIONS.map(x=>x.c),homeNation:"",homeShare:50,genW:[10,25,35,22,8],draftW:[14,34,32,15,5],draftPer:2,draftAgeMin:17,draftAgeMax:21,retireAge:33,extraPlaces:2,theme:{mode:"system",turf:"#1F4D36",accent:"#E8C547",art:"pixel"},ring:{size:30,metal:"gold",stones:"diamond",centre:"plate",panel:"club",text:"CHAMPIONS"},trophies:{},cup:{on:true,name:""},sackings:true,revealPot:false,awardsNight:true};
+const DEFAULT_SETTINGS={potyW:[30,30,20,20],aiTrades:"normal",injury:100,goals:100,home:10,nations:NATIONS.map(x=>x.c),homeNation:"",homeShare:50,genW:[10,25,35,22,8],draftW:[14,34,32,15,5],draftPer:2,draftAgeMin:17,draftAgeMax:21,retireAge:33,extraPlaces:2,theme:{mode:"system",turf:"#1F4D36",accent:"#E8C547",art:"pixel"},ring:{size:30,metal:"gold",stones:"diamond",centre:"plate",panel:"club",text:"CHAMPIONS"},trophies:{},cup:{on:true,name:""},sackings:true,revealPot:false,awardsNight:true};
 function pickNation(){const S=state&&state.settings;const act=S&&S.nations&&S.nations.length?S.nations:NATIONS.map(x=>x.c);if(S&&S.homeNation&&NAT[S.homeNation]&&rand()*100<S.homeShare)return S.homeNation;return pick(act)}
 function guessNat(name){const last=String(name).split(" ").slice(-1)[0];const n=NATIONS.find(x=>x.l.includes(last));return n?n.c:pick(NATIONS).c}
 
@@ -579,7 +591,7 @@ function teamNameGen(used){for(let i=0;i<40;i++){const n=pick(PLACES)+" "+pick(S
 
 /* ---------- state ---------- */
 let state=null,view="table",dirty=false,setup=null;
-let ps={sort:"goals",dir:-1,scope:"season",pos:"ALL",lim:50,comp:"all"},pComp="all";
+let ps={sort:"goals",dir:-1,scope:"season",pos:"ALL",lim:50,comp:"all",status:"all"},pComp="all";
 const team=id=>state.teams.find(t=>t.id===id);
 const pl=id=>state.players[id]||(state.retired&&state.retired[id])||(state.draft&&state.draft.pool.find(p=>p.id===id));
 /* Saves store career rows and archived results as short arrays. In memory they stay as objects. */
@@ -735,10 +747,10 @@ function endSeason(){
   const eos=tradeWindow("End of season");
   const mm=managersSeason(tbl,h);growGrounds(tbl,h);h.milestones=state.msSeason||[];state.msSeason=[];
   state.history.push(h);const newRivals=updateRivals();
-  let ind=0;if(state.season%3===0){ind=hofInduct();h.hof=state.hof[state.hof.length-1].ids}
+  let ind=0;if(state.season%3===0){ind=hofInduct();h.hof=state.hof[state.hof.length-1].ids;awardPoty(h)}
   state.season++;state.fixtures=makeFixtures();state.round=0;state.cup=null;ensureCup();
   startDraft(h);
-  persist();
+  persist();refreshGoats();
   toast(`${h.retired.length} ${h.retired.length===1?"player":"players"} retired.${state.season%3===1&&state.season>1?` Hall of Fame: ${ind} inducted.`:""}${eos?` ${eos} end of season ${eos===1?"trade":"trades"}.`:""}${mm.filter(x=>x.type==="sacked").map(x=>` ${x.team} sacked ${x.name}.`).join("")}${newRivals.map(r=>` A new rivalry: ${team(r.a).name} v ${team(r.b).name}, ${r.name}.`).join("")} The season ${state.season} draft is open.`);
 }
 
@@ -1087,7 +1099,8 @@ function cupDay(k,status){
 }
 function viewPlayers(){
   const cols=[["apps","Apps"],["goals","Goals"],["assists","Assists"],["cs","Clean sheets"]],q=(ps.q||"").trim().toLowerCase();
-  let list=(ps.scope==="all"?everyone():Object.values(state.players)).filter(p=>ps.pos==="ALL"||p.pos===ps.pos).filter(p=>!q||p.name.toLowerCase().includes(q)||(team(p.teamId)&&team(p.teamId).name.toLowerCase().includes(q))||(NAT[p.nat]&&NAT[p.nat].n.toLowerCase().includes(q))).filter(p=>ps.comp!=="cup"||cv(statsFor(p,ps.scope),"apps","cup")>0).map(p=>({p,st:compStats(statsFor(p,ps.scope),ps.comp),rg:ringsOf(p)}));
+  if(ps.status==="retired")ps.scope="all";
+  let list=(ps.scope==="all"?everyone():Object.values(state.players)).filter(p=>ps.status==="all"||(ps.status==="retired")===!!p.retired).filter(p=>ps.pos==="ALL"||p.pos===ps.pos).filter(p=>!q||p.name.toLowerCase().includes(q)||(team(p.teamId)&&team(p.teamId).name.toLowerCase().includes(q))||(NAT[p.nat]&&NAT[p.nat].n.toLowerCase().includes(q))).filter(p=>ps.comp!=="cup"||cv(statsFor(p,ps.scope),"apps","cup")>0).map(p=>({p,st:compStats(statsFor(p,ps.scope),ps.comp),rg:ringsOf(p)}));
   const key=ps.sort;
   list.sort((a,b)=>{let va,vb;if(key==="rating"){va=a.p.rating;vb=b.p.rating}else if(key==="pot"){va=a.p.retired?0:potSort(a.p);vb=b.p.retired?0:potSort(b.p)}else if(key==="age"){va=a.p.age;vb=b.p.age}else if(key==="titles"){va=a.rg.length;vb=b.rg.length}else if(key==="avg"){va=avgOf(a.st)??0;vb=avgOf(b.st)??0}else if(key==="awards"){va=(a.p.awards||[]).length;vb=(b.p.awards||[]).length}else if(key==="name"){return ps.dir*a.p.name.localeCompare(b.p.name)}else{va=a.st[key];vb=b.st[key]}return ps.dir*(va-vb)||b.p.rating-a.p.rating});
   const th=(k,l,r)=>`<th class="sortable ${r?"r":""} ${ps.sort===k?"on":""}" data-act="sort" data-v="${k}">${l}${ps.sort===k?(ps.dir<0?" ↓":" ↑"):""}</th>`;
@@ -1098,7 +1111,7 @@ function viewPlayers(){
   const row=ps.edit?({p})=>`<tr><td><span class="namecell">${flag(p.nat)}<input type="text" data-pf="name" data-id="${p.id}" value="${esc(p.name)}" maxlength="40" aria-label="Player name"></span></td><td>${clubCell(p)}</td><td>${posSel(p)}</td><td>${natSel(p)}</td><td class="r"><input type="number" min="15" max="45" data-pf="age" data-id="${p.id}" value="${p.age}" aria-label="Age"></td><td>${stars(p.rating,p.id)}</td><td><input type="number" min="20" max="99" data-pf="rating" data-id="${p.id}" value="${p.rating}" aria-label="Exact ability"></td><td><button class="btn sm" data-act="player" data-id="${p.id}">Career</button></td></tr>`
     :({p,st,rg})=>`<tr class="click" data-act="player" data-id="${p.id}"><td><span class="namecell">${flag(p.nat)}${esc(p.name)}</span>${injTag(p)}${traitTags(p)}</td><td>${clubCell(p)}</td><td>${p.pos}</td><td class="r num">${p.age}</td><td>${stars(p.rating)}</td><td class="r num">${potText(p,true)}</td>${cols.map(([k])=>`<td class="r num">${st[k]}</td>`).join("")}<td class="r num">${fmtAvg(avgOf(st))}</td><td>${ringsHTML(rg)}</td><td>${awardsHTML(ps.scope==="season"?awardsOf(p).filter(a=>a.season===state.season):awardsOf(p))}</td></tr>`;
   return `<div class="phead"><h2 style="margin:0">Players</h2><button class="btn ${ps.edit?"go":""}" data-act="pedit">${ps.edit?"Done editing":"Edit players"}</button></div>
-  <div class="chips" style="align-items:center">${["season","all"].map(s=>`<button class="chip ${ps.scope===s?"on":""}" data-act="scope" data-v="${s}">${s==="season"?`Season ${state.season}`:"All time"}</button>`).join("")}<span style="width:8px"></span>${["ALL",...POS].map(p=>`<button class="chip ${ps.pos===p?"on":""}" data-act="pos" data-v="${p}">${p==="ALL"?"All positions":p}</button>`).join("")}<input type="search" data-pq placeholder="Search name, club or nation" value="${esc(ps.q||"")}" aria-label="Search players"></div>${ps.edit?"":compChips(ps.comp,"pscomp")}
+  <div class="chips" style="align-items:center">${["season","all"].map(s=>`<button class="chip ${ps.scope===s?"on":""}" data-act="scope" data-v="${s}"${s==="season"&&ps.status==="retired"?` disabled title="Retired players have no stats this season"`:""}>${s==="season"?`Season ${state.season}`:"All time"}</button>`).join("")}<span style="width:8px"></span>${[["all","Everyone"],["active","Active"],["retired","Retired"]].map(([k,l])=>`<button class="chip ${(ps.status||"all")===k?"on":""}" data-act="pstatus" data-v="${k}">${l}</button>`).join("")}<span style="width:8px"></span>${["ALL",...POS].map(p=>`<button class="chip ${ps.pos===p?"on":""}" data-act="pos" data-v="${p}">${p==="ALL"?"All positions":p}</button>`).join("")}<input type="search" data-pq placeholder="Search name, club or nation" value="${esc(ps.q||"")}" aria-label="Search players"></div>${ps.edit?"":compChips(ps.comp,"pscomp")}
   ${ps.edit?`<p class="muted">Changes save as you type. Tap the stars for a quick level or enter an exact ability.</p>`:""}
   <div class="card scroll"><table><thead>${head}</thead><tbody>${list.slice(0,ps.lim).map(row).join("")||`<tr><td colspan="10" class="muted">No players match.</td></tr>`}</tbody></table></div>
   ${list.length>ps.lim?`<div class="toolbar"><button class="btn" data-act="pmore">Show ${Math.min(50,list.length-ps.lim)} more</button><span class="muted">Showing ${ps.lim} of ${list.length} players</span></div>`:""}`;
@@ -1403,6 +1416,7 @@ function anSteps(h){
   if(h.tots&&h.tots.length)st.push({kind:"tots",title:"Team of the season"});
   if(h.mos)st.push({kind:"award",type:"mos",title:"Manager of the season",trophy:"mos",win:h.mos,noms:h.mosNoms||[],mgr:true});
   const m=aw("mvp");if(m)st.push({kind:"award",type:"mvp",title:"Most valuable player",trophy:"mvp",win:m,noms:(h.noms||{}).mvp||[]});
+  if(h.poty)st.push({kind:"award",type:"poty",title:`Player of the Year, year ${h.poty.year}`,trophy:"poty",win:h.poty.win,noms:h.poty.noms});
   const fw=(h.retired||[]).map(r=>pl(r.id)).filter(notable);if(fw.length)st.push({kind:"farewell",title:"Farewells",ps:fw.slice(0,4)});
   if(h.cup)st.push({kind:"cup",title:`${h.cup.name} final`,trophy:"cup"});
   st.push({kind:"champ",title:`Season ${h.season} champions`,trophy:"league"});
@@ -1475,7 +1489,7 @@ function cabCompare(nameA,nameB,gA,gB){
     return `<div class="cmprow">${side(a,x,"l")}<div class="cmpmid"><b class="${x>y?"lead":""}">${x}</b><span class="plq">${esc(a.short||b.short||k)}</span><b class="${y>x?"lead":""}">${y}</b></div>${side(b,y,"r")}</div>`}).join("");
   return `<div class="cabinet cmpcab"><div class="cabcrown cmpcrown"><span class="cabplate">${esc(nameA)}</span><span class="cmpvs">vs</span><span class="cabplate">${esc(nameB)}</span></div><div class="cabin">${rows||`<p class="cabempty">Neither cabinet has anything in it yet.</p>`}</div></div>`;
 }
-const cabT=(k,s,who)=>({img:()=>pxTrophy(k),w:69,cw:46,s,who});
+const cabT=(k,s,who)=>({img:()=>pxTrophy(k),w:69,cw:46,s,who,k});
 const ghostT=k=>()=>pxTrophy(k);
 const cupGroupOn=()=>cupOn()||state.history.some(h=>h.cup);
 function awardGroups(list,ghosts=[]){const by={};list.forEach(a=>(by[a.type]=by[a.type]||[]).push(a));return Object.keys(AWARDS).filter(k=>by[k]||ghosts.includes(k)).map(k=>({label:AWARDS[k].full,short:AWARDS[k].s,ghost:ghostT(k),items:(by[k]||[]).sort((a,b)=>a.season-b.season).map(a=>cabT(k,a.season,a.who))}))}
@@ -1487,7 +1501,7 @@ function clubGroups(t){return [...compGroups(titles(t.id).map(s=>cabT("league",s
 // Silhouettes on a player's shelves only for awards that can still come their way at their position
 function playerGhosts(p){if(p.retired)return [];const g=["mvp"];g.push(p.pos==="GK"?"glove":"boot");if(!(p.career||[]).length&&p.age<=23)g.push("rookie");return g}
 function playerCabinet(p){return cabinetPanel(p.name,playerGroups(p))}
-function playerGroups(p){const t=team(p.teamId)||state.teams[0];return [{label:"Championship rings",short:"Rings",ghost:()=>pxRing(t.c1,state.season,t.id),gw:62,items:ringsOf(p).map(r=>({img:()=>pxRing(r.c1,r.season,r.tid),w:62,s:r.season,who:r.team}))},...(cupGroupOn()?[{label:`${cupName()} medals`,short:"Cup",ghost:ghostT("cup"),items:cupMedalsOf(p).map(a=>cabT("cup",a.season))}]:[]),{label:"Team of the season",short:"TOTS",verb:"Picked",items:(p.tots||[]).map(s=>cabT("tots",s))},...awardGroups(awardsOf(p),playerGhosts(p)),{label:"Hall of Fame",short:"Hall of Fame",verb:"Inducted",items:p.hof?[cabT("hof",p.hof)]:[]}]}
+function playerGroups(p){const t=team(p.teamId)||state.teams[0];return [{label:"Championship rings",short:"Rings",ghost:()=>pxRing(t.c1,state.season,t.id),gw:62,items:ringsOf(p).map(r=>({img:()=>pxRing(r.c1,r.season,r.tid),w:62,s:r.season,who:r.team,k:"ring",c1:r.c1}))},...(cupGroupOn()?[{label:`${cupName()} medals`,short:"Cup",ghost:ghostT("cup"),items:cupMedalsOf(p).map(a=>cabT("cup",a.season))}]:[]),{label:"Team of the season",short:"TOTS",verb:"Picked",items:(p.tots||[]).map(s=>cabT("tots",s))},...awardGroups(awardsOf(p),playerGhosts(p)),{label:"Hall of Fame",short:"Hall of Fame",verb:"Inducted",items:p.hof?[cabT("hof",p.hof)]:[]},{label:"Greatest of all time",short:"GOAT",verb:"Crowned",items:p.goat?[cabT("goat",p.goat)]:[]}]}
 function managerCabinet(m){return cabinetPanel(m.name,[...compGroups(m.hist.filter(r=>r.title).map(r=>cabT("league",r.season,r.team)),m.hist.filter(r=>r.cup).map(r=>cabT("cup",r.season,r.team))),...awardGroups(m.awards||[],m.retired?[]:["mos"])])}
 // Small league and cup row for club cards, like a cabinet in miniature
 function trophyRow(t){if(!pxOn())return "";const g=compGroups(titles(t.id),cupsOf(t.id)),kind=["league","cup"];
@@ -1503,6 +1517,7 @@ function viewReview(season){
   <div class="banner">${pxCtx()?`<img class="px" src="${pxTrophy("league")}" width="69" alt="">`:""}${badge(team(h.champion.id)||h.champion,72)}<div class="grow"><p>Champions</p><h2>${esc(h.champion.name)}</h2><p>${pluralN(ch.w,"win")}, ${pluralN(ch.d,"draw")} and ${pluralN(ch.l,"loss","losses")} for ${pluralN(ch.pts,"point")}. ${gap?`${gap} ${gap===1?"point":"points"} clear of ${esc(h.runnerUp.name)}.`:`Level on points with ${esc(h.runnerUp.name)}, won on the tie-breaker.`}</p></div></div>
   ${h.cup?`<div class="card rvaward" style="margin-bottom:8px">${pxCtx()?`<img class="px" src="${pxTrophy("cup")}" width="46" alt="">`:""}<div><span class="muted">${esc(h.cup.name)} winners</span><b>${esc(h.cup.winner.name)}</b><span class="muted">Final: ${esc(finalLine(h.cup.final,id=>team(id)?team(id).name:"?"))}${h.cup.top?`. Top cup scorer ${esc(h.cup.top.name)} with ${h.cup.top.n}`:""}</span></div></div>`:""}
   ${h.mos&&state.managers&&state.managers[h.mos.id]?`<div class="card rvaward" style="margin-bottom:8px">${pxCtx()?`<img class="px" src="${pxTrophy("mos")}" width="46" alt="">`:""}<div><span class="muted">Manager of the season</span><button class="linkbtn" data-act="mgr" data-id="${h.mos.id}">${esc(h.mos.name)}</button><span class="muted">${esc(h.mos.team)}. Finished ${esc(h.mos.val)}</span></div></div>`:""}
+  ${h.poty?`<div class="card rvaward" style="margin-bottom:8px">${pxCtx()?`<img class="px" src="${pxTrophy("poty")}" width="46" alt="">`:""}<div><span class="muted">Player of the Year, year ${h.poty.year} (seasons ${h.poty.from} to ${h.poty.to})</span>${plink(h.poty.win.id,h.poty.win.name)}<span class="muted">${esc(h.poty.win.team)}. ${esc(h.poty.win.val)}</span></div></div>`:""}
   ${h.awards&&h.awards.length?`<h3>Awards</h3><div class="rvawards">${h.awards.map(a=>`<div class="card rvaward">${pxCtx()?`<img class="px" src="${pxTrophy(a.type)}" width="69" alt="">`:""}<div><span class="muted">${AWARDS[a.type].full}</span>${plink(a.id,a.name)}<span class="muted">${esc(a.team)}</span><span class="num">${esc(a.val||"")}</span></div></div>`).join("")}</div>`:""}
   ${h.tots&&h.tots.length?`<h3>Team of the season</h3>${totsHTML(h.tots)}`:""}
   <h3>Season leaders</h3><div class="card"><div class="rvfacts">${lead("Top scorer",h.topScorer)}${lead("Most assists",h.topAssist)}${lead("Most clean sheets",h.topCS)}</div></div>
@@ -1585,12 +1600,12 @@ function viewHistory(){
   ${(()=>{const E=allEras().sort((a,b)=>b.from-a.from);return E.length?`<div class="card" style="margin-bottom:18px"><h3 style="margin-top:0">Eras and dynasties</h3><p class="muted" style="margin-top:-.4em">Three or more titles with no more than one season between them.</p>${E.map(e=>eraCard(e,true)).join("")}</div>`:""})()}
   ${rivalsHTML()}
   ${[...state.history].reverse().map(h=>`<div class="card hist"><div class="top">${badge(h.champion,48)}<div class="grow"><h3 style="margin:0">Season ${h.season}: ${esc(h.champion.name)}</h3><span class="muted">Runners-up ${esc(h.runnerUp.name)}</span></div><button class="btn sm" data-act="nav" data-v="review:${h.season}">Season review</button></div>
-    <div class="facts">${h.awards&&h.awards.length?awd(h)+fact("Most assists",h.topAssist):fact("Top scorer",h.topScorer)+fact("Most assists",h.topAssist)+fact("Most clean sheets",h.topCS)}${h.hof&&h.hof.length?`<div><span class="muted">Hall of Fame inductees</span>${h.hof.map(i=>pl(i)?`<button class="linkbtn" data-act="player" data-id="${i}">${esc(pl(i).name)}</button>`:"").join("")}</div>`:""}
+    <div class="facts">${h.awards&&h.awards.length?awd(h)+fact("Most assists",h.topAssist):fact("Top scorer",h.topScorer)+fact("Most assists",h.topAssist)+fact("Most clean sheets",h.topCS)}${h.poty?`<div><span class="muted namecell">${pxCtx()?`<img class="px" src="${pxTrophy("poty")}" width="23" alt="">`:""}Player of the Year ${h.poty.year}</span>${pl(h.poty.win.id)?`<button class="linkbtn" data-act="player" data-id="${h.poty.win.id}">${esc(h.poty.win.name)}</button>`:`<b>${esc(h.poty.win.name)}</b>`}<span class="muted">${esc(h.poty.win.team)}, score ${h.poty.win.score}</span></div>`:""}${h.hof&&h.hof.length?`<div><span class="muted">Hall of Fame inductees</span>${h.hof.map(i=>pl(i)?`<button class="linkbtn" data-act="player" data-id="${i}">${esc(pl(i).name)}</button>`:"").join("")}</div>`:""}
     ${h.retired.length?`<div><span class="muted">Retired</span>${h.retired.map(r=>`${r.id&&pl(r.id)?`<button class="linkbtn" data-act="player" data-id="${r.id}">${esc(r.name)}</button>`:`<b>${esc(r.name)}</b>`}<span class="muted">${esc(r.team)}, ${r.apps} apps, ${r.goals} goals</span>`).join("")}</div>`:""}</div>
     <details style="margin-top:12px"><summary>Final table</summary>${leagueTable(h.table,false)}</details></div>`).join("")}`;
 }
 // Settings tabs: [key, label, cards in order]. The tab in view is kept for the session only.
-const SET_TABS=[["league","League",["league","matches","cup","mgrs","trades"]],["players","Players",["players","draft","pot"]],["awards","Awards",["night","custom","trophies"]],["look","Look",["look","rings"]],["app","App",["file","version","delete"]]];
+const SET_TABS=[["league","League",["league","matches","cup","mgrs","trades"]],["players","Players",["players","draft","pot"]],["awards","Awards",["night","poty","custom","trophies"]],["look","Look",["look","rings"]],["app","App",["file","version","delete"]]];
 let setTab="league";
 function viewSettings(){
   const S=state.settings,th=S.theme;
@@ -1607,6 +1622,9 @@ function viewSettings(){
     trophies:()=>trophyCard(),
     cup:()=>cupCard(),
     custom:()=>customAwardsCard(),
+    poty:()=>{const w=S.potyW,tot=w.reduce((a,b)=>a+b,0)||1;return `<section class="card"><h3>Player of the Year</h3><p class="muted" style="margin-top:0">Every three seasons make a year. The award goes to the best player across those three seasons. Each part is scored against the best player that year, then weighted like this.</p>
+    <div class="wts">${["Average rating","Goals and assists (clean sheets for keepers)","Team trophies","Individual awards"].map((l,i)=>`<label class="wt potyw"><span>${l}</span><input type="number" min="0" max="100" data-setw="potyW" data-i="${i}" value="${w[i]}"><small class="muted">${Math.round(w[i]/tot*100)}%</small></label>`).join("")}</div>
+    <p class="muted">New weights are used from the next year on. Past winners stay as they are unless you recalculate them.</p><button class="btn sm" data-act="poty-redo">Recalculate past years</button></section>`},
     night:()=>`<section class="card"><h3>Awards night</h3><label class="nat"><input type="checkbox" data-anight ${state.settings.awardsNight!==false?"checked":""}><span>Reveal the awards one by one when a season ends</span></label><p class="muted">You can replay any season's awards night from its review page.</p></section>`,
     pot:()=>`<section class="card"><h3>Hidden potential</h3><label class="nat"><input type="checkbox" data-reveal ${state.settings.revealPot?"checked":""}><span>Show every player's exact potential</span></label><p class="muted">Off by default, so you only see a scout's estimate that narrows as players get older. Turning it on is the commissioner's peek behind the curtain.</p></section>`,
     mgrs:()=>`<section class="card"><h3>Managers</h3><label class="nat"><input type="checkbox" data-sack ${state.settings.sackings!==false?"checked":""}><span>Boards can sack managers who fall well short two seasons running</span></label><p class="muted">You can also edit any manager, or sack one yourself, from their page.</p></section>`,
@@ -1786,7 +1804,7 @@ function viewTrades(){
 }
 
 /* ---------- phase 5: ratings, awards, hall of fame, charts, ring designer ---------- */
-const AWARDS={cup:{n:"Cup winner",s:"Cup",full:"Cup winner"},mos:{n:"Manager of the season",s:"Manager",full:"Manager of the season"},mvp:{n:"MVP",s:"MVP",full:"Most valuable player"},boot:{n:"Golden Boot",s:"Boot",full:"Golden Boot"},glove:{n:"Golden Glove",s:"Glove",full:"Golden Glove"},rookie:{n:"Rookie",s:"Rookie",full:"Rookie of the season"}};
+const AWARDS={cup:{n:"Cup winner",s:"Cup",full:"Cup winner"},mos:{n:"Manager of the season",s:"Manager",full:"Manager of the season"},mvp:{n:"MVP",s:"MVP",full:"Most valuable player"},boot:{n:"Golden Boot",s:"Boot",full:"Golden Boot"},glove:{n:"Golden Glove",s:"Glove",full:"Golden Glove"},rookie:{n:"Rookie",s:"Rookie",full:"Rookie of the season"},poty:{n:"Player of the Year",s:"POTY",full:"Player of the Year"}};
 const avgOf=st=>st&&st.rapps?st.rsum/st.rapps:null;
 const fmtAvg=v=>v==null?"–":v.toFixed(2);
 function inPoly(x,y,pts){let c=false;for(let i=0,j=pts.length-1;i<pts.length;j=i++){const [xi,yi]=pts[i],[xj,yj]=pts[j];if((yi>y)!==(yj>y)&&x<(xj-xi)*(y-yi)/(yj-yi)+xi)c=!c}return c}
@@ -1794,9 +1812,10 @@ const starArr=(cx,cy,R,r)=>starPts(cx,cy,R,r).split(" ").map(s=>s.split(",").map
 function mapSprite(rows,pal){const w=Math.max(...rows.map(r=>r.length)),g=Grid(w+2,rows.length+2);rows.forEach((r,y)=>[...r].forEach((ch,x)=>{if(pal[ch])g.set(x+1,y+1,pal[ch])}));return g}
 /* ---------- trophies: one engine for the league title and every award ---------- */
 const TRO_MAPS={title:[".........www.........","........wgggg........",".........ggg.........","..........g..........",".......ggggggg.......","......gdddddddg......","...ggggggggggggggg...","ggg.gwggggggggggg.ggg","g...gwggggggggggg...g","g...gdddddddddddg...g","g...gaaaaaaaaaaag...g","gg..gdddddddddddg..gg",".gg.gwggggggggggg.gg.",".agggwggggggggggggga.","aa...ggggggggggg...aa","a.a...ggggggggg...a.a","........ggggg........",".........ggg.........","........gdddg........",".........ggg.........","........ggggg........","......gwggggggg......",".....gdddddddddg.....","...ggggggggggggggg..."],grand:["......ggggggggg......",".....gdddddddddg.....",".ggggggggggggggggggg.","gg..gwggggggggggg..gg","gg..gwggggggggggg..gg","gg..gwggggggggggg..gg","gg...gwggggggggg...gg","gg...gaaaaaaaaag...gg","gg...gwggggggggg...gg",".gg...gwggggggg...gg.",".gg...gwggggggg...gg.","..gg...gwggggg...gg..","..ggg..gwggggg..ggg..","...ggggggggggggggg...",".....ggggggggggg.....",".......ggggggg.......","........ggggg........",".........ggg.........",".........ggg.........","........gdddg........",".........ggg.........",".......ggggggg.......","......gdddddddg......",".....ggggggggggg....."],champ:["......ggg......","....ggdddgg....","...ggggdgggg...","...dggdddggd...","...dgggdgggd...","...ggggggggg...","....ddgggdd....","......ggg......",".......g.......","..ggggggggggg..","...gdddddddg...","...ggggggggg...","....ggggggg....","....ggggggg....",".....ggggg.....","......ggg......","......ggg......","......ggg......",".....ggggg.....","....gaaaaag....","....ggggggg....","...ggggggggg...","...gdddddddg...","..ggggggggggg..","..ggggggggggg.."],cup:["........ggggg........","......ggggggggg......","....ggggggggggggg....","....gdddddddddddg....",".ggggggggggggggggggg.","gg.ggggggggggggggg.gg","g...ggggggggggggg...g","g...gaaaaaaaaaaag...g","g...ggggggggggggg...g","gg...ggggggggggg...gg",".gg..ggggggggggg..gg.","..ggg.ggggggggg.ggg..","......ggggggggg......",".......ggggggg.......","........ggggg........",".........ggg.........",".........ggg.........",".........ggg.........","........ggggg........",".......ggggggg.......","......gdddddddg......","......ggggggggg......",".....ggggggggggg.....",".....ggggggggggg....."],ball:["...gdddg...",".ggggdgggg.",".ggggggggg.","dgggdddgggd","ddggdddggdd","dggggdggggd","ggggggggggg",".gdgggggdg.",".dddgggddd.","..dgggggd..","...ggggg...","....ggg....",".....g.....","...ggggg...","..ggggggg.."],plate:["......ggggggg......",".....ggggggggg.....","...gggddaaaddggg...","...ggdaaaaaaadgg...","..ggdaagggggaadgg..",".ggdaagggggggaadgg.",".ggdaggggwggggadgg.",".ggaaggwwwwwggaagg.",".ggaagggwwwgggaagg.",".ggaagggwgwgggaagg.",".ggdagggggggggadgg.",".ggdaagggggggaadgg.","..ggdaagggggaadgg..","...ggdaaaaaaadgg...","...gggddaaaddggg...",".....ggggggggg.....","......ggggggg......","........ggg........","........ggg........",".......ggggg.......","......ggggggg......"],star:["........g........",".......ggg.......",".......ggg.......","......ggggg......","......ggggg......","ggggggggggggggggg",".ggggggggggggggg.","..ggggggwgggggg..","...ggggwwwgggg...","....ggggwgggg....","....ggggggggg....","...ggggg.ggggg...","...gggg...gggg...","..ggg.......ggg..","..gg.........gg..","........g........","........g........",".......ggg.......","......ggggg......",".....ggggggg....."],boot:["..gggggggg..........","..gddddddg..........","..gggggggg..........","..gggggggg..........","..ggggggggd.........","..gggggggggdg.......","..ggggggggggdgg.....","..gggggggggggdggg...","..gggggggggggggggggg",".ggggggggggggggggggg",".ggggggggggggggggggg",".kkkkkkkkkkkkkkkkkk.","..kk..kk....kk..kk..","........ggggg.......",".......ggggggg......"],glove:[".......gg.gg.....","....gg.gg.gg.gg..","....gg.gg.gg.gg..","....gg.gg.gg.gg..","....gg.gg.gg.gg..","....ggggggggggg..",".gg.ggggggggggg..",".ggggggggggggggg.","..gggggggggggggg.","...gggggggggggg..","....ggggggggggg..","....aaaaaaaaaaa..","....aaaaaaaaaaa..","....ggggggggggg..",".....ggggggggg...",".......ggggg.....","........ggg......","......ggggggg....",".....ggggggggg..."],medal:["aaa.........aaa","aaaa.......aaaa",".aaaa.....aaaa.","..aaaa...aaaa..","...aaaa.aaaa...","....aaaaaaa....",".....ggggg.....","...ggggggggg...","..ggdddddddgg..",".ggdgggggggdgg.",".gdggggwggggdg.",".gdgwwwwwwwgdg.",".gdgggwwwgggdg.",".gdggwgggwggdg.",".ggdgggggggdgg.","..ggdddddddgg..","...ggggggggg...",".....ggggg....."],kicker:["......gg..........",".....gggg.........","......gg..........",".....gggg.........","...ggggggg........","..gg.gggg.gg......",".gg..gggg..gg.....",".g...gggg...g.....",".....gggg.........",".....ggggg........","....ggg.ggg.......","....gg...ggg......","....gg....ggg.....","....gg.....ggg.ggg","....gg......gggggg","....gg.........ggg","...ggg............","..gggg............","..ggggggg.........",".ggggggggg........"],runner:["..g.........g...","..gg.......gg...","...gg.ggg.gg....","....gggggggg....",".....gggggg.....","......gggg......","......gggg......","......gggg......","......gggg......",".....gggggg.....",".....gg..gg.....",".....gg..gg.....",".....gg..gg.....",".....gg..gg.....",".....gg..gg.....","....ggg..ggg....","................","....gggggggg....","...gggggggggg..."],coach:["......gg.........",".....gggg........","......gg.........",".....gggg........","....ggggggggggggg","...ggggggggg.....","..gg.gggggg......","..g..gggggg......","..g..gggggg......","..gg.gggggg......",".....gggggg......",".....gg..gg......",".....gg..gg......",".....gg..gg......",".....gg..gg......",".....gg..gg......","....ggg..ggg.....",".................","....gggggggg.....","...gggggggggg...."],keeper:["................ww..","...........g...wwww.","..........ggg..wwww.","...........g.gg.ww..",".........gggggg.....","......gggggggg......","....ggggggg.........","..gggggg............",".ggg..gg............","gg.....gg...........",".......gg...........","........g...........","........gg..........",".......gggg.........","......gggggg........"]};
-const TROPHY_DEF={league:{shape:"title",metal:"gold",base:"black",accent:"#C8102E"},cup:{shape:"grand",metal:"silver",base:"black",accent:"#1F6FD1"},tots:{shape:"medal",metal:"silver",base:"black",accent:"#1F6FD1"},hof:{shape:"star",metal:"gold",base:"wood",accent:"#C8102E"},mos:{shape:"coach",metal:"gold",base:"black",accent:"#1F6FD1"},mvp:{shape:"kicker",metal:"gold",base:"black",accent:"#C8102E"},boot:{shape:"boot",metal:"gold",base:"black",accent:"#C8102E"},glove:{shape:"glove",metal:"gold",base:"black",accent:"#1F6FD1"},rookie:{shape:"runner",metal:"gold",base:"black",accent:"#1F6FD1"}};
-const TROPHY_L={league:"League title",cup:"Cup",tots:"Team of the season",hof:"Hall of Fame",mos:"Manager",mvp:"MVP",boot:"Golden Boot",glove:"Golden Glove",rookie:"Rookie"};
-const TROPHY_OPTS={shape:[["title","Lidded cup"],["grand","Tall cup"],["champ","Ball top"],["cup","Big cup"],["plate","Plate"],["star","Star"],["ball","Ball"],["boot","Boot"],["glove","Glove"],["medal","Medal"],["kicker","Striker"],["runner","Celebration"],["keeper","Keeper"],["coach","Manager"]],metal:[["gold","Gold"],["silver","Silver"],["rose","Rose gold"],["bronze","Bronze"],["black","Black"]],base:[["black","Black"],["wood","Wood"],["marble","Marble"],["none","None"]]};
+TRO_MAPS.crown=["..a.......a.......a..",".aaa.....aaa.....aaa.","..g.......g.......g..","..gg.....ggg.....gg..","..gwg...ggggg...gwg..","..gwgg.ggggggg.ggwg..","..gwgggggggggggggwg..","..gwgggggggggggggwg..","..ggggggggggggggggg..","..ddddddddddddddddd..","..gaggaggagaggaggag..","..ddddddddddddddddd..","..ggggggggggggggggg..","...ggggggggggggggg...",".....ggggggggggg.....",".......ggggggg.......","........ggggg........",".........ggg.........","........gdddg........",".........ggg.........","........ggggg........","......gwggggggg......",".....gdddddddddg.....","...ggggggggggggggg..."];
+const TROPHY_DEF={league:{shape:"title",metal:"gold",base:"black",accent:"#C8102E"},cup:{shape:"grand",metal:"silver",base:"black",accent:"#1F6FD1"},tots:{shape:"medal",metal:"silver",base:"black",accent:"#1F6FD1"},hof:{shape:"star",metal:"gold",base:"wood",accent:"#C8102E"},mos:{shape:"coach",metal:"gold",base:"black",accent:"#1F6FD1"},mvp:{shape:"kicker",metal:"gold",base:"black",accent:"#C8102E"},boot:{shape:"boot",metal:"gold",base:"black",accent:"#C8102E"},glove:{shape:"glove",metal:"gold",base:"black",accent:"#1F6FD1"},rookie:{shape:"runner",metal:"gold",base:"black",accent:"#1F6FD1"},poty:{shape:"champ",metal:"rose",base:"marble",accent:"#7A3DC8"},goat:{shape:"crown",metal:"gold",base:"marble",accent:"#C8102E"}};
+const TROPHY_L={league:"League title",cup:"Cup",tots:"Team of the season",hof:"Hall of Fame",mos:"Manager",mvp:"MVP",boot:"Golden Boot",glove:"Golden Glove",rookie:"Rookie",poty:"Player of the Year",goat:"GOAT"};
+const TROPHY_OPTS={shape:[["title","Lidded cup"],["grand","Tall cup"],["champ","Ball top"],["cup","Big cup"],["plate","Plate"],["star","Star"],["ball","Ball"],["boot","Boot"],["glove","Glove"],["medal","Medal"],["kicker","Striker"],["runner","Celebration"],["keeper","Keeper"],["coach","Manager"],["crown","Crown"]],metal:[["gold","Gold"],["silver","Silver"],["rose","Rose gold"],["bronze","Bronze"],["black","Black"]],base:[["black","Black"],["wood","Wood"],["marble","Marble"],["none","None"]]};
 const BASES={black:["#3A322A","#1B1712","#0F0C09"],wood:["#A8724A","#7A4B2A","#4E2E18"],marble:["#FFFFFF","#E4E1DA","#B5B0A6"]};
 const trophySpec=k=>({...(TROPHY_DEF[k]||CA_LOOK),...(((state&&state.settings&&state.settings.trophies)||{})[k]||{})});
 // Hand-drawn sprites (TRO_MAPS): g metal, d engraving, w shine, a accent, k black. Metal is shaded per row, light on the left, dark on the right,
@@ -1839,7 +1858,7 @@ function customAwardsCard(){
   ${L.some(c=>c.off)?`<p class="muted">Removed awards that were already won stay in the record books but are not given out any more.</p>`:""}
   <div class="toolbar"><button class="btn" data-act="ca-add">Add an award</button></div></section>`;
 }
-const APP_VERSION="2026.10.28-1";
+const APP_VERSION="2026.10.28-2";
 async function checkUpdates(){try{if(window.caches)for(const k of await caches.keys())await caches.delete(k);if(navigator.serviceWorker)for(const r of await navigator.serviceWorker.getRegistrations())await r.unregister()}catch(e){}location.reload()}
 let trophyTab="league";
 function trophyCard(){
@@ -1859,6 +1878,31 @@ function awardsHTML(list,big){
   const w=big?69:23;
   return `<span class="rings awards${big?"":" flat"}" style="--ov:${big?-46:-15}px" tabindex="0" title="${list.map(a=>`${AWARDS[a.type].full}, season ${a.season}`).join("&#10;")}" aria-label="${list.length} ${list.length===1?"award":"awards"}">${(big?list:list.slice(-1)).map(a=>`<span class="ring"><img class="px" src="${pxTrophy(a.type)}" width="${w}" alt=""><em>${AWARDS[a.type].s} S${a.season}</em></span>`).join("")}<span class="ringn">×${list.length}</span></span>`;
 }
+// Player of the Year: a year is three seasons (1 to 3, 4 to 6...). Decided when the third season ends, from career rows, so
+// older saves can work out every past year too. Each part is scored against the best eligible player that year, then weighted
+// by settings.potyW [rating, goals and assists, team trophies, individual awards]. Keepers count clean sheets for the second part.
+const yearOf=s=>Math.ceil(s/3);
+function decidePoty(to){
+  const from=to-2,inY=s=>s>=from&&s<=to,W=state.settings.potyW||DEFAULT_SETTINGS.potyW,tw=W.reduce((a,b)=>a+b,0)||1,AWP={mvp:3,boot:2,glove:2,rookie:1};
+  const rows=everyone().map(p=>{const cs=(p.career||[]).filter(c=>inY(c.season));if(!cs.length)return null;
+    const sum=k=>cs.reduce((a,c)=>a+(c[k]||0),0),apps=sum("apps"),rapps=sum("rapps"),gk=p.pos==="GK";
+    const team=ringsOf(p).filter(r=>inY(r.season)).length*2+cupMedalsOf(p).filter(a=>inY(a.season)).length;
+    const ind=(p.awards||[]).filter(a=>inY(a.season)&&AWP[a.type]).reduce((a,x)=>a+AWP[x.type],0)+(p.tots||[]).filter(inY).length;
+    const last=cs[cs.length-1],t=state.teams.find(x=>x.id===last.teamId);
+    return{p,apps,gk,r:rapps?sum("rsum")/rapps:0,ga:gk?sum("cs")+sum("ccs"):sum("goals")+sum("cgoals")+sum("assists")+sum("cas"),team,ind,club:t?t.name:last.team}}).filter(Boolean);
+  const maxApps=Math.max(1,...rows.map(x=>x.apps)),el=rows.filter(x=>x.apps>=maxApps*.5&&x.r>0);if(!el.length)return null;
+  const mx=k=>Math.max(...el.map(x=>x[k])),M={r:mx("r"),gaO:Math.max(0,...el.filter(x=>!x.gk).map(x=>x.ga)),gaK:Math.max(0,...el.filter(x=>x.gk).map(x=>x.ga)),team:mx("team"),ind:mx("ind")};
+  const part=(v,m)=>m>0?v/m:0;
+  el.forEach(x=>{x.parts=[part(x.r,M.r),part(x.ga,x.gk?M.gaK:M.gaO),part(x.team,M.team),part(x.ind,M.ind)];x.score=Math.round(x.parts.reduce((a,v,i)=>a+v*W[i],0)/tw*100)});
+  el.sort((a,b)=>b.score-a.score||b.r-a.r);
+  const val=x=>`Score ${x.score}. Rating ${x.r.toFixed(2)}, ${x.ga} ${x.gk?"clean sheets":"goals and assists"}, ${pluralN(x.team,"team trophy point")}, ${pluralN(x.ind,"award point")}`;
+  const one=x=>({id:x.p.id,name:x.p.name,team:x.club,score:x.score,val:val(x)});
+  return{year:yearOf(to),from,to,win:one(el[0]),noms:el.slice(0,3).map(one)};
+}
+function awardPoty(h){const r=decidePoty(h.season);if(!r)return;h.poty=r;const p=pl(r.win.id);if(p){p.awards=(p.awards||[]).filter(a=>!(a.type==="poty"&&a.season===h.season));p.awards.push({type:"poty",season:h.season})}}
+// Older saves, and seasons finished before this version: work out every finished year that has no winner yet
+function ensurePoty(){let ch=false;state.history.forEach(h=>{if(h.season%3===0&&!h.poty){awardPoty(h);if(h.poty)ch=true}});if(ch)persist()}
+function redoPoty(){everyone().forEach(p=>{if(p.awards)p.awards=p.awards.filter(a=>a.type!=="poty")});state.history.forEach(h=>delete h.poty);ensurePoty();persist()}
 function decideAwards(all){
   const maxApps=Math.max(1,...all.map(p=>p.s.apps));
   const av=p=>avgOf(p.s)??(6+(p.s.goals+p.s.assists)/Math.max(1,p.s.apps));
@@ -1875,7 +1919,7 @@ function decideAwards(all){
   return [w("mvp",mvp,mvp&&vA(mvp.p)),w("boot",boot,boot&&vB(boot.p)),w("glove",glove,glove&&vG(glove.p)),w("rookie",rookie,rookie&&vA(rookie.p)),...extra].filter(Boolean);
 }
 function legacy(p){const t=statsFor(p,"all"),a=p.awards||[],cnt=k=>a.filter(x=>x.type===k).length,avg=avgOf(t);
-  return Math.round(t.apps*.1+t.goals*(p.pos==="FW"?.8:1)+t.assists*.7+t.cs*(p.pos==="GK"?1.5:.5)+ringsOf(p).length*6+cupMedalsOf(p).length*3+(p.tots||[]).length*2+(t.ht||0)+cnt("mvp")*10+cnt("boot")*6+cnt("glove")*6+cnt("rookie")*2+(avg?(avg-6.5)*t.rapps*.15:0))}
+  return Math.round(t.apps*.1+t.goals*(p.pos==="FW"?.8:1)+t.assists*.7+t.cs*(p.pos==="GK"?1.5:.5)+ringsOf(p).length*6+cupMedalsOf(p).length*3+(p.tots||[]).length*2+(t.ht||0)+cnt("mvp")*10+cnt("boot")*6+cnt("glove")*6+cnt("rookie")*2+cnt("poty")*8+(avg?(avg-6.5)*t.rapps*.15:0))}
 const hofBar=()=>Math.round(4*state.fixtures.length);
 function hofInduct(){
   const c=Object.values(state.retired).filter(p=>!p.hof).map(p=>({p,s:legacy(p)})).filter(x=>x.s>=hofBar()).sort((a,b)=>b.s-a.s).slice(0,2);
@@ -1981,11 +2025,84 @@ function viewPlayerCompare(id){
   ${duelRow("Peak ability",a.peak,b.peak)}${duelRow("Legacy points",a.leg,b.leg)}</tbody></table></section>`;
 }
 
+/* ---------- GOATs: kept outside every save, in their own browser database, so the gallery shows GOATs from every league ----------
+   An entry: {key: lid:pid, lid, league, fmt, pid, n (place in that league's line), season crowned, until (season replaced), reign,
+   at, snap (player snapshot, refreshed while their league is open), then (totals when crowned)}. */
+let goats=[],_gdb=null,gsel={a:null,b:null};
+const leagueId=()=>state.lid||(state.lid=uid()+uid());
+function gdb(){return _gdb||(_gdb=new Promise((res,rej)=>{const r=indexedDB.open("leaguesim-goats",1);r.onupgradeneeded=()=>r.result.createObjectStore("goats",{keyPath:"key"});r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}))}
+async function gdo(fn){const d=await gdb();return new Promise((res,rej)=>{const tx=d.transaction("goats","readwrite"),st=tx.objectStore("goats"),out={};fn(st,out);tx.oncomplete=()=>res(out.v);tx.onerror=tx.onabort=()=>rej(tx.error)})}
+async function loadGoats(){try{goats=(await gdo((st,o)=>{st.getAll().onsuccess=e=>o.v=e.target.result}))||[]}catch(e){goats=[];console.warn(e)}}
+function saveGoats(list){if(!window.indexedDB)return;gdo(st=>list.forEach(g=>st.put(g))).catch(e=>{console.warn(e);toast("The GOAT gallery could not be saved in this browser.")})}
+const goatTot=p=>{const t=statsFor(p,"all");return{apps:cv(t,"apps"),goals:cv(t,"goals"),assists:cv(t,"assists"),cs:cv(t,"cs"),titles:ringsOf(p).length,season:state.season}};
+function goatSnap(p){
+  const t=statsFor(p,"all"),by={};(p.career||[]).forEach(c=>{by[c.teamId]=(by[c.teamId]||0)+(c.apps||0)+(c.capps||0)});if(!p.retired&&p.teamId)by[p.teamId]=(by[p.teamId]||0)+(p.s.apps||0)+(p.s.capps||0);
+  const main=team(Object.keys(by).sort((a,b)=>by[b]-by[a])[0]),names=[...new Set((p.career||[]).flatMap(c=>(c.teamIds||[c.teamId]).map(i=>team(i)?team(i).name:c.team)).concat(!p.retired&&team(p.teamId)?[team(p.teamId).name]:[]))];
+  return{name:p.name,nat:p.nat,pos:p.pos,age:p.age,rating:p.rating,peak:Math.max(p.rating,...(p.career||[]).map(c=>c.rating||0)),retired:p.retired||0,club:main?{name:main.name,short:main.short,c1:main.c1,c2:main.c2,crest:{...main.crest,img:undefined}}:null,clubs:names,
+    seasons:(p.career||[]).length+(p.retired?0:1),st:{apps:t.apps,goals:t.goals,assists:t.assists,cs:t.cs,capps:t.capps||0,cgoals:t.cgoals||0,cas:t.cas||0,ccs:t.ccs||0,rsum:t.rsum||0,rapps:t.rapps||0,ht:t.ht||0},legacy:legacy(p),hof:p.hof||0,
+    groups:playerGroups(p).filter(g=>g.items.length).map(g=>({label:g.label,short:g.short,verb:g.verb,items:g.items.map(i=>({s:i.s,who:i.who,k:i.k||"mvp",c1:i.c1}))}))}}
+// Cabinet groups back from a snapshot: trophies drawn with this league's styles, unknown custom awards fall back to the MVP look
+const snapItem=i=>i.k==="ring"?{img:()=>pxRing(i.c1||"#C8102E",i.s),w:62,s:i.s,who:i.who}:{img:()=>pxTrophy(TROPHY_DEF[i.k]?i.k:"mvp"),w:69,cw:46,s:i.s,who:i.who};
+const snapGroups=sn=>sn.groups.map(g=>{const k=(g.items[0]||{}).k;return{...g,gw:k==="ring"?62:undefined,ghost:k==="ring"?()=>pxRing("#8A948E",0):()=>pxTrophy(TROPHY_DEF[k]?k:"mvp"),items:g.items.map(snapItem)}});
+// While a league is open its GOATs follow their live careers
+function refreshGoats(){if(!state||!state.lid)return;const ch=[];goats.forEach(g=>{if(g.lid!==state.lid)return;const p=pl(g.pid);if(!p)return;const sn=goatSnap(p);if(JSON.stringify(sn)!==JSON.stringify(g.snap)||g.league!==state.name){g.snap=sn;g.league=state.name;ch.push(g)}});if(ch.length)saveGoats(ch)}
+const myGoats=()=>goats.filter(g=>state&&g.lid===state.lid).sort((a,b)=>a.n-b.n);
+const goatOf=p=>myGoats().find(g=>g.pid===p.id);
+function crownGoat(p){
+  const L=leagueId(),mine=myGoats(),cur=mine.find(g=>g.reign);
+  if(cur&&cur.pid===p.id)return;
+  if(!confirm(`Crown ${p.name} as the GOAT, the greatest of all time?${cur?` ${cur.snap.name} becomes a former GOAT.`:""} The GOAT gallery keeps them even if this save is deleted.`))return;
+  const ch=[];if(cur){cur.reign=false;cur.until=state.season;ch.push(cur)}
+  let e=mine.find(g=>g.pid===p.id);
+  if(e){e.reign=true;e.until=null;e.recrowned=(e.recrowned||[]).concat(state.season)}
+  else e={key:L+":"+p.id,lid:L,pid:p.id,n:mine.length+1,season:state.season,reign:true,at:Date.now(),then:goatTot(p)};
+  p.goat=p.goat||state.season;e.league=state.name;e.fmt=FORMATS[state.format].label;e.snap=goatSnap(p);goats=goats.filter(g=>g.key!==e.key).concat(e);ch.push(e);
+  saveGoats(ch);persist();toast(`${p.name} is crowned the GOAT.`);
+}
+function uncrownGoat(p){
+  const e=goatOf(p);if(!e||!confirm(`Take the GOAT title away from ${p.name}? They leave the GOAT gallery.`))return;
+  goats=goats.filter(g=>g.key!==e.key);delete p.goat;
+  const rest=myGoats();rest.forEach((g,i)=>g.n=i+1);if(e.reign&&rest.length){const last=rest[rest.length-1];last.reign=true;last.until=null}
+  gdo(st=>{st.delete(e.key);rest.forEach(g=>st.put(g))}).catch(console.warn);persist();
+}
+function goatStats(sn){const st=sn.st,ga=cv(st,"apps"),g=cv(st,"goals");return{apps:ga,goals:g,assists:cv(st,"assists"),cs:cv(st,"cs"),gpg:ga?g/ga:null,avg:avgOf(st)}}
+function goatCard(g){
+  const sn=g.snap,S=goatStats(sn),here=state&&g.lid===state.lid&&pl(g.pid),c=sn.club;
+  const span=g.reign?"Reigning GOAT":`GOAT from season ${g.season} to ${g.until||g.season}`;
+  return `<div class="card goatcard${g.reign?" reign":""}"><div class="gtop">${pxCtx()?`<img class="px" src="${pxTrophy("goat")}" width="46" alt="">`:""}<div class="grow">
+   <span class="gn">#${g.n} · ${esc(g.league)}</span>${here?`<button class="linkbtn gname namecell" data-act="player" data-id="${g.pid}">${flag(sn.nat)}${esc(sn.name)}</button>`:`<b class="gname namecell">${flag(sn.nat)}${esc(sn.name)}</b>`}
+   <span class="muted">${sn.pos}, ${sn.retired?`retired after season ${sn.retired}`:`age ${sn.age}`}. ${esc(sn.clubs.join(", "))}</span><span class="muted">${span}. Crowned in season ${g.season}${g.recrowned?`, again in ${g.recrowned.join(", ")}`:""}. ${g.fmt?esc(g.fmt)+" league.":""}</span></div>${c?badge(c,44):""}</div>
+   <div class="gnums"><div><b class="num">${S.apps}</b><span>Apps</span></div><div><b class="num">${S.goals}</b><span>Goals</span></div><div><b class="num">${S.assists}</b><span>Assists</span></div>${sn.pos==="GK"?`<div><b class="num">${S.cs}</b><span>Clean sheets</span></div>`:""}<div><b class="num">${(sn.groups.find(x=>x.short==="Rings")||{items:[]}).items.length}</b><span>Titles</span></div><div><b class="num">${sn.legacy}</b><span>Legacy</span></div></div>
+   ${g.then&&(g.then.apps!==S.apps)?`<p class="muted gthen">When crowned in season ${g.season}: ${g.then.apps} apps, ${g.then.goals} goals, ${g.then.assists} assists, ${pluralN(g.then.titles,"title")}.</p>`:""}
+   <div class="toolbar" style="margin:8px 0 0">${here?`<button class="btn sm" data-act="goat-off" data-id="${g.pid}">Take the title away</button>`:`<button class="btn sm" data-act="goat-del" data-v="${esc(g.key)}">Remove from gallery</button>`}</div></div>`;
+}
+function viewGoats(){
+  refreshGoats();
+  const all=[...goats].sort((a,b)=>(state&&b.lid===state.lid)-(state&&a.lid===state.lid)||(a.league||"").localeCompare(b.league||"")||a.n-b.n);
+  const mine=myGoats(),reign=mine.find(g=>g.reign);
+  if(!all.length)return `<h2>GOATs</h2><div class="empty">No GOAT has been crowned yet. Open any player and press <b>Crown as GOAT</b>. Every GOAT you crown, in any league, is kept here, even if its save is deleted.</div>`;
+  const leagues=[...new Set(all.map(g=>g.lid))];
+  if(!all.some(g=>g.key===gsel.a))gsel.a=(reign||all[0]).key;if(!all.some(g=>g.key===gsel.b)||gsel.b===gsel.a)gsel.b=(all.find(g=>g.key!==gsel.a)||{}).key;
+  const A=all.find(g=>g.key===gsel.a),B=all.find(g=>g.key===gsel.b);
+  const sel=k=>`<select data-gsel="${k}" aria-label="GOAT to compare">${all.map(g=>`<option value="${esc(g.key)}" ${g.key===gsel[k]?"selected":""} ${g.key===gsel[k==="a"?"b":"a"]?"disabled":""}>${esc(g.snap.name)} (${esc(g.league)})</option>`).join("")}</select>`;
+  let cmp="";if(A&&B){const a=goatStats(A.snap),b=goatStats(B.snap),cs=A.snap.pos==="GK"||B.snap.pos==="GK";
+    cmp=`<section class="card" style="margin-top:18px"><div class="phead" style="margin-bottom:10px"><h3 style="margin:0">Compare GOATs</h3><div class="fields">${sel("a")}${sel("b")}</div></div>
+    ${A.fmt!==B.fmt?`<p class="muted" style="margin-top:0">Different formats (${esc(A.fmt)} and ${esc(B.fmt)}), so goals and clean sheets are not like for like.</p>`:""}
+    ${cabCompare(A.snap.name,B.snap.name,snapGroups(A.snap),snapGroups(B.snap))}
+    <table class="duel"><tbody>${duelRow("League",0,0,0,()=>esc(A.league),()=>esc(B.league))}${duelRow("Seasons",A.snap.seasons,B.snap.seasons,0)}${duelRow("Clubs",A.snap.clubs.length,B.snap.clubs.length,0)}
+    ${duelRow("Appearances",a.apps,b.apps)}${duelRow("Goals",a.goals,b.goals)}${duelRow("Assists",a.assists,b.assists)}${duelRow("Goals per game",a.gpg,b.gpg,1,x=>x.toFixed(2))}${cs?duelRow("Clean sheets",a.cs,b.cs):""}
+    ${duelRow("Hat-tricks",A.snap.st.ht,B.snap.st.ht)}${duelRow("Average match rating",a.avg,b.avg,1,x=>x.toFixed(2))}${duelRow("Peak ability",A.snap.peak,B.snap.peak)}${duelRow("Legacy points",A.snap.legacy,B.snap.legacy)}</tbody></table></section>`}
+  return `<h2>GOATs</h2><p class="lede">The greatest of all time, crowned by you. Every league in this app keeps its own line of GOATs, and they all live here, even after a save is deleted.</p>
+  ${state&&!reign?`<p class="muted">This league has no reigning GOAT. Open a player and press <b>Crown as GOAT</b>.</p>`:""}
+  ${leagues.map(l=>{const G=all.filter(g=>g.lid===l);return `<h3>${esc(G[0].league)}${state&&l===state.lid?` <span class="muted" style="font-weight:400">(open now)</span>`:""}</h3><div class="goatgrid">${G.map(goatCard).join("")}</div>`}).join("")}
+  ${cmp}`;
+}
+
 let navStack=[];
 const backTo=()=>navStack.pop()||(view.startsWith("mgr:")?"managers":view.startsWith("club:")?"clubs":view.startsWith("review:")?"history":"players");
 function viewPlayer(id){
   if(!pl(id))return `<div class="empty">That player could not be found.</div>`;
-  return viewPlayerBody(id).replace('<button class="btn sm" data-act="back">‹ Back</button>',`<div class="toolbar" style="margin:0"><button class="btn sm" data-act="back">‹ Back</button><button class="btn sm" data-act="pcmp" data-id="${id}">Compare</button></div>`)}
+  return viewPlayerBody(id).replace('<button class="btn sm" data-act="back">‹ Back</button>',`<div class="toolbar" style="margin:0"><button class="btn sm" data-act="back">‹ Back</button><button class="btn sm" data-act="pcmp" data-id="${id}">Compare</button>${window.indexedDB?(()=>{const g=goatOf(pl(id));return g&&g.reign?`<span class="goattag">${pxCtx()?`<img class="px" src="${pxTrophy("goat",true)}" width="23" alt="">`:""}The GOAT</span>`:`<button class="btn sm" data-act="goat-on" data-id="${id}">${g?"Crown as GOAT again":"Crown as GOAT"}</button>`})():""}</div>`)}
 function viewPlayerBody(id){
   const p=pl(id);if(!p)return `<div class="empty">That player could not be found.</div>`;
   const t=team(p.teamId)||{name:p.lastTeam||"",c1:"#888",c2:"#fff",crest:{},short:"",kit:{home:{style:"plain",a:"#888",b:"#fff",sleeves:"#888",trim:"#fff",shorts:"#fff",socks:"#888"}}};
@@ -2030,13 +2147,13 @@ function render(){
   applyTheme();hideTip();
   const vk=state?view:"setup";if(vk!==_lastView){_lastView=vk;try{window.scrollTo(0,0)}catch(e){}}
   if(!state){renderSetup();return}
-  syncCustom();ensureCup();if(!state.rivals)updateRivals();ensureManagers();state.teams.forEach(ensureGround);
+  syncCustom();ensureCup();ensurePoty();if(!state.rivals)updateRivals();ensureManagers();state.teams.forEach(ensureGround);
   const done=seasonDone();
-  const views=[["table","Table"],["fixtures","Fixtures"],...(cupOn()||state.history.some(h=>h.cup)?[["cup","Cup"]]:[]),["players","Players"],["clubs","Clubs"],["managers","Managers"],["draft","Draft"],["trades","Trades"],["history","History"],["hof","Hall of Fame"],["saves","Saves"],["settings","Settings"]];
+  const views=[["table","Table"],["fixtures","Fixtures"],...(cupOn()||state.history.some(h=>h.cup)?[["cup","Cup"]]:[]),["players","Players"],["clubs","Clubs"],["managers","Managers"],["draft","Draft"],["trades","Trades"],["history","History"],["hof","Hall of Fame"],["goat","GOATs"],["saves","Saves"],["settings","Settings"]];
   const cur=view.startsWith("club:")?"clubs":view.startsWith("player:")||view.startsWith("pcmp:")?"players":view.startsWith("review:")?"history":view.startsWith("mgr:")?"managers":view;
   let body;
   if(view==="table")body=viewTable();else if(view==="fixtures")body=viewFixtures();else if(view==="players")body=viewPlayers();
-  else if(view==="clubs")body=viewClubs();else if(view.startsWith("club:"))body=viewClub(view.slice(5));else if(view==="history")body=viewHistory();else if(view==="hof")body=viewHof();else if(view.startsWith("player:"))body=viewPlayer(view.slice(7));else if(view.startsWith("pcmp:"))body=viewPlayerCompare(view.slice(5));else if(view.startsWith("review:"))body=viewReview(view.slice(7));else if(view==="draft")body=viewDraft();else if(view==="cup")body=viewCup();else if(view==="managers")body=viewManagers();else if(view.startsWith("mgr:"))body=viewManager(view.slice(4));else if(view==="trades")body=viewTrades();else if(view==="saves")body=viewSaves();else body=viewSettings();
+  else if(view==="clubs")body=viewClubs();else if(view==="goat")body=viewGoats();else if(view.startsWith("club:"))body=viewClub(view.slice(5));else if(view==="history")body=viewHistory();else if(view==="hof")body=viewHof();else if(view.startsWith("player:"))body=viewPlayer(view.slice(7));else if(view.startsWith("pcmp:"))body=viewPlayerCompare(view.slice(5));else if(view.startsWith("review:"))body=viewReview(view.slice(7));else if(view==="draft")body=viewDraft();else if(view==="cup")body=viewCup();else if(view==="managers")body=viewManagers();else if(view.startsWith("mgr:"))body=viewManager(view.slice(4));else if(view==="trades")body=viewTrades();else if(view==="saves")body=viewSaves();else body=viewSettings();
   $("#app").innerHTML=`<div class="shell"><aside class="side">
     <div class="hd"><div class="lg">${esc(state.name)}</div><div class="meta">${FORMATS[state.format].label}. Season ${state.season}, ${state.draft?"draft in progress":done?"complete":dayLabel()}</div></div>
     <nav class="nav">${views.map(([k,l])=>`<button class="${cur===k?"on":""}" data-act="nav" data-v="${k}">${l}</button>`).join("")}</nav>
@@ -2208,6 +2325,11 @@ document.addEventListener("click",async e=>{
     case "ctab":clubTab=v;break;
     case "ptab":pTab=v;break;
     case "h2htab":h2hTab=v;break;
+    case "goat-on":{const p=pl(id);if(p)crownGoat(p);break}
+    case "goat-off":{const p=pl(id);if(p)uncrownGoat(p);break}
+    case "goat-del":{const g=goats.find(x=>x.key===v);if(!g||!confirm(`Remove ${g.snap.name} (${g.league}) from the GOAT gallery? Their save is not touched.`))return;goats=goats.filter(x=>x.key!==v);gdo(st=>st.delete(v)).catch(console.warn);break}
+    case "poty-redo":if(!confirm("Work out every past Player of the Year again with the current weights? Winners may change."))return;redoPoty();toast("Player of the Year recalculated for every past year.");break;
+    case "pstatus":ps.status=v;ps.lim=50;if(v==="retired")ps.scope="all";break;
     case "pcmp":closeModal();view="pcmp:"+id;pc.q="";break;
     case "pcpick":pc.b=id;pc.q="";break;
     case "pcswap":pc.b=view.slice(5);view="pcmp:"+id;break;
@@ -2308,6 +2430,7 @@ document.addEventListener("change",e=>{
   if(el.dataset.tro){const TS=state.settings.trophies=state.settings.trophies||{};TS[trophyTab]={...trophySpec(trophyTab),accent:el.value};persist();render();return}
   if(el.dataset.ring){const R2=state.settings.ring;if(el.dataset.ring==="size")R2.size=clamp(+el.value,18,60);else R2.text=el.value.toUpperCase().replace(/[^A-Z0-9 ]/g,"").slice(0,10);persist();render();return}
   if(el.dataset.h2h){h2h[el.dataset.h2h]=el.value;render();return}
+  if(el.dataset.gsel){gsel[el.dataset.gsel]=el.value;render();return}
   if(el.dataset.tb){tb[el.dataset.tb]=el.value;tb["g"+el.dataset.tb]=[];render();return}
   if(el.dataset.lf){state.name=el.value.trim()||state.name;persist();render();return}
   if(el.dataset.tf){const t=team(el.dataset.id),k=el.dataset.tf;let v=el.value;if(k==="name"){v=v.trim()||t.name;if(t.short===shortOf(t.name))t.short=shortOf(v)}if(k==="short")v=v.trim().toUpperCase().slice(0,3)||t.short;t[k]=v;persist();render();return}
@@ -2339,7 +2462,7 @@ let tt;function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("sh
 /* ---------- start ---------- */
 let _boot=null;try{const b=localStorage.getItem("leaguesim-backup");if(b){const d=JSON.parse(b);if(d&&d.app==="leaguesim"){state=migrate(d);if(state.__traitsAdded){delete state.__traitsAdded;persist()}dirty=true;_boot=b}}}catch(e){}
 // Slots load in the background. A league open from before slots existed gets one straight away.
-if(window.indexedDB)listSlots().then(async()=>{
+if(window.indexedDB)Promise.all([listSlots(),loadGoats()]).then(async()=>{refreshGoats();
   if(state&&_boot){const cur=slots.find(x=>x.id===slotId);
     if(!cur){await saveNow(true);toast("Your league is now saved inside the app. Find all your saves on the Saves page.")}
     else{savedAt=cur.saved;const txt=await sdo("readonly",(m,d,o)=>{d.get(cur.id).onsuccess=e=>o.v=e.target.result});dirty=txt!==_boot;if(dirty)autosaveSoon()}}
