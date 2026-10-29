@@ -65,7 +65,7 @@ A pure-simulation football league game. The user sets up clubs and players, then
 
 - Clubs have a Trophy cabinet tab (`clubTab="cab"`); player and manager pages have Career and Trophy cabinet tabs (`pTab`, shared by both).
 - `cabinetPanel(name, groups)` draws a flat pixel wooden cabinet with a brass name plate, glass sheen and one run of shelves (a repeating CSS gradient; slots are a fixed 170px tall so they stand on them). Each group is one slot: the latest three wins stacked at 3x (`stackHTML`, fixed overlap) with a ×count plaque. A fanning bundle of every win was tried and removed at the user's request (felt laggy). Award slots (`g.aw`) link to that award's winners on History; on touch the first tap shows the tooltip and a second tap follows the link. A group with no wins but a `ghost` image shows as a dark silhouette (league and cup everywhere; MVP plus Golden Boot or Glove by position, and Young Player while 21 or under, for active players; Manager of the season for active managers).
-- Trophy details use one shared pixel tooltip (`#tip`, `showTip`/`hideTip`) driven by `data-tip` (lines joined by newlines, first line is the title): mouse hover, keyboard focus, or tap on touch (tap again or elsewhere to close). Hovered slots lift with a stepped glow. Club cards on the Clubs page show a small league and cup row (`trophyRow`) with the same tooltips. `clubCabinet` (titles, cups, plus every individual award its players and managers won while there, via `clubAwards`), `playerCabinet` (rings, cup medals, team of the season picks, each award type, Hall of Fame) and `managerCabinet` (titles, cups, awards) build the groups. Team of the season (`tots`) and Hall of Fame (`hof`) have their own trophy looks in `TROPHY_DEF`.
+- Trophy details use one shared pixel tooltip (`#tip`, `showTip`/`hideTip`) driven by `data-tip` (lines joined by newlines, first line is the title): mouse hover, keyboard focus, or tap on touch (tap again or elsewhere to close). Hovered slots lift with a stepped glow. Club cards on the Clubs page no longer show trophies (the user found it pointless next to the cabinet). `clubCabinet` (titles, cups, plus every individual award its players and managers won while there, via `clubAwards`), `playerCabinet` (rings, cup medals, team of the season picks, each award type, Hall of Fame) and `managerCabinet` (titles, cups, awards) build the groups. Team of the season (`tots`) and Hall of Fame (`hof`) have their own trophy looks in `TROPHY_DEF`.
 - In lists (players table, plaques) `ringsHTML` and `awardsHTML` show only the latest icon plus a count (class `flat`, no hover spread) so the table fits without side scrolling. The tooltip lists them all. Big versions on the player page still spread on hover.
 - Rafter banners were tried and removed at the user's request.
 
@@ -111,6 +111,20 @@ A pure-simulation football league game. The user sets up clubs and players, then
 - Club Legends tab (`legendsHTML`): most appearances and goals for the club, Hall of Famers, one-club legends, trophy-winning managers.
 - Stadiums: `ground.cap` starts by format (`CAP0`), grows 3% after a top half finish, 10% after a cup and 20% after a title (`growGrounds`, history in `ground.ups`). `crowdF()` scales home advantage a little by capacity against the league average.
 
+## Stadiums, arena and sponsors (Phase 3)
+
+- `settings.arena` (Settings, League tab, Venue card; off by default): every club plays at one shared `state.arena` (made by `ensureArena()` from the first club's ground, capacity the average). While on: no home advantage (`HA` in `simMatch`), the Arena menu page (`viewArena`) replaces club Ground tabs, match cards show the arena (`venueOf`), the arena grows 4% a season (`why:"league"`), and club capacity is left out of comparisons. The user plays with it on.
+- A ground (club or arena) holds its look: `grass, mow, lines, boards, trim, floor, net, netPat, posts, per` (boards a side, 2 to 4), `ads` (sponsor id per board, top row then bottom) and `mid` (centre circle sponsor id). Old grounds fall back to `GDEF`. `gndOf(id)` takes a team id or `"arena"`; `stadiumEditor(g,id)` serves both.
+- `pxPitch(g)` draws a top-down pixel arena on canvas (178 x 110: floor, side boards split into sponsor slots, end boards with goals and nets set into them, mowing from `MOWF`, D areas for 5 a side and boxes for 7 and 11). It returns the board and centre rects so `stadiumHTML()` can lay uploaded logos over them as crisp `<img>`s (percent positions), plus the strongest lineup on club grounds. Smooth mode falls back to `pitchSvg`.
+- Sponsors: `state.sponsors` [{id,name,bg,fg,img}] league-wide; grounds store ids only, so a logo is saved once. Names are painted in the pixel font; made-up names in `SPON_NAMES`. No real brand logos ship with the game: the user uploads their own.
+- Image imports go through `readImg(file,{w,h,box})`: big images shrink, small pixel art scales up by whole steps with smoothing off, `box` pads to a fixed shape. Sizes told to the user: badge 256 x 256 (stored at 192), board logo 512 x 128, centre logo 256 x 256 (stored within 320 x 160), trophy 69 x 96 exactly (23:32, `box`), pixel art 26 x 30 badge or 23 x 32 trophy.
+- Trophy room: `settings.trophies[k].img` replaces the drawn trophy everywhere (`pxTrophy` returns it first).
+
+## Badges
+
+- 12 shapes, 14 patterns (`CPAT_D` drives pixel and smooth; pinstripes are every third pixel column in pixel mode), 29 emblems (`emblemParts`, `circ()` helper; the smooth SVG builds new ones from the same parts).
+- `crest.text`: initials (Auto, the old placement), top, middle, bottom, none. `crest.stars` (0 to 5, along the top) and `crest.est` (founding year on a ribbon across the lower badge, wider than narrow shapes like a crest scroll). The pixel cache key is `badgeKey(t)`.
+
 ## Hidden potential
 
 - `p.pot` is a hidden ceiling (`rollPot`): young players can sit far below it, players in their late twenties are close. Positive growth stops at the ceiling (a 5% chance of +1 beyond it), so busts and late gems happen.
@@ -139,7 +153,7 @@ A pure-simulation football league game. The user sets up clubs and players, then
 
 - The sidebar is drawn as a pitch: a chalk outline, a penalty box around the league name, one mowing stripe per menu item, the halfway line and centre circle above the sim buttons, and a penalty box around the file buttons.
 
-- Pixel art engine drawn onto canvas at low resolution and shown with `image-rendering: pixelated`: badges (`pxBadge`), kits (`pxKit`), championship rings (`pxRing`), trophies (`pxTrophy`), position charts (`pxChart`).
+- Pixel art engine drawn onto canvas at low resolution (also `pxPitch` for grounds) and shown with `image-rendering: pixelated`: badges (`pxBadge`), kits (`pxKit`), championship rings (`pxRing`), trophies (`pxTrophy`), position charts (`pxChart`).
 - `pxTrophy(kind, icon)` draws the league title and every award from one spec: shape (cup, plate, star, ball, boot, glove, medal), metal, plinth and accent colour. Defaults live in `TROPHY_DEF`; the user's changes in `settings.trophies[kind]`. Sprites are 23 px wide and are always shown at exactly 1x, 2x or 3x so they stay crisp. `icon` gives the topper only, used for league title counts. New competitions add a `TROPHY_DEF` entry and get a Trophy room tab for free. A 3x5 pixel font is in `FONT`, with wide 5x5 glyphs for M, N, V and W in `FONTW`.
 - A Smooth setting falls back to the earlier vector SVG art.
 - Ring designer settings: size, metal, stones, centre piece, side panel and banner text. The Trophy room card in Settings sits next to it.

@@ -279,6 +279,17 @@ input[type=checkbox]{accent-color:var(--turf)}
 .hdkit{display:block}
 .tabs{margin-bottom:16px}
 .pitchwrap{width:100%;max-width:340px}
+.stadpv{display:flex;flex-direction:column;align-items:center;gap:8px;margin-bottom:14px}
+.stad{position:relative;width:100%;max-width:960px;line-height:0}
+.stad>img.pt{width:100%;height:auto;display:block;image-rendering:pixelated}
+.stad .spimg{position:absolute;object-fit:contain;box-sizing:border-box;padding:1px 3px}
+.stad .spimg.mid{padding:0}
+.stad .spl{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;line-height:1;pointer-events:none}
+.stad .spl img{width:clamp(16px,3.4vw,34px);image-rendering:pixelated}
+.stad .spl span{font:600 .72rem var(--hd);color:#fff;text-shadow:1px 1px 0 #000,-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000;white-space:nowrap;margin-top:1px}
+.sprow{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;padding:10px 0;border-top:1px solid var(--line)}
+.spchip{height:24px;border:2px solid var(--pxc);image-rendering:pixelated}
+span.spchip{display:inline-grid;place-items:center;width:159px;font:600 .8rem var(--px);overflow:hidden}span.spchip img{max-width:150px;max-height:20px}
 .pitchwrap>svg{width:100%;height:auto;display:block;border-radius:0}
 .grid2.even{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
 tr.sel td{background:color-mix(in srgb,var(--flood) 20%,transparent)}
@@ -562,7 +573,7 @@ const FLAGS={
  UKR:`<rect width="30" height="10" fill="#0057B7"/><rect y="10" width="30" height="10" fill="#FFD700"/>`
 };
 function flag(c,w=18){const n=NAT[c];if(!n)return "";return `<svg class="flag" width="${w}" height="${Math.round(w*2/3)}" viewBox="0 0 30 20" role="img" aria-label="${n.n}"><title>${n.n}</title>${FLAGS[c]}<rect x=".25" y=".25" width="29.5" height="19.5" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".5"/></svg>`}
-const DEFAULT_SETTINGS={potyW:[30,30,20,20],aiTrades:"normal",injury:100,goals:100,home:10,nations:NATIONS.map(x=>x.c),homeNation:"",homeShare:50,genW:[10,25,35,22,8],draftW:[14,34,32,15,5],draftPer:2,draftAgeMin:17,draftAgeMax:21,retireAge:33,extraPlaces:2,theme:{mode:"system",turf:"#1F4D36",accent:"#E8C547",art:"pixel"},ring:{size:30,metal:"gold",stones:"diamond",centre:"plate",panel:"club",text:"CHAMPIONS"},trophies:{},cup:{on:true,name:""},sackings:true,revealPot:false,awardsNight:true};
+const DEFAULT_SETTINGS={potyW:[30,30,20,20],aiTrades:"normal",injury:100,goals:100,home:10,nations:NATIONS.map(x=>x.c),homeNation:"",homeShare:50,genW:[10,25,35,22,8],draftW:[14,34,32,15,5],draftPer:2,draftAgeMin:17,draftAgeMax:21,retireAge:33,extraPlaces:2,theme:{mode:"system",turf:"#1F4D36",accent:"#E8C547",art:"pixel"},ring:{size:30,metal:"gold",stones:"diamond",centre:"plate",panel:"club",text:"CHAMPIONS"},trophies:{},cup:{on:true,name:""},sackings:true,revealPot:false,awardsNight:true,arena:false};
 function pickNation(){const S=state&&state.settings;const act=S&&S.nations&&S.nations.length?S.nations:NATIONS.map(x=>x.c);if(S&&S.homeNation&&NAT[S.homeNation]&&rand()*100<S.homeShare)return S.homeNation;return pick(act)}
 function guessNat(name){const last=String(name).split(" ").slice(-1)[0];const n=NATIONS.find(x=>x.l.includes(last));return n?n.c:pick(NATIONS).c}
 
@@ -697,8 +708,8 @@ function simMatch(f){
   const lh=lineup(H),la=lineup(A),sh=strength(lh),sa=strength(la),k=22,base=fmt.base*S.goals/100;
   const mh=mgrOf(H),ma=mgrOf(A),own={att:1.12,bal:1,def:.9},opp={att:1.08,bal:1,def:.9},sty=(a,b)=>(a?own[a.style]||1:1)*(b?opp[b.style]||1:1);
   if(mh){sh.att+=mh.tac-3;sh.def+=mh.tac-3}if(ma){sa.att+=ma.tac-3;sa.def+=ma.tac-3}
-  const lamH=clamp(base*Math.exp((sh.att-sa.def)/k)*(1+S.home/100*crowdF(H))*sty(mh,ma),.1,9);
-  const lamA=clamp(base*Math.exp((sa.att-sh.def)/k)*(1-S.home/250)*sty(ma,mh),.1,9);
+  const HA=arenaOn()?0:S.home,lamH=clamp(base*Math.exp((sh.att-sa.def)/k)*(1+HA/100*crowdF(H))*sty(mh,ma),.1,9);
+  const lamA=clamp(base*Math.exp((sa.att-sh.def)/k)*(1-HA/250)*sty(ma,mh),.1,9);
   f.hg=poisson(lamH);f.ag=poisson(lamA);
   lh.concat(la).forEach(x=>x.p.s.apps++);
   if(f.ag===0)lh.filter(x=>x.role==="GK").forEach(x=>x.p.s.cs++);
@@ -887,7 +898,8 @@ const gw=ch=>FONTW[ch]?5:3;
 const textW=str=>[...str].reduce((a,ch)=>a+gw(ch)+1,0)-1;
 const FONT={A:"010101111101101",B:"110101110101110",C:"011100100100011",D:"110101101101110",E:"111100110100111",F:"111100110100100",G:"011100101101011",H:"101101111101101",I:"111010010010111",J:"001001001101010",K:"101101110101101",L:"100100100100111",M:"101111111101101",N:"110101101101101",O:"010101101101010",P:"110101110100100",Q:"010101101110011",R:"110101110101101",S:"011100010001110",T:"111010010010010",U:"101101101101111",V:"101101101101010",W:"101101111111101",X:"101101010101101",Y:"101101010010010",Z:"111001010100111","0":"111101101101111","1":"010110010010111","2":"110001010100111","3":"110001010001110","4":"101101111001001","5":"111100110001110","6":"011100110101010","7":"111001010010010","8":"010101010101010","9":"010101011001110"};
 function drawText(g,str,x0,y0,col,sh,clip,vertical,ol){const pts=[];let cx=x0;[...str].forEach((ch,i)=>{if(!vertical&&FONTW[ch]){const f=FONTW[ch];for(let k=0;k<25;k++)if(f[k]==="1")pts.push([cx+k%5,y0+Math.floor(k/5)]);cx+=6;return}const f=FONT[ch];if(f)for(let k=0;k<15;k++)if(f[k]==="1")pts.push(vertical?[x0+k%3,y0+i*6+Math.floor(k/3)]:[cx+k%3,y0+Math.floor(k/3)]);cx+=4});const S=new Set(pts.map(([x,y])=>x+","+y));if(sh&&ol){pts.forEach(([x,y])=>{for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++){const a=x+dx,b=y+dy;if(!S.has(a+","+b)&&(!clip||clip(a,b)))g.set(a,b,sh)}})}else if(sh)pts.forEach(([x,y])=>{const a=x+1,b=y+1;if(!S.has(a+","+b)&&(!clip||clip(a,b)))g.set(a,b,sh)});pts.forEach(([x,y])=>{if(!clip||clip(x,y))g.set(x,y,col)})}
-const CPAT_D={stripes:[4,12,20,28,36].map(c=>`M${c-2} 0h4v46h-4z`).join(""),halves:"M20 0h20v46h-20z",band:"M0 17h40v12h-40z",sash:"M-2 10L8 0L44 36L34 46Z",quarters:"M20 0h20v23h-20zM0 23h20v23h-20z",chevron:"M0 22L20 10L40 22V31L20 19L0 31Z",hoops:[8,18,28,38].map(c=>`M0 ${c-2.5}h40v5h-40z`).join("")};
+const CPAT_D={stripes:[4,12,20,28,36].map(c=>`M${c-2} 0h4v46h-4z`).join(""),halves:"M20 0h20v46h-20z",band:"M0 17h40v12h-40z",sash:"M-2 10L8 0L44 36L34 46Z",quarters:"M20 0h20v23h-20zM0 23h20v23h-20z",chevron:"M0 22L20 10L40 22V31L20 19L0 31Z",hoops:[8,18,28,38].map(c=>`M0 ${c-2.5}h40v5h-40z`).join(""),cross:"M16 0h8v46h-8zM0 18h40v8h-40z",saltire:"M-4 2L2 -4L44 40L38 46ZM38 -4L44 2L2 46L-4 40Z",checks:Array.from({length:16},(_,i)=>(i>>2)+(i&3)&1?`M${(i&3)*10} ${(i>>2)*11.5}h10v11.5h-10z`:"").join(""),diagonal:"M0 0H40L0 46Z",pinstripes:[3,8,13,18,23,28,33,38].map(c=>`M${c-.7} 0h1.4v46h-1.4z`).join(""),pale:"M14 0h12v46h-12z"};
+const circ=(x,y,r)=>`M${x-r} ${y}a${r} ${r} 0 1 0 ${2*r} 0a${r} ${r} 0 1 0 ${-2*r} 0Z`;
 function emblemParts(e){switch(e){
   case "star":return[{d:"M"+starPts(20,27,8.6,3.8).split(" ").join("L")+"Z",c:3}];
   case "ball":return[{d:"M12.5 27a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0Z",c:3},{d:"M20 23.4L23.4 26L22.1 30H17.9L16.6 26Z",c:1}];
@@ -895,27 +907,64 @@ function emblemParts(e){switch(e){
   case "bolt":return[{d:"M23 17L14 29H19L17 38L27 25H22L25 17Z",c:3}];
   case "tower":return[{d:"M13 37V23H15.5V20H18V23H22V20H24.5V23H27V37Z",c:3},{d:"M18.4 31h3.2v6h-3.2z",c:1}];
   case "wave":return[{d:"M11 24q4.5 -5 9 0t9 0M11 30.5q4.5 -5 9 0t9 0",c:3,stroke:3.4}];
+  case "anchor":return[{d:"M20 21.5V35.5M15.5 25H24.5M12.5 29.5Q13.5 35.5 20 35.5Q26.5 35.5 27.5 29.5",c:3,stroke:2.4},{d:circ(20,19,2.3),c:3,stroke:1.8}];
+  case "castle":return[{d:"M10 37V20H11.8V18H13.4V20H15V18H16.6V20H17V24H23V20H23.4V18H25V20H26.6V18H28.2V20H30V37Z",c:3},{d:"M17.6 37V32Q20 29 22.4 32V37Z",c:1}];
+  case "tree":return[{d:"M20 16L27 25H24L29 32H22V37H18V32H11L16 25H13Z",c:3}];
+  case "sword":return[{d:"M20 13L21.4 15.5V30H25.5V32.5H21.4V35.5H22.5V38H17.5V35.5H18.6V32.5H14.5V30H18.6V15.5Z",c:3}];
+  case "key":return[{d:circ(20,19.5,4.2),c:3},{d:"M18.8 23H21.2V37.5H18.8ZM21.2 30.5H24.5V32.5H21.2ZM21.2 34.5H24V36.5H21.2Z",c:3},{d:circ(20,19.5,1.6),c:1}];
+  case "wheel":return[{d:circ(20,27,7)+"M20 20V34M13 27H27M15 22L25 32M25 22L15 32",c:3,stroke:2}];
+  case "flame":return[{d:"M20 15C24 20 28 23 27 29C26.5 34 23.5 37 20 37C16.5 37 13.5 34 13 30C12.5 26 15 24 16.5 21C17.5 24 18 25 19.5 26C19 22 19 18.5 20 15Z",c:3},{d:"M20 27C22 29 23 31 22.5 33C22 35 21 35.5 20 35.5C19 35.5 18 35 17.5 33C17.2 31 18.5 30 20 27Z",c:1}];
+  case "horse":return[{d:"M14 37H27V35C27 31 25 30 25 27C25 22 24 18 19 16L18 14L16.5 16.5C14 18 12 21 12 24L13.5 25.5L17 23.5C17 26 15 29 14 31Z",c:3}];
+  case "bull":return[{d:"M11 18C12 22 14 23.5 16 24L16 30C16 34 18 36.5 20 36.5C22 36.5 24 34 24 30L24 24C26 23.5 28 22 29 18C27 20.5 25 21.5 22.5 21.5H17.5C15 21.5 13 20.5 11 18Z",c:3},{d:"M17.3 26h1.8v1.8h-1.8zM20.9 26h1.8v1.8h-1.8z",c:1}];
+  case "wolf":return[{d:"M13 17L17 22H23L27 17L28 25C28 30 24 33 20 37C16 33 12 30 12 25Z",c:3},{d:"M15.8 25.5h2.4v1.8h-2.4zM21.8 25.5h2.4v1.8h-2.4z",c:1}];
+  case "lion":return[{d:[...Array(10)].map((_,i)=>{const a=i*Math.PI/5;return circ(+(20+6.5*Math.cos(a)).toFixed(2),+(27+6.5*Math.sin(a)).toFixed(2),3)}).join("")+circ(20,27,6.5),c:3},{d:circ(20,27,4.9),c:1},{d:"M17.4 25.2h1.7v1.7h-1.7zM20.9 25.2h1.7v1.7h-1.7zM18.6 28.6h2.8l-1.4 1.8z",c:3}];
+  case "eagle":return[{d:"M20 18L22 21L29 18L27 24L30 24L25 29L23 29L22 35L20 37L18 35L17 29L15 29L10 24L13 24L11 18L18 21Z",c:3}];
+  case "bird":return[{d:"M10 21C14 23 17 25 19 28C21 24 25 22 30 20C27 24 24 28 22.5 31L25 37L20 33.5L15 36L17.5 31C15 26 12 24 10 21Z",c:3}];
+  case "rose":return[{d:[0,1,2,3,4].map(i=>{const a=(-90+72*i)*Math.PI/180;return circ(+(20+4.2*Math.cos(a)).toFixed(2),+(25.5+4.2*Math.sin(a)).toFixed(2),3.4)}).join(""),c:3},{d:circ(20,25.5,1.8),c:1},{d:"M20 31V38",c:3,stroke:1.8}];
+  case "clover":return[{d:circ(20,21.5,3.8)+circ(15.8,27,3.8)+circ(24.2,27,3.8),c:3},{d:"M20 28Q20.5 34 23.5 37.5",c:3,stroke:2}];
+  case "heart":return[{d:"M20 36C14 31 11 28 11 24C11 21 13 19 15.5 19C17.5 19 19 20.5 20 22C21 20.5 22.5 19 24.5 19C27 19 29 21 29 24C29 28 26 31 20 36Z",c:3}];
+  case "moon":return[{d:"M23 17A10 10 0 1 0 23 37A8 8 0 1 1 23 17Z",c:3}];
+  case "sun":return[{d:circ(20,27,4.6),c:3},{d:"M20 16.5V19.5M20 34.5V37.5M9.5 27H12.5M27.5 27H30.5M12.6 19.6L14.7 21.7M25.3 32.3L27.4 34.4M27.4 19.6L25.3 21.7M14.7 32.3L12.6 34.4",c:3,stroke:2}];
+  case "mountain":return[{d:"M9 36L16.5 22L20 27.5L23.5 19.5L31 36Z",c:3},{d:"M21.9 23.2L23.5 19.5L25.1 23.2L23.5 24.5Z",c:1}];
+  case "ship":return[{d:"M19.5 15.5V30.5H11.5Z",c:3},{d:"M21.5 18L28 30.5H21.5Z",c:3},{d:"M10 32.5H30L27 37H13Z",c:3}];
+  case "fish":return[{d:"M10.5 27C14 22 21 21 25 24.5L30 21V33L25 29.5C21 33 14 32 10.5 27Z",c:3},{d:circ(15.5,26,1.1),c:1}];
+  case "gem":return[{d:"M14 20H26L30 25.5L20 37L10 25.5Z",c:3},{d:"M10 25.5H30",c:1,stroke:1.2}];
+  case "trident":return[{d:"M20 16V38M14 18V23Q14 27 20 27Q26 27 26 23V18",c:3,stroke:2.2},{d:"M20 14L22 17.5H18ZM14 16L15.6 19H12.4ZM26 16L27.6 19H24.4Z",c:3}];
   default:return[]}}
+const badgeKey=t=>{const c=t.crest||{};return ["b",c.shape,c.pattern,c.emblem,c.text,c.c3,t.c1,t.c2,t.short,c.stars||0,c.est||""].join("|")};
+// Pixel badge: shape and pattern, emblem, optional stars along the top and a founding year ribbon, then the initials
+// (Auto keeps the old placement: top when there is an emblem, centre when not).
 function pxBadge(t){
-  const c=t.crest||{},key=["b",c.shape,c.pattern,c.emblem,c.text,c.c3,t.c1,t.c2,t.short].join("|");
+  const c=t.crest||{},key=badgeKey(t);
   if(PXC.cache.has(key))return PXC.cache.get(key);
   const ctx=pxCtx(),W=26,H=30,sx=40/24,sy=46/28,g=Grid(W,H),X=x=>(x-.5)*sx,Y=y=>(y-.5)*sy;
-  const shape=P2(SHAPES[c.shape]||SHAPES.shield),pat=CPAT_D[c.pattern]?P2(CPAT_D[c.pattern]):null,c1=t.c1,c2=t.c2,c3=c.c3||t.c2;
+  const shape=P2(SHAPES[c.shape]||SHAPES.shield),pin=c.pattern==="pinstripes",pat=!pin&&CPAT_D[c.pattern]?P2(CPAT_D[c.pattern]):null,c1=t.c1,c2=t.c2,c3=c.c3||t.c2;
   const IN=[];for(let y=0;y<H;y++)for(let x=0;x<W;x++)IN[y*W+x]=x>=1&&y>=1&&x<=24&&y<=28&&ctx.isPointInPath(shape,X(x),Y(y));
   const I=(x,y)=>x>=0&&y>=0&&x<W&&y<H&&IN[y*W+x];
-  const edge=(x,y)=>!I(x+1,y)||!I(x-1,y)||!I(x,y+1)||!I(x,y-1);
+  const edge=(x,y)=>!I(x+1,y)||!I(x-1,y)||!I(x,y+1)||!I(x,y-1),ok=(x,y)=>I(x,y)&&!edge(x,y);
   for(let y=0;y<H;y++)for(let x=0;x<W;x++){if(!I(x,y))continue;if(edge(x,y)){g.set(x,y,(x+y)%5===0?lit(c3,.35):c3);continue}
-    let col=pat&&ctx.isPointInPath(pat,X(x),Y(y))?c2:c1;
+    let col=(pin?x%3===1:pat&&ctx.isPointInPath(pat,X(x),Y(y)))?c2:c1;
     if(!I(x-1,y-1)||!I(x,y-2)||!I(x-2,y))col=lit(col,.22);else if(!I(x+1,y+1)||!I(x,y+2)||!I(x+2,y))col=drk(col,.24);g.set(x,y,col)}
-  const em=new Set();
+  const em=new Set(),hasEm=!!(c.emblem&&c.emblem!=="none");
   for(const pt of emblemParts(c.emblem)){const p=P2(pt.d);if(pt.stroke){ctx.lineWidth=pt.stroke;ctx.lineCap="round"}
-    for(let y=0;y<H;y++)for(let x=0;x<W;x++){if(!I(x,y)||edge(x,y))continue;if(pt.stroke?ctx.isPointInStroke(p,X(x),Y(y)):ctx.isPointInPath(p,X(x),Y(y))){g.set(x,y,pt.c===3?c3:c1);em.add(y*W+x)}}}
+    for(let y=0;y<H;y++)for(let x=0;x<W;x++){if(!ok(x,y))continue;if(pt.stroke?ctx.isPointInStroke(p,X(x),Y(y)):ctx.isPointInPath(p,X(x),Y(y))){g.set(x,y,pt.c===3?c3:c1);em.add(y*W+x)}}}
+  const ns=clamp(+c.stars||0,0,5);let sTop=-1;
+  if(ns){const sw=ns*4-1,x0=1+Math.floor((24-sw)/2);for(let y=2;y<12&&sTop<0;y++){let f=true;for(let r=-1;r<4&&f;r++)for(let x=x0-1;x<=x0+sw;x++)if(!ok(x,y+r)){f=false;break}if(f)sTop=y}
+    if(sTop>=0)for(let i=0;i<ns;i++){const bx=x0+i*4;[[1,0],[0,1],[1,1],[2,1],[1,2]].forEach(([dx,dy])=>{g.set(bx+dx,sTop+dy,c3);em.add((sTop+dy)*W+bx+dx)})}}
   em.forEach(i=>{const x=i%W,y=(i-x)/W,col=g.get(x,y);if(!em.has(i-W))g.set(x,y,lit(col,.3));else if(!em.has(i+W))g.set(x,y,drk(col,.25))});
-  const eo=new Set();em.forEach(i=>{const x=i%W,y=(i-x)/W;for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const j=(y+dy)*W+x+dx;if(!em.has(j)&&I(x+dx,y+dy)&&!edge(x+dx,y+dy))eo.add(j)}});eo.forEach(j=>{const x=j%W;g.set(x,(j-x)/W,lum(c3)>.3?mix(drk(c1,.6),"#000",.3):lit(c1,.55))});
-  if((c.text||"initials")==="initials"){const s=String(t.short||"").toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,3);
-    if(s){const wd=textW(s),x0=1+Math.floor((24-wd)/2);const fits=y=>{for(let r=-1;r<6;r++)for(let x=x0-1;x<=x0+wd;x++)if(!I(x,y+r)||edge(x,y+r))return false;return true};
-      let y0=12;if(em.size){y0=3;while(y0<11&&!fits(y0))y0++}
-      drawText(g,s,x0,y0,c3,lum(c3)>.3?mix(drk(c1,.6),"#000",.3):"#F2F2EE",(x,y)=>I(x,y)&&!edge(x,y),false,true)}}
+  const dark=lum(c3)>.3?mix(drk(c1,.6),"#000",.3):lit(c1,.55);
+  const eo=new Set();em.forEach(i=>{const x=i%W,y=(i-x)/W;for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const j=(y+dy)*W+x+dx;if(!em.has(j)&&ok(x+dx,y+dy))eo.add(j)}});eo.forEach(j=>{const x=j%W;g.set(x,(j-x)/W,dark)});
+  const est=String(c.est||"").replace(/\D/g,"").slice(0,4);let bTop=99;
+  if(est){bTop=21;const tw=textW(est);for(let r=0;r<7;r++)for(let x=1;x<=24;x++){if((x<3||x>22)&&(r===0||r===6))continue;g.set(x,bTop+r,x<3||x>22?drk(c3,.35):r===0?lit(c3,.25):r===6?drk(c3,.3):c3)}
+    drawText(g,est,1+Math.floor((24-tw)/2),bTop+1,lum(c3)>.4?"#1A1A1A":"#FFFFFF")}
+  const tp=c.text||"initials";
+  if(tp!=="none"){const s=String(t.short||"").toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,3);
+    if(s){const wd=textW(s),x0=1+Math.floor((24-wd)/2),lo=sTop>=0?sTop+4:1,hi=Math.min(bTop-6,22);
+      const fits=y=>{if(y<lo||y>hi)return false;for(let r=-1;r<6;r++)for(let x=x0-1;x<=x0+wd;x++)if(!ok(x,y+r))return false;return true};
+      const near=p=>{for(let d=0;d<12;d++){if(fits(p+d))return p+d;if(fits(p-d))return p-d}return null};
+      let y0;if(tp==="initials"){if(hasEm){y0=Math.max(3,lo);while(y0<11&&!fits(y0))y0++}else y0=near(12)??12}
+      else y0=near(tp==="top"?3:tp==="bottom"?20:12)??12;
+      drawText(g,s,x0,y0,c3,lum(c3)>.3?mix(drk(c1,.6),"#000",.3):"#F2F2EE",ok,false,true)}}
   outlineG(g);PXC.grids.set(key,g);const url=gridURL(g);PXC.cache.set(key,url);return url;
 }
 const KPAT_D={stripes:[26,38,50,62,74].map(c=>`M${c-3.5} 0h7v100h-7z`).join(""),hoops:[14,32,50,68,86].map(c=>`M0 ${c-4.5}h100v9h-100z`).join(""),halves:"M50 0h50v100h-50z",sash:"M22 8L36 2L80 84L66 92Z",chevron:"M20 22L50 42L80 22V34L50 54L20 34Z",quarters:"M50 0h50v48h-50zM0 48h50v52h-50z"};
@@ -936,7 +985,7 @@ function pxKit(k,full){
 }
 const METALS={gold:["#F6D46A","#E2AD2E","#B07D12","#7A520A"],bronze:["#F0C08A","#C98A4B","#93582A","#5E3517"],silver:["#F4F6F9","#C9D0D9","#8E98A6","#5B6470"],rose:["#F8CDB9","#E39A7C","#B4674C","#7E412D"],black:["#77777F","#45454C","#2A2A30","#131316"]};
 function stonePal(k,col){return k==="ruby"?["#FFD6D6","#F05050","#B81E2E","#7A0E18"]:k==="sapphire"?["#DCE8FF","#4F7DF0","#1F45B8","#132A73"]:k==="emerald"?["#D8FFE6","#3CCB78","#14894A","#0B5530"]:k==="club"?[lit(col,.7),lit(col,.3),col,drk(col,.35)]:["#FFFFFF","#D6E2F4","#93A8C8","#6F84A6"]}
-function badgeGrid(t){pxBadge(t);const c=t.crest||{};return PXC.grids.get(["b",c.shape,c.pattern,c.emblem,c.text,c.c3,t.c1,t.c2,t.short].join("|"))}
+function badgeGrid(t){pxBadge(t);return PXC.grids.get(badgeKey(t))}
 function pxRing(col,season,teamId){
   const RS=(state&&state.settings&&state.settings.ring)||DEFAULT_SETTINGS.ring,tm=teamId&&state?team(teamId):null;
   const key="r|"+col+"|"+season+"|"+JSON.stringify([RS.metal,RS.stones,RS.centre,RS.panel,RS.text])+"|"+(RS.centre==="badge"&&tm?JSON.stringify([tm.crest,tm.c1,tm.c2,tm.short]):"");if(PXC.cache.has(key))return PXC.cache.get(key);
@@ -968,10 +1017,10 @@ function pxRing(col,season,teamId){
 }
 
 /* ---------- identity: badges, kits, grounds ---------- */
-const SHAPES={shield:"M20 1.5 L38 6.5 V22 C38 34 30 41 20 44.5 C10 41 2 34 2 22 V6.5 Z",heater:"M3 3 H37 V20 C37 33 28 40 20 44.5 C12 40 3 33 3 20 Z",round:"M1 23 a19 19 0 1 0 38 0 a19 19 0 1 0 -38 0 Z",square:"M5 3 H35 Q38 3 38 6 V40 Q38 43 35 43 H5 Q2 43 2 40 V6 Q2 3 5 3 Z",hex:"M20 1.5 L38 11.5 V34.5 L20 44.5 L2 34.5 V11.5 Z",diamond:"M20 1.5 L38.5 23 L20 44.5 L1.5 23 Z"};
-const SHAPE_L={shield:"Shield",heater:"Heater",round:"Round",square:"Square",hex:"Hexagon",diamond:"Diamond"};
-const CPAT={plain:"Plain",stripes:"Stripes",halves:"Halves",band:"Band",sash:"Sash",quarters:"Quarters",chevron:"Chevron",hoops:"Hoops"};
-const EMB={none:"None",star:"Star",ball:"Ball",crown:"Crown",bolt:"Bolt",tower:"Tower",wave:"Waves"};
+const SHAPES={shield:"M20 1.5 L38 6.5 V22 C38 34 30 41 20 44.5 C10 41 2 34 2 22 V6.5 Z",heater:"M3 3 H37 V20 C37 33 28 40 20 44.5 C12 40 3 33 3 20 Z",round:"M1 23 a19 19 0 1 0 38 0 a19 19 0 1 0 -38 0 Z",square:"M5 3 H35 Q38 3 38 6 V40 Q38 43 35 43 H5 Q2 43 2 40 V6 Q2 3 5 3 Z",hex:"M20 1.5 L38 11.5 V34.5 L20 44.5 L2 34.5 V11.5 Z",diamond:"M20 1.5 L38.5 23 L20 44.5 L1.5 23 Z",oval:"M20 1.5C31 1.5 38.5 11 38.5 23C38.5 35 31 44.5 20 44.5C9 44.5 1.5 35 1.5 23C1.5 11 9 1.5 20 1.5Z",octagon:"M12 1.5H28L38.5 12V34L28 44.5H12L1.5 34V12Z",pennant:"M2 2H38V16L20 44.5L2 16Z",banner:"M3 2H37V44.5L20 36L3 44.5Z",crowned:"M2 10L8 3L14 8L20 1.5L26 8L32 3L38 10V24C38 35 30 41 20 44.5C10 41 2 35 2 24Z",classic:"M2 4Q20 10 38 4V24C38 35 30 41 20 44.5C10 41 2 35 2 24Z"};
+const SHAPE_L={shield:"Shield",heater:"Heater",round:"Round",square:"Square",hex:"Hexagon",diamond:"Diamond",oval:"Oval",octagon:"Octagon",pennant:"Pennant",banner:"Banner",crowned:"Crown top",classic:"Classic"};
+const CPAT={plain:"Plain",stripes:"Stripes",halves:"Halves",band:"Band",sash:"Sash",quarters:"Quarters",chevron:"Chevron",hoops:"Hoops",cross:"Cross",saltire:"Saltire",checks:"Checks",diagonal:"Diagonal",pinstripes:"Pinstripes",pale:"Centre stripe"};
+const EMB={none:"None",star:"Star",ball:"Ball",crown:"Crown",bolt:"Bolt",tower:"Tower",wave:"Waves",lion:"Lion",eagle:"Eagle",bird:"Swallow",wolf:"Wolf",bull:"Bull",horse:"Horse",fish:"Fish",anchor:"Anchor",ship:"Ship",castle:"Castle",sword:"Sword",trident:"Trident",key:"Key",wheel:"Wheel",tree:"Tree",rose:"Rose",clover:"Clover",mountain:"Mountain",sun:"Sun",moon:"Moon",flame:"Flame",heart:"Heart",gem:"Gem"};
 function crestPattern(p,c){switch(p){
   case "stripes":return [4,12,20,28,36].map(x=>`<rect x="${x-2}" y="0" width="4" height="46" fill="${c}"/>`).join("");
   case "halves":return `<rect x="20" y="0" width="20" height="46" fill="${c}"/>`;
@@ -980,7 +1029,7 @@ function crestPattern(p,c){switch(p){
   case "quarters":return `<rect x="20" y="0" width="20" height="23" fill="${c}"/><rect x="0" y="23" width="20" height="23" fill="${c}"/>`;
   case "chevron":return `<path d="M0 22 L20 10 L40 22 V31 L20 19 L0 31 Z" fill="${c}"/>`;
   case "hoops":return [8,18,28,38].map(y=>`<rect x="0" y="${y-2.5}" width="40" height="5" fill="${c}"/>`).join("");
-  default:return "";}}
+  default:return CPAT_D[p]?`<path d="${CPAT_D[p]}" fill="${c}"/>`:"";}}
 function emblemSvg(e,c,o){const sw=`stroke="${o}" stroke-width="1" paint-order="stroke"`;switch(e){
   case "star":{const pts=[];for(let i=0;i<10;i++){const a=(-90+36*i)*Math.PI/180,r=i%2?3.6:8.2;pts.push((20+r*Math.cos(a)).toFixed(2)+","+(27+r*Math.sin(a)).toFixed(2))}return `<polygon points="${pts.join(" ")}" fill="${c}" ${sw}/>`}
   case "ball":return `<circle cx="20" cy="27" r="7.5" fill="${c}" stroke="${o}" stroke-width="1.2"/><polygon points="20,23.6 23.2,26 22,29.8 18,29.8 16.8,26" fill="${o}"/>`;
@@ -988,13 +1037,13 @@ function emblemSvg(e,c,o){const sw=`stroke="${o}" stroke-width="1" paint-order="
   case "bolt":return `<path d="M23 17 L14 29 H19 L17 38 L27 25 H22 L25 17 Z" fill="${c}" ${sw}/>`;
   case "tower":return `<path d="M13 37 V23 H15.5 V20 H18 V23 H22 V20 H24.5 V23 H27 V37 Z" fill="${c}" ${sw}/><rect x="18.5" y="31" width="3" height="6" fill="${o}"/>`;
   case "wave":return `<path d="M11 24 q4.5 -5 9 0 t9 0 M11 30.5 q4.5 -5 9 0 t9 0" fill="none" stroke="${c}" stroke-width="2.6" stroke-linecap="round"/>`;
-  default:return "";}}
+  default:return emblemParts(e).map(pt=>pt.stroke?`<path d="${pt.d}" fill="none" stroke="${pt.c===3?c:o}" stroke-width="${pt.stroke}" stroke-linecap="round"/>`:`<path d="${pt.d}" fill="${pt.c===3?c:o}" ${pt.c===3?sw:""}/>`).join("");}}
 function badge(t,size=26){
   if(t.crest&&t.crest.img)return `<svg class="badge" width="${size}" height="${Math.round(size*1.15)}" viewBox="0 0 40 46" aria-hidden="true"><image href="${esc(t.crest.img)}" x="0" y="0" width="40" height="46" preserveAspectRatio="xMidYMid meet"/></svg>`;
   if(pxOn())return `<img class="badge px" src="${pxBadge(t)}" width="${size}" height="${Math.round(size*1.15)}" alt="">`;
   const c=t.crest||{},id="cb"+(++_bid),shape=SHAPES[c.shape]||SHAPES.shield,c3=esc(c.c3||t.c2),c1=esc(t.c1),c2=esc(t.c2);
-  const em=c.emblem&&c.emblem!=="none",txt=(c.text||"initials")==="initials",ini=esc((t.short||shortOf(t.name||"")).slice(0,3));
-  return `<svg class="badge" width="${size}" height="${Math.round(size*1.15)}" viewBox="0 0 40 46" aria-hidden="true"><defs><clipPath id="${id}"><path d="${shape}"/></clipPath></defs><path d="${shape}" fill="${c1}"/><g clip-path="url(#${id})">${crestPattern(c.pattern,c2)}</g>${em?emblemSvg(c.emblem,c3,c1):""}${txt?`<text x="20" y="${em?(c.shape==="diamond"?16:14):27.5}" text-anchor="middle" font-family="Barlow Condensed,Arial Narrow,sans-serif" font-weight="700" font-size="${em?(c.shape==="diamond"?6:7.5):13}" fill="${c3}" stroke="${c1}" stroke-width="${em?1.6:2.4}" paint-order="stroke">${ini}</text>`:""}<path d="${shape}" fill="none" stroke="${c3}" stroke-width="2.4"/></svg>`;
+  const em=c.emblem&&c.emblem!=="none",tp=c.text||"initials",txt=tp!=="none",ns=clamp(+c.stars||0,0,5),est=String(c.est||"").replace(/\D/g,"").slice(0,4),big=(tp==="initials"&&!em)||tp==="middle",ty=tp==="top"||(tp==="initials"&&em)?(c.shape==="diamond"?16:14):tp==="bottom"?(est?29:38):27.5,ini=esc((t.short||shortOf(t.name||"")).slice(0,3));
+  return `<svg class="badge" width="${size}" height="${Math.round(size*1.15)}" viewBox="0 0 40 46" aria-hidden="true"><defs><clipPath id="${id}"><path d="${shape}"/></clipPath></defs><path d="${shape}" fill="${c1}"/><g clip-path="url(#${id})">${crestPattern(c.pattern,c2)}${est?`<rect x="0" y="31" width="40" height="7" fill="${c3}"/>`:""}</g>${em?emblemSvg(c.emblem,c3,c1):""}${txt?`<text x="20" y="${ty}" text-anchor="middle" font-family="Barlow Condensed,Arial Narrow,sans-serif" font-weight="700" font-size="${big?13:(c.shape==="diamond"?6:7.5)}" fill="${c3}" stroke="${c1}" stroke-width="${big?2.4:1.6}" paint-order="stroke">${ini}</text>`:""}${ns?[...Array(ns)].map((_,i)=>`<polygon points="${starPts(20+(i-(ns-1)/2)*5.2,7.8,2.5,1.05)}" fill="${c3}" stroke="${c1}" stroke-width=".6" paint-order="stroke"/>`).join(""):""}${est?`<text x="20" y="36.6" text-anchor="middle" font-family="Barlow Condensed,Arial Narrow,sans-serif" font-weight="700" font-size="6.2" fill="${lum(c.c3||t.c2)>.4?"#1A1A1A":"#FFFFFF"}">${est}</text>`:""}<path d="${shape}" fill="none" stroke="${c3}" stroke-width="2.4"/></svg>`;
 }
 const KSTY={plain:"Plain",stripes:"Stripes",pinstripes:"Pinstripes",hoops:"Hoops",halves:"Halves",sash:"Sash",chevron:"Chevron",quarters:"Quarters"};
 const TORSO="M30 10 L40 6 Q50 12 60 6 L70 10 L72 32 V90 H28 V32 Z",SL="M30 10 L28 32 L18 38 L10 24 Z",SR="M70 10 L90 24 L82 38 L72 32 Z",SHIRT="M30 10 L40 6 Q50 12 60 6 L70 10 L90 24 L82 38 L72 32 V90 H28 V32 L18 38 L10 24 Z";
@@ -1014,7 +1063,7 @@ function kitSvg(k,full,w){
   if(!full)return `<svg width="${w}" height="${Math.round(w*.94)}" viewBox="0 0 100 94" aria-hidden="true">${shirtG(k)}</svg>`;
   return `<svg width="${w}" height="${Math.round(w*1.72)}" viewBox="0 0 100 172" aria-hidden="true">${shirtG(k)}<path d="M27 93 H73 L77 124 H53 L50 110 L47 124 H23 Z" fill="${esc(k.shorts)}" stroke="rgba(0,0,0,.35)" stroke-width="1.2" stroke-linejoin="round"/><rect x="30" y="131" width="14" height="38" rx="2" fill="${esc(k.socks)}" stroke="rgba(0,0,0,.3)"/><rect x="56" y="131" width="14" height="38" rx="2" fill="${esc(k.socks)}" stroke="rgba(0,0,0,.3)"/><rect x="30" y="134" width="14" height="4" fill="${esc(k.trim)}"/><rect x="56" y="134" width="14" height="4" fill="${esc(k.trim)}"/></svg>`;
 }
-const MOW={plain:"Plain",stripes:"Stripes",wide:"Wide stripes",checks:"Checks",diagonal:"Diagonal",rings:"Rings"};
+const MOW={plain:"Plain",stripes:"Stripes",wide:"Wide stripes",checks:"Checks",diagonal:"Diagonal",rings:"Rings",hoops:"Hoops",diamonds:"Diamonds",waves:"Waves"};
 const GRASS=["#3E8E41","#2F7D32","#4A9A3F","#2C6B35","#5DA046","#3B7A57"];
 function pitchSvg(g,players,kit,w){
   const id="pp"+(++_bid),L=esc(g.lines);let defs="",over="";
@@ -1034,11 +1083,83 @@ function pitchSvg(g,players,kit,w){
 }
 function xiOnPitch(t){const lu=lineup(t,false),Y={GK:96,DF:77,MF:56,FW:32},rows={};lu.forEach(x=>(rows[x.role]=rows[x.role]||[]).push(x));
   const out=[];for(const r in rows)rows[r].forEach((x,i)=>out.push({x:68*(i+1)/(rows[r].length+1),y:Y[r],name:x.p.name.split(" ").slice(-1)[0]}));return out}
-function randomCrest(c2){const em=pick(Object.keys(EMB));return{shape:pick(Object.keys(SHAPES)),pattern:rand()<.35?"plain":pick(Object.keys(CPAT)),emblem:em,text:em==="none"||rand()<.6?"initials":"none",c3:pick(["#FFFFFF","#F2C200","#1A1A1A",c2])}}
+function randomCrest(c2){const em=rand()<.15?"none":pick(Object.keys(EMB).filter(k=>k!=="none"));return{shape:pick(Object.keys(SHAPES)),pattern:rand()<.35?"plain":pick(Object.keys(CPAT)),emblem:em,text:em==="none"||rand()<.6?"initials":"none",c3:pick(["#FFFFFF","#F2C200","#1A1A1A",c2]),stars:rand()<.15?pick([1,2,3]):0,est:rand()<.3?String(1860+Math.floor(rand()*140)):""}}
 function randomKit(c1,c2){const alt=pick(["#FFFFFF","#1A1A1A","#F2C200","#87CEEB","#E86A10","#6A1B9A","#0B6E3C"].filter(c=>c.toLowerCase()!==String(c1).toLowerCase()));
   return{home:{style:rand()<.4?"plain":pick(Object.keys(KSTY)),a:c1,b:c2,sleeves:rand()<.75?c1:c2,trim:c2,shorts:rand()<.5?c2:(rand()<.5?"#FFFFFF":c1),socks:rand()<.5?c1:c2},
     away:{style:rand()<.5?"plain":pick(Object.keys(KSTY)),a:alt,b:c1,sleeves:alt,trim:c1,shorts:rand()<.5?alt:c1,socks:alt}}}
-function randomGround(name){return{name:(String(name||"Town").split(" ")[0])+" "+pick(["Park","Road","Lane","Stadium","Ground","Meadow","Arena","Field"]),grass:pick(GRASS),mow:pick(Object.keys(MOW)),lines:"#FFFFFF"}}
+// Ground look: grass, mow, lines, then boards, trim, floor (run-off), net, netPat, posts, per (boards a side),
+// ads (sponsor id per board, top row left to right then bottom row) and mid (centre circle sponsor id). Old grounds fall back to GDEF.
+const GDEF={boards:"#1E2A44",trim:"#F2C200",floor:"#2B2E35",net:"#F4F6F2",netPat:"square",posts:"#FFFFFF",per:3};
+const BOARDC=["#1E2A44","#14171C","#7A0F1F","#0B4F2E","#1F3F8C","#3A3F47","#F2F2EE"],TRIMC=["#F2C200","#FFFFFF","#C8102E","#1F6FD1","#E86A10"],FLOORC=["#2B2E35","#3A3530","#23303A","#4A4F57"];
+function randomLook(){return{grass:pick(GRASS),mow:pick(Object.keys(MOW)),lines:"#FFFFFF",boards:pick(BOARDC),trim:pick(TRIMC),floor:pick(FLOORC),net:"#F4F6F2",netPat:pick(["square","square","diamond"]),posts:"#FFFFFF"}}
+function randomGround(name){return{name:(String(name||"Town").split(" ")[0])+" "+pick(["Park","Road","Lane","Stadium","Ground","Meadow","Arena","Field"]),...randomLook(),per:3}}
+/* ---------- venues: one shared arena (settings.arena, state.arena) or a ground per club ---------- */
+const arenaOn=()=>!!(state&&state.settings&&state.settings.arena);
+function ensureArena(){if(state.arena)return state.arena;const src=state.teams[0]&&state.teams[0].ground||randomGround(state.name),caps=state.teams.map(x=>x.ground&&x.ground.cap||0).filter(Boolean);
+  state.arena={...JSON.parse(JSON.stringify(src)),name:(String(state.name||"League").split(" ")[0])+" Arena",cap:caps.length?Math.round(caps.reduce((a,b)=>a+b,0)/caps.length/50)*50:CAP0[state.format],ups:[]};return state.arena}
+const venueOf=t=>arenaOn()?ensureArena():t&&t.ground;
+const gndOf=id=>id==="arena"?ensureArena():team(id)&&team(id).ground;
+const allGrounds=()=>[...state.teams.map(t=>t.ground),...(state.arena?[state.arena]:[])].filter(Boolean);
+/* Sponsors: a league-wide list (state.sponsors) of {id,name,bg,fg,img}. Grounds only store sponsor ids, so a logo is saved once.
+   Names are drawn in the pixel font on the boards; uploaded logos sit on top of the board at full sharpness. */
+const SPON_NAMES=["VOLTEK","KICKCO","BREWSTONE","NORDAIR","PIXEL COLA","GRIDLINE","LUMEN BANK","TOPSPIN","OAKMILL","RED KITE","BOLTPAY","SUNWAVE","COPPERJACK","FIZZBOX","HALFTIME","NETWORX","GOLDLEAF","MOTORVIA","SNAPBYTE","CORNER FLAG","BLUE OWL","TURFMAX"];
+const SPON_COLS=[["#FFFFFF","#C8102E"],["#111111","#F2C200"],["#1F6FD1","#FFFFFF"],["#F2C200","#111111"],["#C8102E","#FFFFFF"],["#0B6E3C","#FFFFFF"],["#FFFFFF","#1B2440"],["#6A1B9A","#FFFFFF"],["#E86A10","#111111"],["#87CEEB","#123C8C"]];
+const spons=()=>state.sponsors||(state.sponsors=[]);
+const sponOf=id=>id?spons().find(s=>s.id===id)||null:null;
+function newSponsor(){const used=new Set(spons().map(s=>s.name)),n=SPON_NAMES.find(x=>!used.has(x))||pick(SPON_NAMES)+" "+(spons().length+1),[bg,fg]=pick(SPON_COLS);return{id:uid(),name:n,bg,fg}}
+const sponText=s=>String(s&&s.name||"").toUpperCase().replace(/[^A-Z0-9 ]/g,"").trim();
+function drawSpon(G,s,x,y,w,h){for(let j=0;j<h;j++)for(let i=0;i<w;i++)G.set(x+i,y+j,s.bg||"#FFFFFF");if(s.img)return;
+  let t=sponText(s);if(t&&textW(t)>w-2)t=t.replace(/ /g,"");while(t.length>1&&textW(t)>w-2)t=t.slice(0,-1);
+  if(t)drawText(G,t,x+Math.floor((w-textW(t))/2),y+Math.floor((h-5)/2),s.fg||"#111111")}
+function pxSpon(s){const key="sp|"+[s.name,s.bg,s.fg].join("|");if(PXC.cache.has(key))return PXC.cache.get(key);const G=Grid(53,8);drawSpon(G,{...s,img:null},0,0,53,8);const u=gridURL(G);PXC.cache.set(key,u);return u}
+// Mowing patterns over pitch pixels (0..160 by 0..80), centred on the halfway line and the centre spot
+const MOWF={stripes:(x,y)=>Math.floor((x+5)/10)%2,wide:(x,y)=>Math.floor((x+10)/20)%2,checks:(x,y)=>(Math.floor((x+5)/10)+Math.floor((y+5)/10))%2,diagonal:(x,y)=>Math.floor((x+y)/8)%2,
+  rings:(x,y)=>Math.floor(Math.hypot(x-80,y-40)/6)%2,hoops:(x,y)=>Math.floor((y+54)/9)%2,diamonds:(x,y)=>(Math.floor((x+y)/12)+Math.floor((x-y+240)/12))%2,waves:(x,y)=>Math.floor((x+5+3*Math.sin(y/5))/10)%2};
+// Top-down pixel arena: floor, side boards split into sponsor slots, end boards with the goals set into them, then the pitch.
+// Returns the image and the board and centre rects (canvas pixels) so uploaded logos can be laid over them.
+function pxPitch(g0){
+  const g={...GDEF,...g0},fm=state?state.format:5,per=clamp(+g.per||3,2,4);
+  const ads=[...Array(per*2)].map((_,i)=>sponOf((g.ads||[])[i])),mid=sponOf(g.mid),sk=s=>s&&[s.name,s.bg,s.fg,!!s.img];
+  const key="pt|"+fm+"|"+JSON.stringify([g.grass,g.mow,g.lines,g.boards,g.trim,g.floor,g.net,g.netPat,g.posts,per,ads.map(sk),sk(mid)]);
+  if(PXC.cache.has(key))return PXC.cache.get(key);
+  const M=3,BH=12,EW=7,PW=161,PH=81,W=M*2+EW*2+PW,H=M*2+BH*2+PH,X0=M+EW,Y0=M+BH,G=Grid(W,H),cx=X0+80,cy=Y0+40;
+  const FL=[g.floor,drk(g.floor,.14)],BD=[lit(g.boards,.18),g.boards,drk(g.boards,.3)],TR=[lit(g.trim,.2),g.trim,drk(g.trim,.35)];
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++)G.set(x,y,(x*3+y*5)%7===0?FL[1]:FL[0]);
+  const band=y0=>{for(let x=M;x<W-M;x++){G.set(x,y0,TR[0]);G.set(x,y0+1,TR[1]);for(let r=2;r<BH-2;r++)G.set(x,y0+r,r===2?BD[0]:BD[1]);G.set(x,y0+BH-2,TR[1]);G.set(x,y0+BH-1,TR[2])}};
+  band(M);band(Y0+PH);
+  for(const ex of [M,X0+PW])for(let y=Y0;y<Y0+PH;y++)for(let i=0;i<EW;i++){const outer=ex===M?i===0:i===EW-1,inner=ex===M?i===EW-1:i===0;G.set(ex+i,y,outer?TR[2]:inner?TR[1]:(y+i)%4?BD[1]:BD[2])}
+  const rects=[];
+  for(let side=0;side<2;side++){const yb=(side?Y0+PH:M)+2;for(let i=0;i<per;i++){const xs=X0+Math.round(i*(PW+1)/per),xe=X0+Math.round((i+1)*(PW+1)/per)-1,r={x:xs,y:yb,w:xe-xs,h:BH-4};
+    if(i<per-1)for(let j=0;j<r.h;j++)G.set(xe,yb+j,BD[2]);const sp=ads[side*per+i];if(sp)drawSpon(G,sp,r.x,r.y,r.w,r.h);rects.push(r)}}
+  const gr=g.grass,GL=lit(gr,.07),GD=drk(gr,.06),mf=MOWF[g.mow];
+  for(let y=0;y<PH;y++)for(let x=0;x<PW;x++){let c=mf?(mf(x,y)?GL:GD):gr;if(y===0)c=drk(c,.28);else if(y===1)c=drk(c,.12);G.set(X0+x,Y0+y,c)}
+  const L=g.lines,lx0=X0+2,lx1=X0+PW-3,ly0=Y0+2,ly1=Y0+PH-3,P=(x,y)=>G.set(x,y,L);
+  const ring=(ox,oy,r,keep)=>{for(let y=oy-r-1;y<=oy+r+1;y++)for(let x=ox-r-1;x<=ox+r+1;x++)if(Math.abs(Math.hypot(x-ox,y-oy)-r)<.5&&(!keep||keep(x,y)))P(x,y)};
+  for(let x=lx0;x<=lx1;x++){P(x,ly0);P(x,ly1)}for(let y=ly0;y<=ly1;y++){P(lx0,y);P(lx1,y);P(cx,y)}
+  ring(cx,cy,11);P(cx-1,cy);P(cx+1,cy);
+  if(fm===5){ring(lx0,cy,17,x=>x>lx0);ring(lx1,cy,17,x=>x<lx1);P(lx0+12,cy);P(lx1-12,cy)}
+  else{const bd=fm===7?18:24,bh=fm===7?40:48,gd=fm===7?0:8;
+    const box=(x0,dir,d,h)=>{const ya=cy-(h>>1),yb=cy+(h>>1);for(let y=ya;y<=yb;y++)P(x0+dir*d,y);for(let i=0;i<=d;i++){P(x0+dir*i,ya);P(x0+dir*i,yb)}};
+    [[lx0,1],[lx1,-1]].forEach(([x0,dir])=>{box(x0,dir,bd,bh);if(gd)box(x0,dir,gd,24);const sx=x0+dir*(bd-6);P(sx,cy);ring(sx,cy,9,x=>dir>0?x>x0+bd:x<x0-bd)})}
+  [[lx0,ly0],[lx1,ly0],[lx0,ly1],[lx1,ly1]].forEach(([ox,oy])=>ring(ox,oy,3,(x,y)=>(x-ox)*(cx-ox)>0&&(y-oy)*(cy-oy)>0));
+  const GH=fm===5?14:16,GDp=5,ya=cy-(GH>>1),yb=cy+(GH>>1),hole=drk(g.floor,.45),NC=g.netPat==="plain"?mix(g.net,hole,.45):g.net;
+  const net=(x,y)=>g.netPat==="plain"?true:g.netPat==="diamond"?(x+y)%3===0||(x-y+300)%3===0:x%2===0||y%2===0;
+  [[lx0,-1],[lx1,1]].forEach(([gx,dir])=>{for(let y=ya;y<=yb;y++)for(let i=1;i<=GDp;i++){const x=gx+dir*i;G.set(x,y,net(x,y)?NC:hole)}
+    for(let i=0;i<=GDp;i++){G.set(gx+dir*i,ya,g.posts);G.set(gx+dir*i,yb,g.posts)}for(let y=ya;y<=yb;y++)G.set(gx+dir*GDp,y,drk(g.posts,.25))});
+  if(mid&&!mid.img){const t=sponText(mid).slice(0,12);if(t){const w=Math.min(textW(t)+6,70);drawSpon(G,{...mid,name:t},cx-(w>>1),cy-4,w,9)}}
+  const out={url:gridURL(G),W,H,X0,Y0,PW,PH,rects,midBox:{x:cx-14,y:cy-14,w:29,h:29}};PXC.cache.set(key,out);return out;
+}
+function pxMowThumb(grass,mow){const key="mt|"+grass+"|"+mow;if(PXC.cache.has(key))return PXC.cache.get(key);const G=Grid(54,28),mf=MOWF[mow],GL=lit(grass,.09),GD=drk(grass,.08);
+  for(let y=0;y<28;y++)for(let x=0;x<54;x++){let c=mf?(mf(x*3,y*3)?GL:GD):grass;if(x===0||y===0||x===53||y===27||x===27||Math.abs(Math.hypot(x-27,y-14)-5)<.5)c="#F4F6F2";G.set(x,y,c)}const u=gridURL(G);PXC.cache.set(key,u);return u}
+function stadiumHTML(g0,players,kit){
+  if(!pxOn())return `<div class="pitchwrap">${pitchSvg(g0,players||[],kit)}</div>`;
+  const g={...GDEF,...g0},P=pxPitch(g),pc=(v,t)=>+(v/t*100).toFixed(3)+"%",box=r=>`left:${pc(r.x,P.W)};top:${pc(r.y,P.H)};width:${pc(r.w,P.W)};height:${pc(r.h,P.H)}`;
+  const ov=P.rects.map((r,i)=>{const sp=sponOf((g.ads||[])[i]);return sp&&sp.img?`<img class="spimg" src="${esc(sp.img)}" style="${box(r)}" alt="${esc(sp.name)}">`:""}).join("");
+  const m=sponOf(g.mid),mo=m&&m.img?`<img class="spimg mid" src="${esc(m.img)}" style="${box(P.midBox)}" alt="${esc(m.name)}">`:"";
+  const pl2=(players||[]).map(p=>`<span class="spl" style="left:${pc(P.X0+(105-p.y)/105*P.PW,P.W)};top:${pc(P.Y0+p.x/68*P.PH,P.H)}"><img src="${pxKit(kit,false)}" alt=""><span>${esc(p.name)}</span></span>`).join("");
+  return `<div class="stad"><img class="pt" src="${P.url}" alt="${esc(g.name||"Pitch")}">${ov}${mo}${pl2}</div>`;
+}
+function stadiumPreview(id){const t=id==="arena"?null:team(id),g=gndOf(id);return `${stadiumHTML(g,t?xiOnPitch(t):null,t?t.kit.home:null)}<span class="muted">${esc(g.name)}${t?", strongest lineup":""}</span>`}
 const clubLabel=(t,size)=>`<span class="club">${badge(t,size)}${esc(t.name)}</span>`;
 function stars(r,editId){
   const n=starsOf(r);let h=`<span class="stars" ${editId?"":`aria-label="${n} of 5"`}>`;
@@ -1080,7 +1201,7 @@ function matchCard(f){
   const H=team(f.h),A=team(f.a),hw=f.played&&f.hg>f.ag,aw=f.played&&f.ag>f.hg;
   const side=(t,win,lose)=>`<button class="mc-team ${win?"win":lose?"lose":""}" data-act="club" data-id="${t.id}">${badge(t,44)}<span>${esc(t.name)}</span></button>`;
   const evs=tid=>f.ev.filter(e=>e.t===tid).map(e=>e.inj?`<li><span class="ii" aria-hidden="true">+</span><span>${esc(pname(e.inj))} <span class="muted">${e.m}', out ${e.n}</span></span></li>`:`<li>${goalIcon}<span>${esc(pname(e.s))} <span class="muted">${e.m}'${e.a?`, ${esc(pname(e.a))}`:""}</span></span></li>`).join("");
-  return `<article class="mc"><div class="mc-bar" style="background:linear-gradient(90deg,${esc(H.c1)} 0 50%,${esc(A.c1)} 50% 100%)"></div><div class="mc-venue">${esc(H.ground?H.ground.name:"")}${derbyOf(f.h,f.a)?` <b class="derby">${esc(derbyOf(f.h,f.a).name)}</b>`:""}</div>
+  return `<article class="mc"><div class="mc-bar" style="background:linear-gradient(90deg,${esc(H.c1)} 0 50%,${esc(A.c1)} 50% 100%)"></div><div class="mc-venue">${esc((venueOf(H)||{}).name||"")}${derbyOf(f.h,f.a)?` <b class="derby">${esc(derbyOf(f.h,f.a).name)}</b>`:""}</div>
   <div class="mc-main">${side(H,hw,aw)}<div class="mc-score ${f.played?"":"ko"}" ${f.played?`aria-label="${f.hg} to ${f.ag}"`:""}>${f.played?`<span>${f.hg}</span><span>${f.ag}</span>`:"<span>v</span>"}</div>${side(A,aw,hw)}</div>
   ${f.pen?`<div class="mc-ev none">${esc(team(f.w).name)} win ${Math.max(...f.pen)}–${Math.min(...f.pen)} on penalties</div>`:""}${f.played&&f.ev.length?`<div class="mc-ev"><ul>${evs(f.h)}</ul><ul class="away">${evs(f.a)}</ul></div>`:f.played?`<div class="mc-ev none">No goals</div>`:""}${(()=>{const c={};f.ev.forEach(e=>{if(e.s)c[e.s]=(c[e.s]||0)+1});const ht=Object.keys(c).filter(k=>c[k]>=3);return ht.length?`<div class="mc-motm"><span class="muted">Hat-trick</span> ${ht.map(k=>`<button class="linkbtn inl" data-act="player" data-id="${k}">${esc(pname(k))}</button> <b class="num">${c[k]}</b>`).join(", ")}</div>`:""})()}${f.motm&&pl(f.motm.id)?`<div class="mc-motm"><span class="muted">Player of the match</span> <button class="linkbtn inl" data-act="player" data-id="${f.motm.id}">${esc(pname(f.motm.id))}</button> <b class="num">${f.motm.r.toFixed(1)}</b></div>`:""}</article>`;
 }
@@ -1118,13 +1239,13 @@ function viewPlayers(){
 }
 function viewClubs(){
   const tbl=computeTable();
-  return `<h2>Clubs</h2><div class="clubs">${state.teams.map(t=>{const pos=tbl.findIndex(r=>r.id===t.id)+1,ti=titles(t.id).length;return `<button class="clubcard" data-act="club" data-id="${t.id}">${badge(t,48)}<span><span class="nm">${esc(t.name)}</span><br><span class="sub">${ordinal(pos)} in the table, ${t.players.length} players</span><br><span class="sub">${stars(avgRating(t))}</span>${pxOn()?trophyRow(t):ti||cupsOf(t.id).length?`<br>${trophies(t.id,24)} ${cupTrophies(t.id,24)}`:""}</span></button>`}).join("")}</div><div style="margin-top:18px">${state.teams.length>1?h2hHTML():""}</div>`;
+  return `<h2>Clubs</h2><div class="clubs">${state.teams.map(t=>{const pos=tbl.findIndex(r=>r.id===t.id)+1,ti=titles(t.id).length;return `<button class="clubcard" data-act="club" data-id="${t.id}">${badge(t,48)}<span><span class="nm">${esc(t.name)}</span><br><span class="sub">${ordinal(pos)} in the table, ${t.players.length} players</span><br><span class="sub">${stars(avgRating(t))}</span></span></button>`}).join("")}</div><div style="margin-top:18px">${state.teams.length>1?h2hHTML():""}</div>`;
 }
 function viewClub(id){
   const t=team(id);if(!t){view="clubs";return viewClubs()}
-  const ti=titles(id),tabs=[["squad","Squad"],["cab","Trophy cabinet"],["hist","History"],["legends","Legends"],["h2h","Head to head"],["badge","Badge"],["kit","Kits"],["ground","Ground"]];
-  const body=clubTab==="cab"?clubCabinet(t):clubTab==="legends"?legendsHTML(t):clubTab==="h2h"?h2hHTML(t.id):clubTab==="hist"?clubHistoryPanel(t):clubTab==="badge"?badgeEditor(t):clubTab==="kit"?kitEditor(t):clubTab==="ground"?groundEditor(t):squadPanel(t);
-  return `<div class="clubhead">${badge(t,84)}<span class="hdkit">${kitSvg(t.kit.home,false,58)}</span><div><h1 style="margin:0">${esc(t.name)}</h1><p style="margin:.4em 0 0">${ti.length?`${trophies(id,44,true)} <span class="muted">Season ${ti.join(", ")}</span>`:`<span class="muted">No titles yet</span>`}${cupsOf(id).length?` ${cupTrophies(id,44,true)} <span class="muted">Season ${cupsOf(id).join(", ")}</span>`:""}</p><p class="muted" style="margin:.2em 0 0">${esc(t.ground.name)}${t.ground.cap?`, capacity ${capText(t.ground.cap)}`:""}. Average ability ${avgRating(t)}</p>${mgrOf(t)?`<p style="margin:.3em 0 0"><span class="muted">Manager:</span> ${mgrLink(mgrOf(t))} <span class="muted">${STYLES[mgrOf(t).style]}. Tactics ${mgrOf(t).tac}, coaching ${mgrOf(t).coa}, scouting ${mgrOf(t).sco}</span></p>`:""}${(()=>{const rv=rivalOf(id),o=clubRuns()[id],cur=o&&(o.curw>1?runText(o.curw,"w"):o.curl>1?runText(o.curl,"l"):o.curu>2?runText(o.curu,"u"):"");return (rv?`<p style="margin:.3em 0 0"><span class="muted">Rivals:</span> <button class="linkbtn inl" data-act="club" data-id="${rv.a===id?rv.b:rv.a}">${esc(team(rv.a===id?rv.b:rv.a).name)}</button> <b class="derby">${esc(rv.name)}</b></p>`:"")+(cur?`<p class="muted" style="margin:.2em 0 0">On a run of ${cur}. Best ever: ${runText(o.w.n,"w")}, ${runText(o.u.n,"u")}.</p>`:o&&o.w.n?`<p class="muted" style="margin:.2em 0 0">Best ever: ${runText(o.w.n,"w")}, ${runText(o.u.n,"u")}.</p>`:"")})()}</div></div>
+  const ti=titles(id),tabs=[["squad","Squad"],["cab","Trophy cabinet"],["hist","History"],["legends","Legends"],["h2h","Head to head"],["badge","Badge"],["kit","Kits"],...(arenaOn()?[]:[["ground","Ground"]])];
+  const body=clubTab==="cab"?clubCabinet(t):clubTab==="legends"?legendsHTML(t):clubTab==="h2h"?h2hHTML(t.id):clubTab==="hist"?clubHistoryPanel(t):clubTab==="badge"?badgeEditor(t):clubTab==="kit"?kitEditor(t):clubTab==="ground"&&!arenaOn()?groundEditor(t):squadPanel(t);
+  return `<div class="clubhead">${badge(t,84)}<span class="hdkit">${kitSvg(t.kit.home,false,58)}</span><div><h1 style="margin:0">${esc(t.name)}</h1><p style="margin:.4em 0 0">${ti.length?`${trophies(id,44,true)} <span class="muted">Season ${ti.join(", ")}</span>`:`<span class="muted">No titles yet</span>`}${cupsOf(id).length?` ${cupTrophies(id,44,true)} <span class="muted">Season ${cupsOf(id).join(", ")}</span>`:""}</p><p class="muted" style="margin:.2em 0 0">${arenaOn()?"":`${esc(t.ground.name)}${t.ground.cap?`, capacity ${capText(t.ground.cap)}`:""}. `}Average ability ${avgRating(t)}</p>${mgrOf(t)?`<p style="margin:.3em 0 0"><span class="muted">Manager:</span> ${mgrLink(mgrOf(t))} <span class="muted">${STYLES[mgrOf(t).style]}. Tactics ${mgrOf(t).tac}, coaching ${mgrOf(t).coa}, scouting ${mgrOf(t).sco}</span></p>`:""}${(()=>{const rv=rivalOf(id),o=clubRuns()[id],cur=o&&(o.curw>1?runText(o.curw,"w"):o.curl>1?runText(o.curl,"l"):o.curu>2?runText(o.curu,"u"):"");return (rv?`<p style="margin:.3em 0 0"><span class="muted">Rivals:</span> <button class="linkbtn inl" data-act="club" data-id="${rv.a===id?rv.b:rv.a}">${esc(team(rv.a===id?rv.b:rv.a).name)}</button> <b class="derby">${esc(rv.name)}</b></p>`:"")+(cur?`<p class="muted" style="margin:.2em 0 0">On a run of ${cur}. Best ever: ${runText(o.w.n,"w")}, ${runText(o.u.n,"u")}.</p>`:o&&o.w.n?`<p class="muted" style="margin:.2em 0 0">Best ever: ${runText(o.w.n,"w")}, ${runText(o.u.n,"u")}.</p>`:"")})()}</div></div>
   <div class="chips tabs" role="tablist">${tabs.map(([k,l])=>`<button class="chip ${clubTab===k?"on":""}" role="tab" aria-selected="${clubTab===k}" data-act="ctab" data-v="${k}">${l}</button>`).join("")}</div>${body}`;
 }
 function squadPanel(t){
@@ -1143,7 +1264,7 @@ const opt=(t,act,k,v,label,svg,on)=>`<button class="opt ${on?"on":""}" aria-pres
 function previewHTML(t){
   if(clubTab==="badge")return badge(t,150);
   if(clubTab==="kit")return `${kitSvg(t.kit[kitSide],true,130)}<span class="muted">${kitSide==="home"?"Home":"Away"} kit</span>`;
-  if(clubTab==="ground")return `<div class="pitchwrap">${pitchSvg(t.ground,xiOnPitch(t),t.kit.home)}</div><span class="muted">${esc(t.ground.name)}, strongest lineup</span>`;
+  if(clubTab==="ground")return stadiumPreview(t.id);
   return "";
 }
 function badgeEditor(t){const c={...t.crest,img:null};const hasImg=!!t.crest.img;
@@ -1157,8 +1278,9 @@ function badgeEditor(t){const c={...t.crest,img:null};const hasImg=!!t.crest.img
   <h4>Shape</h4><div class="opts">${Object.keys(SHAPES).map(v=>opt(t,"crest","shape",v,SHAPE_L[v],badge({...t,crest:{...c,shape:v}},34),c.shape===v)).join("")}</div>
   <h4>Pattern</h4><div class="opts">${Object.keys(CPAT).map(v=>opt(t,"crest","pattern",v,CPAT[v],badge({...t,crest:{...c,pattern:v}},34),c.pattern===v)).join("")}</div>
   <h4>Emblem</h4><div class="opts">${Object.keys(EMB).map(v=>opt(t,"crest","emblem",v,EMB[v],badge({...t,crest:{...c,emblem:v}},34),c.emblem===v)).join("")}</div>
-  <h4>Lettering</h4><div class="opts">${[["initials","Initials"],["none","None"]].map(([v,l])=>opt(t,"crest","text",v,l,badge({...t,crest:{...c,text:v}},34),c.text===v)).join("")}</div>
-  <div class="toolbar"><button class="btn" data-act="rand-crest" data-id="${t.id}">Randomise badge</button><label class="btn" style="display:inline-flex;align-items:center">Upload image<input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" data-upload="${t.id}" style="display:none"></label>${hasImg?`<button class="btn" data-act="crest-img-clear" data-id="${t.id}">Remove image</button>`:""}</div>${hasImg?`<p class="muted">Your uploaded image is in use. Remove it to go back to the badge builder.</p>`:`<p class="muted">PNG with a transparent background works best. Images are resized to keep save files small.</p>`}</div></div>`;
+  <h4>Lettering</h4><div class="opts">${[["initials","Auto"],["top","Top"],["middle","Middle"],["bottom","Bottom"],["none","None"]].map(([v,l])=>opt(t,"crest","text",v,l,badge({...t,crest:{...c,text:v}},34),(c.text||"initials")===v)).join("")}</div>
+  <h4>Extras</h4><div class="fields"><label class="f">Stars on top<select data-cf="stars" data-id="${t.id}">${[0,1,2,3,4,5].map(n=>`<option value="${n}" ${(+c.stars||0)===n?"selected":""}>${n?n:"None"}</option>`).join("")}</select></label><label class="f">Founded, on a ribbon<input type="text" inputmode="numeric" data-cf="est" data-id="${t.id}" value="${esc(c.est||"")}" maxlength="4" placeholder="Year" style="width:90px"></label></div>
+  <div class="toolbar"><button class="btn" data-act="rand-crest" data-id="${t.id}">Randomise badge</button><label class="btn" style="display:inline-flex;align-items:center">Upload image<input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" data-upload="${t.id}" style="display:none"></label>${hasImg?`<button class="btn" data-act="crest-img-clear" data-id="${t.id}">Remove image</button>`:""}</div>${hasImg?`<p class="muted">Your uploaded image is in use. Remove it to go back to the badge builder.</p>`:`<p class="muted">Your own badge: a PNG with a transparent background, square, ideally 256 × 256 pixels. Bigger images are shrunk to keep saves small. Pixel art made at 26 × 30 is scaled up and stays sharp.</p>`}</div></div>`;
 }
 function kitEditor(t){const k=t.kit[kitSide];
   const col=(f,l)=>`<label class="f">${l}<input type="color" data-kf="${f}" data-id="${t.id}" value="${esc(k[f])}"></label>`;
@@ -1168,12 +1290,33 @@ function kitEditor(t){const k=t.kit[kitSide];
   <h4>Colours</h4><div class="fields">${col("a","Shirt")}${col("b","Pattern")}${col("sleeves","Sleeves")}${col("trim","Trim")}${col("shorts","Shorts")}${col("socks","Socks")}</div>
   <div class="toolbar"><button class="btn" data-act="kit-badge" data-id="${t.id}">Use badge colours</button><button class="btn" data-act="rand-kit" data-id="${t.id}">Randomise ${kitSide} kit</button></div></div></div>`;
 }
-function groundEditor(t){const g=t.ground;
-  return `${g.cap?`<div class="card" style="margin-bottom:14px"><h3 style="margin-top:0">${esc(g.name)}, capacity ${capText(g.cap)}</h3>${(g.ups||[]).length?`<table><tbody>${[...g.ups].reverse().map(u=>`<tr><td class="muted">Season ${u.s}</td><td>${u.why==="title"?"New stand after the title":"Expanded after the cup win"}</td><td class="r num">${capText(u.from)} to ${capText(u.to)}</td></tr>`).join("")}</tbody></table>`:`<p class="muted">Crowds grow a little after every top half finish. A title or a cup win pays for a new stand. Bigger crowds give a slightly stronger home advantage.</p>`}</div>`:""}<div class="editor"><div class="card pv" id="pv">${previewHTML(t)}</div><div class="card ctl">
-  <h4>Ground</h4><div class="fields"><label class="f">Ground name<input type="text" data-gf="name" data-id="${t.id}" value="${esc(g.name)}" maxlength="40" style="min-width:220px"></label></div>
-  <h4>Grass</h4><div class="opts" style="align-items:center">${GRASS.map(c=>`<button class="sw ${g.grass.toLowerCase()===c.toLowerCase()?"on":""}" style="background:${c}" data-act="grass" data-v="${c}" data-id="${t.id}" aria-label="Grass ${c}"></button>`).join("")}<label class="f" style="margin-left:8px">Custom<input type="color" data-gf="grass" data-id="${t.id}" value="${esc(g.grass)}"></label><label class="f">Lines<input type="color" data-gf="lines" data-id="${t.id}" value="${esc(g.lines)}"></label></div>
-  <h4>Mowing pattern</h4><div class="opts">${Object.keys(MOW).map(v=>opt(t,"mow","mow",v,MOW[v],pitchSvg({...g,mow:v},[],null,44),g.mow===v)).join("")}</div>
-  <div class="toolbar"><button class="btn" data-act="rand-ground" data-id="${t.id}">Randomise pitch</button></div></div></div>`;
+function groundEditor(t){return stadiumEditor(t.ground,t.id)}
+function viewArena(){const g=ensureArena();return `<h2>${esc(g.name)}</h2><p class="muted" style="margin-top:-.4em">Every club plays here, so there is no home advantage. Capacity ${capText(g.cap||0)}.</p>${stadiumEditor(g,"arena")}`}
+const UPS_L={title:"New stand after the title",cup:"Expanded after the cup win",league:"Expanded as the league grew"};
+function stadiumEditor(g0,id){
+  const g={...GDEF,...g0},per=clamp(+g.per||3,2,4),L=spons(),ar=id==="arena";
+  const col=(k,l)=>`<label class="f">${l}<input type="color" data-gf="${k}" data-id="${id}" value="${esc(g[k])}"></label>`;
+  const seg=(k,list)=>`<div class="seg" style="margin-bottom:6px">${list.map(([v,l])=>`<button class="${String(g[k])===String(v)?"on":""}" data-act="gset" data-k="${k}" data-v="${v}" data-id="${id}">${l}</button>`).join("")}</div>`;
+  const sel=(attr,cur,label)=>`<label class="f">${label}<select ${attr} data-id="${id}"><option value="">Empty</option>${L.map(s=>`<option value="${s.id}" ${s.id===cur?"selected":""}>${esc(s.name)}</option>`).join("")}</select></label>`;
+  const cap=g.cap?`<div class="card" style="margin-bottom:14px"><h3 style="margin-top:0">${esc(g.name)}, capacity ${capText(g.cap)}</h3>${(g.ups||[]).length?`<table><tbody>${[...g.ups].reverse().slice(0,12).map(u=>`<tr><td class="muted">Season ${u.s}</td><td>${UPS_L[u.why]||UPS_L.cup}</td><td class="r num">${capText(u.from)} to ${capText(u.to)}</td></tr>`).join("")}</tbody></table>`:`<p class="muted">${ar?"The arena grows a little every season.":"Crowds grow a little after every top half finish. A title or a cup win pays for a new stand. Bigger crowds give a slightly stronger home advantage."}</p>`}</div>`:"";
+  const chip=s=>s.img?`<span class="spchip" style="background:${esc(s.bg)}"><img src="${esc(s.img)}" alt=""></span>`:pxOn()?`<img class="spchip px" src="${pxSpon(s)}" alt="">`:`<span class="spchip" style="background:${esc(s.bg)};color:${esc(s.fg)}">${esc(s.name)}</span>`;
+  return `<div class="card stadpv" id="pv">${stadiumPreview(id)}</div>
+  <div class="setgrid">${ar?"":cap.replace('class="card" style="margin-bottom:14px"','class="card"')}
+  <section class="card"><h3>Pitch</h3><div class="fields"><label class="f">${ar?"Arena":"Ground"} name<input type="text" data-gf="name" data-id="${id}" value="${esc(g.name)}" maxlength="40" style="min-width:220px"></label></div>
+    <h4>Grass</h4><div class="opts" style="align-items:center">${GRASS.map(c=>`<button class="sw ${String(g.grass).toLowerCase()===c.toLowerCase()?"on":""}" style="background:${c}" data-act="grass" data-v="${c}" data-id="${id}" aria-label="Grass ${c}"></button>`).join("")}${col("grass","Custom")}${col("lines","Lines")}</div>
+    <h4>Mowing pattern</h4><div class="opts">${Object.keys(MOW).map(v=>opt({id},"mow","mow",v,MOW[v],pxOn()?`<img class="px" src="${pxMowThumb(g.grass,v)}" width="108" alt="">`:pitchSvg({...g,mow:v},[],null,44),g.mow===v)).join("")}</div>
+    <div class="toolbar"><button class="btn" data-act="rand-ground" data-id="${id}">Randomise the look</button></div></section>
+  <section class="card"><h3>Boards and goals</h3><p class="muted" style="margin:0 0 4px">Boards a side</p>${seg("per",[[2,"2"],[3,"3"],[4,"4"]])}
+    <div class="fields">${col("boards","Boards")}${col("trim","Board trim")}${col("floor","Floor")}</div>
+    <div class="fields">${col("net","Net")}${col("posts","Goal frame")}</div><p class="muted" style="margin:8px 0 4px">Net pattern</p>${seg("netPat",[["square","Square"],["diamond","Diamond"],["plain","Solid"]])}</section>
+  <section class="card"><h3>Sponsor boards</h3>${L.length?`<div class="fields">${[...Array(per*2)].map((_,i)=>sel(`data-gad="${i}"`,(g.ads||[])[i]||"",`${i<per?"Top":"Bottom"} board ${i%per+1}`)).join("")}${sel("data-gmid",g.mid||"","Centre circle")}</div>`:`<p class="muted">Add a sponsor below first.</p>`}
+    <div class="toolbar"><button class="btn" data-act="spon-fill" data-id="${id}">Fill every board</button><button class="btn" data-act="spon-clear" data-id="${id}">Clear the boards</button></div></section>
+  <section class="card"><h3>Sponsors</h3><p class="muted" style="margin-top:0">One list for the whole league. Names are painted on the boards in pixel letters. Upload a logo to show it instead.</p>
+    ${L.map(s=>`<div class="sprow">${chip(s)}<label class="f">Name<input type="text" data-spn="name" data-id="${s.id}" value="${esc(s.name)}" maxlength="16" style="width:130px"></label><label class="f">Board<input type="color" data-spn="bg" data-id="${s.id}" value="${esc(s.bg)}"></label><label class="f">Text<input type="color" data-spn="fg" data-id="${s.id}" value="${esc(s.fg)}"></label>
+      <label class="btn sm" style="display:inline-flex;align-items:center">${s.img?"New logo":"Logo"}<input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" data-spimg="${s.id}" style="display:none"></label>${s.img?`<button class="btn sm" data-act="spon-img-clear" data-v="${s.id}">Remove logo</button>`:""}<button class="btn sm danger" data-act="spon-del" data-v="${s.id}">Delete</button></div>`).join("")}
+    <div class="toolbar"><button class="btn" data-act="spon-add">Add a sponsor</button><button class="btn" data-act="spon-add5">Add 5 made-up sponsors</button></div>
+    <p class="muted">Logos: PNG, ideally 512 × 128 pixels (4 to 1) for the boards and 256 × 256 (square) for the centre circle. A transparent background lets the board colour show through. Images are shrunk to keep saves small.</p></section>
+  </div>`;
 }
 /* ---------- domestic cup ----------
    state.cup: {season, sched:[matchday index per round], rounds:[{ties,byes}], cur, winner}
@@ -1407,7 +1550,7 @@ function legendsHTML(t){
 const CAP0={5:900,7:2600,11:14000};
 function ensureGround(t){const g=t.ground;if(g.cap)return;g.cap=Math.round(CAP0[state.format]*(.75+rand()*.5)/50)*50;g.ups=[]}
 // End of season: success grows the crowd, and big wins pay for a new stand
-function growGrounds(tbl,h){tbl.forEach((r,i)=>{const t=team(r.id);if(!t)return;ensureGround(t);const g=t.ground,why=i===0?"title":h.cup&&h.cup.winner.id===r.id?"cup":i<tbl.length/2?"":null;
+function growGrounds(tbl,h){if(arenaOn()){const A=ensureArena();A.cap=A.cap||CAP0[state.format];A.ups=A.ups||[];const old=A.cap;A.cap=Math.round(A.cap*1.04/50)*50;if(A.cap>old)A.ups.push({s:h.season,from:old,to:A.cap,why:"league"});return}tbl.forEach((r,i)=>{const t=team(r.id);if(!t)return;ensureGround(t);const g=t.ground,why=i===0?"title":h.cup&&h.cup.winner.id===r.id?"cup":i<tbl.length/2?"":null;
   const f=why==="title"?1.2:why==="cup"?1.1:why===""?1.03:1;if(f>1){const old=g.cap;g.cap=Math.round(g.cap*f/50)*50;if(why)g.ups.push({s:h.season,from:old,to:g.cap,why})}})}
 const capText=n=>n.toLocaleString("en-GB");
 // Home advantage scales a little with crowd size compared with the league average
@@ -1507,8 +1650,6 @@ function playerCabinet(p){return cabinetPanel(p.name,playerGroups(p))}
 function playerGroups(p){const t=team(p.teamId)||state.teams[0];return [{label:"Championship rings",short:"Rings",ghost:()=>pxRing(t.c1,state.season,t.id),gw:62,items:ringsOf(p).map(r=>({img:()=>pxRing(r.c1,r.season,r.tid),w:62,s:r.season,who:r.team,k:"ring",c1:r.c1}))},...(cupGroupOn()?[{label:`${cupName()} medals`,short:"Cup",ghost:ghostT("cup"),items:cupMedalsOf(p).map(a=>cabT("cup",a.season))}]:[]),{aw:"tots",label:"Team of the season",short:"TOTS",verb:"Picked",items:(p.tots||[]).map(s=>cabT("tots",s))},...awardGroups(awardsOf(p),playerGhosts(p)),{aw:"hof",label:"Hall of Fame",short:"Hall of Fame",verb:"Inducted",items:p.hof?[cabT("hof",p.hof)]:[]},{label:"Greatest of all time",short:"GOAT",verb:"Crowned",items:p.goat?[cabT("goat",p.goat)]:[]}]}
 function managerCabinet(m){return cabinetPanel(m.name,[...compGroups(m.hist.filter(r=>r.title).map(r=>cabT("league",r.season,r.team)),m.hist.filter(r=>r.cup).map(r=>cabT("cup",r.season,r.team))),...awardGroups(m.awards||[],m.retired?[]:["mos"])])}
 // Small league and cup row for club cards, like a cabinet in miniature
-function trophyRow(t){if(!pxOn())return "";const g=compGroups(titles(t.id),cupsOf(t.id)),kind=["league","cup"];
-  return `<span class="trow">${g.map((x,i)=>{const n=x.items.length,tip=n?[x.label,wonN(n),`${n>1?"Seasons":"Season"} ${x.items.join(", ")}`]:[x.label,"Not won yet"];return `<span class="tmini${n?"":" sil"}"${tipAttr(tip,false)} aria-label="${esc(tip.join(". "))}"><img class="px" src="${pxTrophy(kind[i])}" width="23" alt="">${n?`<b>×${n}</b>`:""}</span>`}).join("")}</span>`}
 const pTabs=()=>`<div class="chips tabs" role="tablist" style="margin-bottom:14px">${[["car","Career"],["cab","Trophy cabinet"]].map(([k,l])=>`<button class="chip ${pTab===k?"on":""}" role="tab" aria-selected="${pTab===k}" data-act="ptab" data-v="${k}">${l}</button>`).join("")}</div>`;
 /* ---------- season review ---------- */
 function viewReview(season){
@@ -1643,7 +1784,7 @@ function viewHistory(){
   return `<h2>History</h2>${tabs}${body}`;
 }
 // Settings tabs: [key, label, cards in order]. The tab in view is kept for the session only.
-const SET_TABS=[["league","League",["league","matches","cup","mgrs","trades"]],["players","Players",["players","draft","pot"]],["awards","Awards",["night","poty","custom","trophies"]],["look","Look",["look","rings"]],["app","App",["file","version","delete"]]];
+const SET_TABS=[["league","League",["league","venue","matches","cup","mgrs","trades"]],["players","Players",["players","draft","pot"]],["awards","Awards",["night","poty","custom","trophies"]],["look","Look",["look","rings"]],["app","App",["file","version","delete"]]];
 let setTab="league";
 function viewSettings(){
   const S=state.settings,th=S.theme;
@@ -1656,6 +1797,7 @@ function viewSettings(){
     look:()=>`<section class="card"><h3>Appearance</h3><div class="seg" style="margin-bottom:10px">${[["pixel","Pixel art"],["smooth","Smooth"]].map(([k,l])=>`<button class="${(th.art||"pixel")===k?"on":""}" data-act="theme-art" data-v="${k}">${l}</button>`).join("")}</div><div class="seg">${[["system","Match device"],["light","Light"],["dark","Dark"]].map(([k,l])=>`<button class="${th.mode===k?"on":""}" data-act="theme-mode" data-v="${k}">${l}</button>`).join("")}</div>
     <h4 style="margin:16px 0 8px">Colour presets</h4><div class="opts">${PRE.map(([n,a,b])=>`<button class="opt ${th.turf.toLowerCase()===a.toLowerCase()&&th.accent.toLowerCase()===b.toLowerCase()?"on":""}" data-act="theme-preset" data-v="${a}|${b}"><span class="pre" style="background:linear-gradient(135deg,${a} 0 62%,${b} 62% 100%)"></span><span>${n}</span></button>`).join("")}</div>
     <div class="fields" style="margin-top:14px"><label class="f">Sidebar and banners<input type="color" data-theme-k="turf" value="${esc(th.turf)}"></label><label class="f">Accent and buttons<input type="color" data-theme-k="accent" value="${esc(th.accent)}"></label></div></section>`,
+    venue:()=>`<section class="card"><h3>Venue</h3><label class="nat"><input type="checkbox" data-arena ${arenaOn()?"checked":""}><span>All clubs play at one shared arena</span></label><p class="muted">On: every match is played at the same arena, so there is no home advantage, and the arena grows a little each season. Its pitch, boards and sponsors are on the Arena page. Off: each club has its own ground, set on the club's Ground tab.</p>${arenaOn()?`<button class="btn sm" data-act="nav" data-v="arena">Open the Arena page</button>`:""}</section>`,
     rings:()=>ringCard(),
     trophies:()=>trophyCard(),
     cup:()=>cupCard(),
@@ -1666,7 +1808,7 @@ function viewSettings(){
     night:()=>`<section class="card"><h3>Awards night</h3><label class="nat"><input type="checkbox" data-anight ${state.settings.awardsNight!==false?"checked":""}><span>Reveal the awards one by one when a season ends</span></label><p class="muted">You can replay any season's awards night from its review page.</p></section>`,
     pot:()=>`<section class="card"><h3>Hidden potential</h3><label class="nat"><input type="checkbox" data-reveal ${state.settings.revealPot?"checked":""}><span>Show every player's exact potential</span></label><p class="muted">Off by default, so you only see a scout's estimate that narrows as players get older. Turning it on is the commissioner's peek behind the curtain.</p></section>`,
     mgrs:()=>`<section class="card"><h3>Managers</h3><label class="nat"><input type="checkbox" data-sack ${state.settings.sackings!==false?"checked":""}><span>Boards can sack managers who fall well short two seasons running</span></label><p class="muted">You can also edit any manager, or sack one yourself, from their page.</p></section>`,
-    matches:()=>`<section class="card"><h3>Matches</h3>${rng("goals","Goal rate",50,200,5,"%","100% is the normal level for the format.")}${rng("home","Home advantage",0,30,1,"%")}${rng("injury","Injury rate",0,300,10,"%","0% turns injuries off. At 100% each club loses a player roughly every few matches.")}</section>`,
+    matches:()=>`<section class="card"><h3>Matches</h3>${rng("goals","Goal rate",50,200,5,"%","100% is the normal level for the format.")}${rng("home","Home advantage",0,30,1,"%",arenaOn()?"Not used while every club plays at the shared arena.":"")}${rng("injury","Injury rate",0,300,10,"%","0% turns injuries off. At 100% each club loses a player roughly every few matches.")}</section>`,
     players:()=>`<section class="card"><h3>Players and nationalities</h3>
     <label class="f">Home nation<select data-set="homeNation"><option value="">None, fully mixed</option>${NATIONS.map(n=>`<option value="${n.c}" ${S.homeNation===n.c?"selected":""}>${n.n}</option>`).join("")}</select></label>
     ${S.homeNation?rng("homeShare","Share of new players from the home nation",0,100,5,"%"):""}
@@ -1692,7 +1834,9 @@ function applyTheme(){
   if(th.accent&&th.accent.toLowerCase()!==D.accent.toLowerCase())st.setProperty("--flood",th.accent);else st.removeProperty("--flood");
   st.setProperty("--on-flood",lum(th.accent||D.accent)>.35?"#1B1A10":"#FFFFFF");
 }
-function readImg(file){return new Promise((res,rej)=>{const fr=new FileReader();fr.onerror=rej;fr.onload=()=>{const im=new Image();im.onerror=rej;im.onload=()=>{const M=160,w=im.naturalWidth||M,h=im.naturalHeight||M,k=Math.min(1,M/Math.max(w,h)),c=document.createElement("canvas");c.width=Math.max(1,Math.round(w*k));c.height=Math.max(1,Math.round(h*k));c.getContext("2d").drawImage(im,0,0,c.width,c.height);res(c.toDataURL("image/png"))};im.src=fr.result};fr.readAsDataURL(file)})}
+function readImg(file,o={}){const mw=o.w||160,mh=o.h||mw;return new Promise((res,rej)=>{const fr=new FileReader();fr.onerror=rej;fr.onload=()=>{const im=new Image();im.onerror=rej;im.onload=()=>{
+  const w=im.naturalWidth||mw,h=im.naturalHeight||mh,fit=Math.min(mw/w,mh/h),up=fit>=2,k=up?Math.floor(fit):Math.min(1,fit),dw=Math.max(1,Math.round(w*k)),dh=Math.max(1,Math.round(h*k)),c=document.createElement("canvas");
+  c.width=o.box?mw:dw;c.height=o.box?mh:dh;const x=c.getContext("2d");x.imageSmoothingEnabled=!up;x.imageSmoothingQuality="high";x.drawImage(im,Math.floor((c.width-dw)/2),Math.floor((c.height-dh)/2),dw,dh);res(c.toDataURL("image/png"))};im.src=fr.result};fr.readAsDataURL(file)})}
 const ordinal=n=>n+(["th","st","nd","rd"][(n%100-20)%10]||["th","st","nd","rd"][n%100]||"th");
 
 function playerModal(id){
@@ -1859,7 +2003,7 @@ const trophySpec=k=>({...(TROPHY_DEF[k]||CA_LOOK),...(((state&&state.settings&&s
 // Hand-drawn sprites (TRO_MAPS): g metal, d engraving, w shine, a accent, k black. Metal is shaded per row, light on the left, dark on the right,
 // and one step darker along bottom edges so each piece reads as rounded. title (league) and grand (cup) are the competition trophies.
 function pxTrophy(k,icon){
-  const T=trophySpec(k),key=["tr",icon?1:0,T.shape,T.metal,T.base,T.accent].join("|");if(PXC.cache.has(key))return PXC.cache.get(key);
+  const T=trophySpec(k);if(T.img)return T.img;const key=["tr",icon?1:0,T.shape,T.metal,T.base,T.accent].join("|");if(PXC.cache.has(key))return PXC.cache.get(key);
   const rows=TRO_MAPS[T.shape]||TRO_MAPS.champ,W=23,OH=25,noBase=icon||T.base==="none",g=Grid(W,noBase?OH:32);
   const G=METALS[T.metal]||METALS.gold,A=T.accent||"#C8102E",AS=[lit(A,.35),A,drk(A,.3),drk(A,.45)],ox=(W-rows[0].length)>>1,oy=OH-rows.length;
   rows.forEach((r,y)=>{for(let x=0;x<r.length;x++){const c=r[x];if(c===".")continue;let col;
@@ -1896,7 +2040,7 @@ function customAwardsCard(){
   ${L.some(c=>c.off)?`<p class="muted">Removed awards that were already won stay in the record books but are not given out any more.</p>`:""}
   <div class="toolbar"><button class="btn" data-act="ca-add">Add an award</button></div></section>`;
 }
-const APP_VERSION="2.100";
+const APP_VERSION="2.101";
 async function checkUpdates(){try{if(window.caches)for(const k of await caches.keys())await caches.delete(k);if(navigator.serviceWorker)for(const r of await navigator.serviceWorker.getRegistrations())await r.unregister()}catch(e){}location.reload()}
 let trophyTab="league";
 function trophyCard(){
@@ -1907,6 +2051,7 @@ function trophyCard(){
   ${pxCtx()?`<div class="ringprev"><img class="px" src="${pxTrophy(k)}" width="92" alt="${esc(TROPHY_L[k])} trophy preview"><img class="px" src="${pxTrophy(k)}" width="23" alt=""><img class="px" src="${pxTrophy(k,true)}" width="23" alt=""></div>`:""}
   <p class="muted" style="margin:10px 0 4px">Shape</p>${seg("shape")}<p class="muted" style="margin:6px 0 4px">Metal</p>${seg("metal")}<p class="muted" style="margin:6px 0 4px">Plinth</p>${seg("base")}
   <label class="f" style="margin-top:6px">Accent colour<input type="color" data-tro="accent" value="${esc(T.accent)}"></label><small class="muted">Used for ribbons, bands and stones.</small>
+  <p class="muted" style="margin:14px 0 4px">Your own image</p><div class="toolbar" style="margin-top:0"><label class="btn sm" style="display:inline-flex;align-items:center">Upload image<input type="file" accept="image/png,image/jpeg,image/webp,image/gif" data-troimg style="display:none"></label>${T.img?`<button class="btn sm" data-act="trophy-img-clear">Use the drawn trophy</button>`:""}</div><small class="muted">${T.img?"Your image is in use, so the shape, metal and plinth above are not shown. ":""}A PNG with a transparent background, upright at 23 by 32. 69 × 96 pixels is exactly the size it shows in cabinets; bigger images are shrunk to fit. Pixel art made at 23 × 32 is scaled up and stays sharp.</small>
   ${custom?`<div class="toolbar"><button class="btn" data-act="trophy-reset">Reset ${esc(TROPHY_L[k])} to default</button></div>`:""}</section>`;
 }
 function awardsOf(p){return (p.awards||[]).slice().sort((a,b)=>a.season-b.season)}
@@ -2007,7 +2152,7 @@ function clubLeader(t,k){let best=null;everyone().forEach(p=>{const cs=p.career.
   n=[...cs,...(cur?[cur]:[])].reduce((a,c)=>a+(c[k]||0)+(c[COMP_K[k]?COMP_K[k][1]:""]||0),0);if(n>0&&(!best||n>best.n))best={p,n}});return best}
 function clubCompareHTML(A,B){
   const S=t=>{const r=clubSeasons().filter(x=>x.id===t.id),sum=k=>r.reduce((a,x)=>a+(x[k]||0),0);
-    return{ti:titles(t.id).length,cu:cupsOf(t.id).length,n:r.length,best:r.length?Math.min(...r.map(x=>x.pos)):null,avg:r.length?sum("pos")/r.length:null,pts:sum("pts"),w:sum("w"),d:sum("d"),l:sum("l"),gf:sum("gf"),ga:sum("ga"),aw:clubAwards(t).length,sc:clubLeader(t,"goals"),ap:clubLeader(t,"apps"),rt:avgRating(t),cap:t.ground?t.ground.cap:null}};
+    return{ti:titles(t.id).length,cu:cupsOf(t.id).length,n:r.length,best:r.length?Math.min(...r.map(x=>x.pos)):null,avg:r.length?sum("pos")/r.length:null,pts:sum("pts"),w:sum("w"),d:sum("d"),l:sum("l"),gf:sum("gf"),ga:sum("ga"),aw:clubAwards(t).length,sc:clubLeader(t,"goals"),ap:clubLeader(t,"apps"),rt:avgRating(t),cap:t.ground&&!arenaOn()?t.ground.cap:null}};
   const a=S(A),b=S(B),one=x=>x.toFixed(1),lead=x=>x?`${esc(x.p.name)} (${x.n})`:"None yet";
   return `${cabCompare(A.name,B.name,clubGroups(A),clubGroups(B))}
   <table class="duel"><tbody>${duelRow("League titles",a.ti,b.ti)}${cupGroupOn()?duelRow(`${esc(cupName())} wins`,a.cu,b.cu):""}${duelRow("Individual awards",a.aw,b.aw)}
@@ -2187,10 +2332,10 @@ function render(){
   if(!state){renderSetup();return}
   syncCustom();ensureCup();ensurePoty();if(!state.rivals)updateRivals();ensureManagers();state.teams.forEach(ensureGround);
   const done=seasonDone();
-  const views=[["table","Table"],["fixtures","Fixtures"],...(cupOn()||state.history.some(h=>h.cup)?[["cup","Cup"]]:[]),["players","Players"],["clubs","Clubs"],["managers","Managers"],["draft","Draft"],["trades","Trades"],["history","History"],["hof","Hall of Fame"],["goat","GOATs"],["saves","Saves"],["settings","Settings"]];
+  const views=[["table","Table"],["fixtures","Fixtures"],...(cupOn()||state.history.some(h=>h.cup)?[["cup","Cup"]]:[]),["players","Players"],["clubs","Clubs"],...(arenaOn()?[["arena","Arena"]]:[]),["managers","Managers"],["draft","Draft"],["trades","Trades"],["history","History"],["hof","Hall of Fame"],["goat","GOATs"],["saves","Saves"],["settings","Settings"]];
   const cur=view.startsWith("club:")?"clubs":view.startsWith("player:")||view.startsWith("pcmp:")?"players":view.startsWith("review:")?"history":view.startsWith("mgr:")?"managers":view;
   let body;
-  if(view==="table")body=viewTable();else if(view==="fixtures")body=viewFixtures();else if(view==="players")body=viewPlayers();
+  if(view==="arena")body=arenaOn()?viewArena():viewClubs();else if(view==="table")body=viewTable();else if(view==="fixtures")body=viewFixtures();else if(view==="players")body=viewPlayers();
   else if(view==="clubs")body=viewClubs();else if(view==="goat")body=viewGoats();else if(view.startsWith("club:"))body=viewClub(view.slice(5));else if(view==="history")body=viewHistory();else if(view==="hof")body=viewHof();else if(view.startsWith("player:"))body=viewPlayer(view.slice(7));else if(view.startsWith("pcmp:"))body=viewPlayerCompare(view.slice(5));else if(view.startsWith("review:"))body=viewReview(view.slice(7));else if(view==="draft")body=viewDraft();else if(view==="cup")body=viewCup();else if(view==="managers")body=viewManagers();else if(view.startsWith("mgr:"))body=viewManager(view.slice(4));else if(view==="trades")body=viewTrades();else if(view==="saves")body=viewSaves();else body=viewSettings();
   $("#app").innerHTML=`<div class="shell"><aside class="side">
     <div class="hd"><div class="lg">${esc(state.name)}</div><div class="meta">${FORMATS[state.format].label}. Season ${state.season}, ${state.draft?"draft in progress":done?"complete":dayLabel()}</div></div>
@@ -2379,11 +2524,19 @@ document.addEventListener("click",async e=>{
     case "kside":kitSide=v;break;
     case "crest":team(id).crest[b.dataset.k]=v;persist();break;
     case "kit":team(id).kit[kitSide].style=v;persist();break;
-    case "mow":team(id).ground.mow=v;persist();break;
-    case "grass":team(id).ground.grass=v;persist();break;
+    case "mow":gndOf(id).mow=v;persist();break;
+    case "grass":gndOf(id).grass=v;persist();break;
+    case "gset":{const g=gndOf(id),k=b.dataset.k;g[k]=k==="per"?+v:v;persist();break}
+    case "spon-add":spons().push(newSponsor());persist();break;
+    case "spon-add5":for(let i=0;i<5;i++)spons().push(newSponsor());persist();break;
+    case "spon-del":{const sp=sponOf(v);if(!sp||!confirm(`Delete ${sp.name}? It comes off every board.`))return;state.sponsors=spons().filter(x=>x.id!==v);allGrounds().forEach(g=>{g.ads=(g.ads||[]).map(x=>x===v?"":x);if(g.mid===v)g.mid=""});persist();break}
+    case "spon-img-clear":{const sp=sponOf(v);if(sp)delete sp.img;persist();break}
+    case "spon-fill":{const g=gndOf(id),per=clamp(+g.per||3,2,4);if(!spons().length)for(let i=0;i<4;i++)spons().push(newSponsor());const L=shuffle(spons().map(x=>x.id));g.ads=[...Array(per*2)].map((_,i)=>L[i%L.length]);if(!g.mid)g.mid=L[0];persist();break}
+    case "spon-clear":{const g=gndOf(id);g.ads=[];g.mid="";persist();break}
+    case "trophy-img-clear":{const TS=state.settings.trophies||{};if(TS[trophyTab])delete TS[trophyTab].img;persist();break}
     case "rand-crest":{const t=team(id);t.crest=randomCrest(t.c2);persist();break}
     case "rand-kit":{const t=team(id);t.kit[kitSide]=randomKit(t.c1,t.c2)[kitSide];persist();break}
-    case "rand-ground":{const t=team(id);const g=randomGround(t.name);g.name=t.ground.name;t.ground=g;persist();break}
+    case "rand-ground":{Object.assign(gndOf(id),randomLook());persist();break}
     case "kit-badge":{const t=team(id),k=t.kit[kitSide];Object.assign(k,{a:t.c1,b:t.c2,sleeves:t.c1,trim:t.crest.c3||t.c2,shorts:t.c2,socks:t.c1});persist();break}
     case "player":closeModal();view="player:"+id;break;
     case "back":view=backTo();break;
@@ -2437,7 +2590,7 @@ document.addEventListener("click",async e=>{
   if(a!=="back"&&a!=="nav"&&a!=="pcswap"&&view!==was&&/^(player|mgr|club|review|pcmp):/.test(view)){navStack.push(was);if(navStack.length>40)navStack.shift()}
   render();
 });
-function applyField(t,el){const v=el.value;if(el.dataset.tf)t[el.dataset.tf]=v;else if(el.dataset.cf)t.crest[el.dataset.cf]=v;else if(el.dataset.kf)t.kit[kitSide][el.dataset.kf]=v;else if(el.dataset.gf)t.ground[el.dataset.gf]=v}
+function applyField(t,el){let v=el.value;if(el.dataset.cf==="est")v=v.replace(/\D/g,"").slice(0,4);if(el.dataset.cf==="stars")v=+v;if(el.dataset.tf)t[el.dataset.tf]=v;else if(el.dataset.cf)t.crest[el.dataset.cf]=v;else if(el.dataset.kf)t.kit[kitSide][el.dataset.kf]=v;else if(el.dataset.gf)t.ground[el.dataset.gf]=v}
 document.addEventListener("input",e=>{
   const el=e.target;
   if(state&&el.hasAttribute("data-dq")){ps.dq=el.value;render();const s3=$("[data-dq]");if(s3){s3.focus();const L=s3.value.length;try{s3.setSelectionRange(L,L)}catch(x){}}return}
@@ -2446,6 +2599,7 @@ document.addEventListener("input",e=>{
   if(state&&el.dataset.set&&el.type==="range"){const o=$(`[data-out="${el.dataset.set}"]`);if(o)o.textContent=el.value+(el.dataset.unit||"");return}
   if(state&&el.dataset.ring==="size"){const o=$(`[data-out="ringsize"]`);if(o)o.textContent=el.value+"px";return}
   if(state&&el.dataset.themeK){state.settings.theme[el.dataset.themeK]=el.value;applyTheme();return}
+  if(state&&el.type==="color"&&el.dataset.gf){const g=gndOf(el.dataset.id);if(g){g[el.dataset.gf]=el.value;const pv=$("#pv");if(pv)pv.innerHTML=stadiumPreview(el.dataset.id)}return}
   if(state&&el.type==="color"&&el.dataset.id&&(el.dataset.tf||el.dataset.cf||el.dataset.kf||el.dataset.gf)){const t=team(el.dataset.id);if(t){applyField(t,el);const pv=$("#pv");if(pv)pv.innerHTML=previewHTML(t)}return}
   if(el.dataset.sf&&setup){if(el.dataset.sf==="league")setup.name=el.value;else if(el.dataset.sf==="name")setup.teams[+el.dataset.i].name=el.value}
 });
@@ -2455,7 +2609,14 @@ document.addEventListener("change",e=>{
   if(el.dataset.sf==="share"&&setup){setup.homeShare=+el.value;renderSetup();return}
   if(el.dataset.sf&&setup){const i=+el.dataset.i;if(el.dataset.sf==="c1"||el.dataset.sf==="c2"){setup.teams[i][el.dataset.sf]=el.value}renderSetup();return}
   if(!state)return;
-  if(el.dataset.upload){const f=el.files&&el.files[0],t=team(el.dataset.upload);if(!f||!t)return;readImg(f).then(u=>{t.crest.img=u;persist();render();toast("Badge image added")}).catch(()=>toast("That image could not be read. Try a PNG or JPG file."));return}
+  if(el.dataset.arena!==undefined){state.settings.arena=el.checked;if(el.checked)ensureArena();persist();render();return}
+  if(el.dataset.gf){const g=gndOf(el.dataset.id);if(g){if(el.dataset.gf==="name")g.name=el.value.trim()||g.name;else g[el.dataset.gf]=el.value}persist();render();return}
+  if(el.dataset.gad!==undefined){const g=gndOf(el.dataset.id);if(g){g.ads=g.ads||[];g.ads[+el.dataset.gad]=el.value}persist();render();return}
+  if(el.dataset.gmid!==undefined){const g=gndOf(el.dataset.id);if(g)g.mid=el.value;persist();render();return}
+  if(el.dataset.spn){const sp=sponOf(el.dataset.id),k=el.dataset.spn;if(sp)sp[k]=k==="name"?(el.value.trim().slice(0,16)||sp.name):el.value;persist();render();return}
+  if(el.dataset.spimg){const f=el.files&&el.files[0],sp=sponOf(el.dataset.spimg);if(!f||!sp)return;readImg(f,{w:320,h:160}).then(u=>{sp.img=u;persist();render();toast("Logo added")}).catch(()=>toast("That image could not be read. Try a PNG or JPG file."));return}
+  if(el.dataset.troimg!==undefined){const f=el.files&&el.files[0];if(!f)return;readImg(f,{w:69,h:96,box:1}).then(u=>{const TS=state.settings.trophies=state.settings.trophies||{};TS[trophyTab]={...trophySpec(trophyTab),img:u};persist();render();toast("Trophy image added")}).catch(()=>toast("That image could not be read. Try a PNG or JPG file."));return}
+  if(el.dataset.upload){const f=el.files&&el.files[0],t=team(el.dataset.upload);if(!f||!t)return;readImg(f,{w:192,h:192}).then(u=>{t.crest.img=u;persist();render();toast("Badge image added")}).catch(()=>toast("That image could not be read. Try a PNG or JPG file."));return}
   if(el.dataset.set){const S=state.settings,k=el.dataset.set;if(k==="homeNation")S[k]=el.value;else S[k]=+el.value;if(k==="draftAgeMin"&&S.draftAgeMin>S.draftAgeMax)S.draftAgeMax=S.draftAgeMin;if(k==="draftAgeMax"&&S.draftAgeMax<S.draftAgeMin)S.draftAgeMin=S.draftAgeMax;persist();render();return}
   if(el.dataset.setw){const S=state.settings;S[el.dataset.setw][+el.dataset.i]=clamp(parseInt(el.value)||0,0,100);persist();render();return}
   if(el.dataset.nat){const S=state.settings,c=el.dataset.nat;S.nations=el.checked?[...new Set([...S.nations,c])]:S.nations.filter(x=>x!==c);persist();render();return}
