@@ -35,7 +35,7 @@ A pure-simulation football league game. The user sets up clubs and players, then
 - `simMatch()` uses Poisson goals from attack against defence, then assigns scorers and assisters, match ratings out of 10, player of the match, clean sheets and injuries. Injuries and their minute are rolled before goals, and `goals()` only picks players still on the pitch at each goal's minute, so an injured player never scores or assists after going off.
 - `endSeason()` archives the season (table, matchday positions, awards, results), pushes career rows, ages players, runs progression, handles retirements and youth replacements, runs the end of season trade window, inducts the Hall of Fame every third season, then opens the yearly draft.
 - Draft: lowest finisher picks first. The opening draft (new league option) is a snake draft over a big pool, with a setup stage where the pool can be edited first. AI picks fill starting positions, then bench, with small per-club positional tastes.
-- AI trades: 1 for 1 swaps that fix each club's weakest position at similar value. Windows run only at the end of the season and after the draft. Players traded recently are excluded, and each pair of clubs trades once per window.
+- AI trades: 1 for 1 swaps that fix each club's weakest position at similar value, and both clubs must stay under the wage cap (`fitsCap`). Windows run only at the end of the season and after the draft. Players traded recently are excluded, and each pair of clubs trades once per window.
 - Awards each season: MVP (best average rating among regulars), Golden Boot, Golden Glove (keeper clean sheets), Young Player of the season (age 21 or under, at least 40% of the top appearances; stored under the old `rookie` key so older winners keep it).
 - Hall of Fame: legacy points from apps, goals, assists, clean sheets, titles and awards. Up to two retired players per class, one class every three seasons.
 
@@ -52,11 +52,29 @@ A pure-simulation football league game. The user sets up clubs and players, then
 
 ## Managers
 
-- The user is the league commissioner and never manages a club. Every manager is AI; the commissioner can edit any manager or sack one from the manager page.
-- `state.managers` keyed by id; each club points to its manager with `t.mgr`. A manager has a style (attacking, balanced, defensive), tactics, coaching and scouting (1 to 5), a `hist` row per finished season (finish, expected finish, W/D/L, honours) and `awards` (Manager of the season, type `mos`).
-- Effects: style multiplies goals for and against in `simMatch()`, tactics adds to both sides' strength, coaching nudges growth for players aged 25 and under (`coachBonus`), scouting sets how much AI clubs misjudge prospects in the draft (`scoutView`).
-- `setExpect()` ranks clubs by squad strength when a season kicks off. `managersSeason()` runs in `endSeason()`: career rows, Manager of the season, small skill changes, sackings (two seasons running finishing a quarter of the league or more below expectation, unless they won something; `settings.sackings`), retirements, then `fillVacancies()` hires from out-of-work managers, one recently retired player with a strong legacy, and fresh names. Moves are kept in `h.mgrMoves` for the season review.
+- The user is the League President and never manages a club. Every manager and owner is AI; the President can edit any manager or sack one from the manager page or the President page.
+- `state.managers` keyed by id; each club points to its manager with `t.mgr`. A manager has a style (attacking, balanced, defensive), tactics and coaching (1 to 5; an old `sco` field is unused and seeded the first owner's scouting), a `hist` row per finished season (finish, expected finish, W/D/L, honours) and `awards` (Manager of the season, type `mos`).
+- Effects: style multiplies goals for and against in `simMatch()`, tactics adds to both sides' strength, coaching nudges growth for players aged 25 and under (`coachBonus`). The owner's scouting sets how much AI clubs misjudge prospects in the draft (`scoutView`).
+- `setExpect()` ranks clubs by squad strength when a season kicks off. `managersSeason()` runs in `endSeason()`: career rows, Manager of the season, small skill changes, then `ownersSeason()` (supporter mood and sackings), `poachSeason()` and `ownersAge()` (see below), retirements, then `fillVacancies()` hires from out-of-work managers, one recently retired player with a strong legacy, and fresh names. Moves are kept in `h.mgrMoves` for the season review.
 - First appointments in an older save use fresh managers only.
+
+## League President, owners and wage cap
+
+- The user is the League President (`state.pres`: name, nat, since, `log` of decisions written by `presLog`). Manual powers only, nothing waits on the user. The President page (view `president`, `viewPresident`) holds the profile, decisions log, wage cap, a club table (manager with Sack, owner name and skills, supporters, wages), Overrule an award and League size.
+- Owners: `state.owners` keyed by id, each club points to one with `t.owner`. Skills 1 to 5: scouting (`sco`, used by `scoutView`), patience (`pat`) and ambition (`amb`). `ensureOwners()` (in `render`) creates owners, the President, `state.gone` and the first wage cap for older saves.
+- Supporters: `t.fans` 0 to 100 (`fanWord`), moved each season by finish against expectation, trophies, top and bottom quarter, and pulled back toward 60.
+- `ownersSeason()`: strikes as before, but patient owners (4+) wait three bad seasons, impatient ones (2 or less) also sack after three seasons averaging a quarter of the league below expectation, and any owner sacks when supporters fall low and the club finished below expectation. Moves carry `why` (results, fans, replaced, pres).
+- `poachSeason()`: at most one a season. An owner with ambition 3+ whose manager finished below expectation (or who has none) may lure a manager who beat expectation by 2+ or won something elsewhere, if their club is expected to finish at least as high (or with a 30% chance). Move type `poached`. `ownersAge()` sells clubs from age 70 (move type `owner`).
+- Wages: `wage(p)` in thousands a week from ability, lower at 21 and under and 23 and under. `payroll(t)`. `settings.wageCap`, `capOn` (default on) and `capAuto` (default on: `setAutoCap()` in `endSeason()` sets 110% of the average payroll). No currency anywhere else: wages are shown as plain `k` numbers.
+- `capWindow()` runs in `finishDraft()`: clubs over the cap let go of the players with the lowest value for their wage, clubs with room and squad space sign the best of them (move type `signed`), the rest are released, and short squads get cheap youngsters. Stored on the draft history entry as `cap: {cut, signed}`.
+- Award overrides: `awardChoices(season,k)` builds candidates from career rows (or manager `hist` for `mos`), `overrideAward()` moves the `{type,season}` entry between players and rewrites `h.awards` or `h.mos` with `pres:1` and `was`. A Player of the Year already decided stays until it is recalculated.
+- Clubs join or leave only when `canReshape()` (no draft, round 0, not completed). `addClub()` runs an expansion draft (each club protects its top lineup-size players by ability, the new club takes the best of the rest per club, then generated players fill the squad) and `removeClub()` shares players round robin from the weakest clubs, within squad size and cap. Both push a `draftHistory` entry (`type: "expansion"` or `"dispersal"`) and call `reschedule()` (new fixtures and cup).
+- Removed clubs move to `state.gone` with `t.gone` = season. `team()` still finds them so history, records and cabinets keep working; use `isLive(id)` for current clubs. Their club page shows only Trophy cabinet, History and Legends.
+
+## Trades page and Back
+
+- `viewTrades()`: a summary card (each side's outgoing players as removable chips, value, wages after against the cap, verdict, Complete trade), two club panels (wage meter, position chips `tb.fa`/`tb.fb`, scrolling list with name links), then the trade log with counts, season and club filters and a By chip (`tl`), grouped by season and paged.
+- Back returns to the same scroll position: the click handler saves `_viewY[was]` when it pushes `navStack` and restores it after `render()`. Any scrolling box marked `data-keep="<key>"` keeps its scroll per view across redraws (`_keepY`).
 
 ## Trophy art and custom awards
 
@@ -95,7 +113,7 @@ A pure-simulation football league game. The user sets up clubs and players, then
 
 ## GOATs
 
-- Commissioner only: Crown as GOAT on the player page. GOATs live outside saves in their own IndexedDB database `leaguesim-goats` (store `goats`, key `lid:pid`), loaded at boot into `goats`, so the GOATs page (menu, view `goat`) shows every league's GOATs, even after a save is deleted.
+- President only: Crown as GOAT on the player page. GOATs live outside saves in their own IndexedDB database `leaguesim-goats` (store `goats`, key `lid:pid`), loaded at boot into `goats`, so the GOATs page (menu, view `goat`) shows every league's GOATs, even after a save is deleted.
 - `state.lid` (made by `leagueId()` on first crowning) ties entries to a league. Each league has a line: `n`, `reign`, `season`, `until`, `recrowned`. Crowning a new one makes the last a former GOAT; taking the title away hands the reign back to the latest former one.
 - `snap` (`goatSnap`) is a self-contained copy: bio, main club badge, club names, totals, legacy and cabinet groups as plain data (items carry their trophy kind `k`, rings their colour). `snapGroups` redraws them. `refreshGoats()` updates the open league's snapshots at boot, at season end and on the GOATs page. `then` keeps their totals from the day they were crowned.
 - The player keeps `p.goat` (season first crowned), which gives a crown trophy (`TRO_MAPS.crown`, `goat` in `TROPHY_DEF`) in their cabinet.
