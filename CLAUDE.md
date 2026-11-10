@@ -13,6 +13,13 @@ A pure-simulation football league game. The user sets up clubs and players, then
 - Saves are compact: `saveText()` runs `packState()`, which turns career rows and archived results into short arrays (marked `packed:1`) and writes JSON without whitespace. `migrate()` calls `unpackState()` first, so in memory everything stays as objects. New fields on career rows or results are safe: rows with unknown keys are left as objects.
 - Keep the save small as features grow: about 30KB per season for a 10 club 11 a side league. Store ids, not copies of names, wherever history allows.
 
+## Iterations
+
+- The user plays in iterations: one league played for many seasons, then marked complete before starting a new save.
+- Complete iteration on a slot card (`retireSlot`) loads the slot if needed, then sets `state.done` = {n, at, season}. The iteration number defaults to the next one (`nextIter`). Slot meta gets `done` from `iterSummary()` (seasons, club with most titles, reigning GOAT), and the Saves page lists those slots under Completed iterations with View, Reopen (`reopenSlot`), Rename, Export and Delete.
+- A completed league is read only: the actions in `LOCKED` (sims, end season, draft, trades, sacking) are blocked, the sidebar shows an Iteration tag instead of sim buttons and every page has the `.donebar` banner. Browsing, records and crowning GOATs still work.
+- Its GOAT entries get `iter` (`tagGoats`), shown on the GOATs page headings, cards and compare picker.
+
 ## Architecture notes
 
 - Global `state` holds the league: `teams`, `players` (active), `retired` (retired and released players, kept for history), `fixtures` (current season rounds), `history` (one entry per finished season), `results` (archived matches for head to head), `trades`, `draftHistory`, `draft` (active draft or null), `hof`, `settings`.

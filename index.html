@@ -264,6 +264,8 @@ input[type=checkbox]{accent-color:var(--turf)}
 .slot .row{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.tribn{display:block;font-family:var(--px);font-size:1.25rem;margin:.1em 0 .2em}
 .era{display:flex;gap:12px;align-items:flex-start;background:var(--paper);border:var(--pxb) solid var(--line);border-left:6px solid var(--ec);border-radius:0;padding:10px 12px;margin-bottom:8px}
 .erahd{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.erahd b{font-family:var(--px);font-size:1.15rem}
+.slot.done{border-color:var(--gold)}.itern{font:700 1.6rem/1 var(--px);color:var(--gold)}
+.donebar{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;background:var(--surface);border:var(--pxb) solid var(--gold);box-shadow:var(--px-sh);padding:10px 14px;margin-bottom:16px}.donebar b{font-family:var(--px);font-size:1.15rem}
 .eratag{font:700 .7rem/1 var(--px);text-transform:uppercase;letter-spacing:.04em;padding:3px 6px;border-radius:0;background:var(--gold);color:#1B1712}.eratag.live{background:var(--win,#2E8B57);color:#fff}
 .linkbtn{background:none;border:0;padding:0;font-weight:700;font-family:var(--hd);font-size:1.05rem;cursor:pointer;text-decoration:underline;text-underline-offset:2px;display:block;text-align:left}
 .editor{display:grid;grid-template-columns:minmax(220px,340px) minmax(0,1fr);gap:20px;align-items:start}
@@ -2040,7 +2042,7 @@ function customAwardsCard(){
   ${L.some(c=>c.off)?`<p class="muted">Removed awards that were already won stay in the record books but are not given out any more.</p>`:""}
   <div class="toolbar"><button class="btn" data-act="ca-add">Add an award</button></div></section>`;
 }
-const APP_VERSION="2.101";
+const APP_VERSION="2.102";
 async function checkUpdates(){try{if(window.caches)for(const k of await caches.keys())await caches.delete(k);if(navigator.serviceWorker)for(const r of await navigator.serviceWorker.getRegistrations())await r.unregister()}catch(e){}location.reload()}
 let trophyTab="league";
 function trophyCard(){
@@ -2239,7 +2241,7 @@ function crownGoat(p){
   let e=mine.find(g=>g.pid===p.id);
   if(e){e.reign=true;e.until=null;e.recrowned=(e.recrowned||[]).concat(state.season)}
   else e={key:L+":"+p.id,lid:L,pid:p.id,n:mine.length+1,season:state.season,reign:true,at:Date.now(),then:goatTot(p)};
-  p.goat=p.goat||state.season;e.league=state.name;e.fmt=FORMATS[state.format].label;e.snap=goatSnap(p);goats=goats.filter(g=>g.key!==e.key).concat(e);ch.push(e);
+  p.goat=p.goat||state.season;e.league=state.name;if(state.done)e.iter=state.done.n;e.fmt=FORMATS[state.format].label;e.snap=goatSnap(p);goats=goats.filter(g=>g.key!==e.key).concat(e);ch.push(e);
   saveGoats(ch);persist();toast(`${p.name} is crowned the GOAT.`);
 }
 function uncrownGoat(p){
@@ -2253,7 +2255,7 @@ function goatCard(g){
   const sn=g.snap,S=goatStats(sn),here=state&&g.lid===state.lid&&pl(g.pid),c=sn.club;
   const span=g.reign?"Reigning GOAT":`GOAT from season ${g.season} to ${g.until||g.season}`;
   return `<div class="card goatcard${g.reign?" reign":""}"><div class="gtop">${pxCtx()?`<img class="px" src="${pxTrophy("goat")}" width="46" alt="">`:""}<div class="grow">
-   <span class="gn">#${g.n} · ${esc(g.league)}</span>${here?`<button class="linkbtn gname namecell" data-act="player" data-id="${g.pid}">${flag(sn.nat)}${esc(sn.name)}</button>`:`<b class="gname namecell">${flag(sn.nat)}${esc(sn.name)}</b>`}
+   <span class="gn">#${g.n} · ${g.iter?`Iteration ${g.iter} · `:""}${esc(g.league)}</span>${here?`<button class="linkbtn gname namecell" data-act="player" data-id="${g.pid}">${flag(sn.nat)}${esc(sn.name)}</button>`:`<b class="gname namecell">${flag(sn.nat)}${esc(sn.name)}</b>`}
    <span class="muted">${sn.pos}, ${sn.retired?`retired after season ${sn.retired}`:`age ${sn.age}`}. ${esc(sn.clubs.join(", "))}</span><span class="muted">${span}. Crowned in season ${g.season}${g.recrowned?`, again in ${g.recrowned.join(", ")}`:""}. ${g.fmt?esc(g.fmt)+" league.":""}</span></div>${c?badge(c,44):""}</div>
    <div class="gnums"><div><b class="num">${S.apps}</b><span>Apps</span></div><div><b class="num">${S.goals}</b><span>Goals</span></div><div><b class="num">${S.assists}</b><span>Assists</span></div>${sn.pos==="GK"?`<div><b class="num">${S.cs}</b><span>Clean sheets</span></div>`:""}<div><b class="num">${(sn.groups.find(x=>x.short==="Rings")||{items:[]}).items.length}</b><span>Titles</span></div><div><b class="num">${sn.legacy}</b><span>Legacy</span></div></div>
    ${g.then&&(g.then.apps!==S.apps)?`<p class="muted gthen">When crowned in season ${g.season}: ${g.then.apps} apps, ${g.then.goals} goals, ${g.then.assists} assists, ${pluralN(g.then.titles,"title")}.</p>`:""}
@@ -2267,7 +2269,7 @@ function viewGoats(){
   const leagues=[...new Set(all.map(g=>g.lid))];
   if(!all.some(g=>g.key===gsel.a))gsel.a=(reign||all[0]).key;if(!all.some(g=>g.key===gsel.b)||gsel.b===gsel.a)gsel.b=(all.find(g=>g.key!==gsel.a)||{}).key;
   const A=all.find(g=>g.key===gsel.a),B=all.find(g=>g.key===gsel.b);
-  const sel=k=>`<select data-gsel="${k}" aria-label="GOAT to compare">${all.map(g=>`<option value="${esc(g.key)}" ${g.key===gsel[k]?"selected":""} ${g.key===gsel[k==="a"?"b":"a"]?"disabled":""}>${esc(g.snap.name)} (${esc(g.league)})</option>`).join("")}</select>`;
+  const sel=k=>`<select data-gsel="${k}" aria-label="GOAT to compare">${all.map(g=>`<option value="${esc(g.key)}" ${g.key===gsel[k]?"selected":""} ${g.key===gsel[k==="a"?"b":"a"]?"disabled":""}>${esc(g.snap.name)} (${g.iter?`It. ${g.iter}, `:""}${esc(g.league)})</option>`).join("")}</select>`;
   let cmp="";if(A&&B){const a=goatStats(A.snap),b=goatStats(B.snap),cs=A.snap.pos==="GK"||B.snap.pos==="GK";
     cmp=`<section class="card" style="margin-top:18px"><div class="phead" style="margin-bottom:10px"><h3 style="margin:0">Compare GOATs</h3><div class="fields">${sel("a")}${sel("b")}</div></div>
     ${A.fmt!==B.fmt?`<p class="muted" style="margin-top:0">Different formats (${esc(A.fmt)} and ${esc(B.fmt)}), so goals and clean sheets are not like for like.</p>`:""}
@@ -2277,7 +2279,7 @@ function viewGoats(){
     ${duelRow("Hat-tricks",A.snap.st.ht,B.snap.st.ht)}${duelRow("Average match rating",a.avg,b.avg,1,x=>x.toFixed(2))}${duelRow("Peak ability",A.snap.peak,B.snap.peak)}${duelRow("Legacy points",A.snap.legacy,B.snap.legacy)}</tbody></table></section>`}
   return `<h2>GOATs</h2><p class="lede">The greatest of all time, crowned by you. Every league in this app keeps its own line of GOATs, and they all live here, even after a save is deleted.</p>
   ${state&&!reign?`<p class="muted">This league has no reigning GOAT. Open a player and press <b>Crown as GOAT</b>.</p>`:""}
-  ${leagues.map(l=>{const G=all.filter(g=>g.lid===l);return `<h3>${esc(G[0].league)}${state&&l===state.lid?` <span class="muted" style="font-weight:400">(open now)</span>`:""}</h3><div class="goatgrid">${G.map(goatCard).join("")}</div>`}).join("")}
+  ${leagues.map(l=>{const G=all.filter(g=>g.lid===l);return `<h3>${G[0].iter?`Iteration ${G[0].iter}: `:""}${esc(G[0].league)}${state&&l===state.lid?` <span class="muted" style="font-weight:400">(open now)</span>`:""}</h3><div class="goatgrid">${G.map(goatCard).join("")}</div>`}).join("")}
   ${cmp}`;
 }
 
@@ -2340,11 +2342,11 @@ function render(){
   $("#app").innerHTML=`<div class="shell"><aside class="side">
     <div class="hd"><div class="lg">${esc(state.name)}</div><div class="meta">${FORMATS[state.format].label}. Season ${state.season}, ${state.draft?"draft in progress":done?"complete":dayLabel()}</div></div>
     <nav class="nav">${views.map(([k,l])=>`<button class="${cur===k?"on":""}" data-act="nav" data-v="${k}">${l}</button>`).join("")}</nav>
-    <div class="simbox">${state.draft&&state.draft.stage==="setup"?`<button class="btn go" data-act="draft-start">Start the draft</button><button class="btn ghost" data-act="nav" data-v="draft">Edit the player pool</button>`:state.draft?`<button class="btn go" data-act="nav" data-v="draft">Go to the draft</button><button class="btn ghost" data-act="draft-auto-all">Auto-draft the rest</button>`:done?`<button class="btn go" data-act="end-season">Start season ${state.season+1}</button>`:`<button class="btn go" data-act="sim-round">${cupDue()?"Sim cup day":"Sim matchday"}</button><button class="btn ghost" data-act="sim-season">Sim rest of season</button>`}</div>
+    <div class="simbox">${state.done?`<span class="eratag" style="align-self:center">Iteration ${state.done.n} complete</span><button class="btn ghost" data-act="nav" data-v="saves">Saves</button>`:state.draft&&state.draft.stage==="setup"?`<button class="btn go" data-act="draft-start">Start the draft</button><button class="btn ghost" data-act="nav" data-v="draft">Edit the player pool</button>`:state.draft?`<button class="btn go" data-act="nav" data-v="draft">Go to the draft</button><button class="btn ghost" data-act="draft-auto-all">Auto-draft the rest</button>`:done?`<button class="btn go" data-act="end-season">Start season ${state.season+1}</button>`:`<button class="btn go" data-act="sim-round">${cupDue()?"Sim cup day":"Sim matchday"}</button><button class="btn ghost" data-act="sim-season">Sim rest of season</button>`}</div>
     <div class="filebox"><div class="row"><button class="btn ghost" data-act="save">Save</button><button class="btn ghost" data-act="nav" data-v="saves">Saves</button></div>
     <div class="savestate ${dirty?"dirty":""}">${dirty?(autosaveOn()?"Saving soon":"Unsaved changes"):savedAt?`Saved ${whenTxt(savedAt)}`:"Saved"}</div>
     <button class="btn ghost" data-act="new">New league</button></div>
-  </aside><main>${body}</main></div>`;
+  </aside><main>${state.done?`<div class="donebar"><b>Iteration ${state.done.n}</b><span class="muted">Completed ${new Date(state.done.at).toLocaleDateString([],{dateStyle:"medium"})} after ${pluralN(state.history.length,"season")}. Read only: browse history, records and trophies.</span></div>`:""}${body}</main></div>`;
 }
 
 /* ---------- setup ---------- */
@@ -2402,7 +2404,7 @@ const setSlotId=id=>{slotId=id;try{id?localStorage.setItem("leaguesim-slot",id):
 function slotMeta(id,name){
   const ch=state.history.length?team(state.history[state.history.length-1].champion.id):null,b=ch||state.teams[0];
   return{id,name,league:state.name,season:state.season,where:state.draft?"draft in progress":seasonDone()?"season complete":dayLabel(),fmt:FORMATS[state.format].label,clubs:state.teams.length,
-    champ:ch?ch.name:"",badge:b?{id:b.id,name:b.name,short:b.short,c1:b.c1,c2:b.c2,crest:{...b.crest,img:undefined}}:null,saved:Date.now()};
+    champ:ch?ch.name:"",done:state.done?iterSummary():null,badge:b?{id:b.id,name:b.name,short:b.short,c1:b.c1,c2:b.c2,crest:{...b.crest,img:undefined}}:null,saved:Date.now()};
 }
 async function writeSlot(id,name){
   const text=saveText(),meta={...slotMeta(id,name),kb:Math.round(text.length/1024)};
@@ -2432,6 +2434,27 @@ async function loadSlot(id){
 }
 async function renameSlot(id){const mt=slots.find(x=>x.id===id);if(!mt)return;const n=prompt("Rename this save",mt.name);if(n===null||!n.trim())return;mt.name=n.trim().slice(0,60);await sdo("readwrite",m=>{m.put(mt)});await listSlots();render()}
 async function deleteSlot(id){const mt=slots.find(x=>x.id===id);if(!mt||!confirm(`Delete the save "${mt.name}"? This cannot be undone.`))return;await sdo("readwrite",(m,d)=>{m.delete(id);d.delete(id)});if(id===slotId){setSlotId(null);if(state)dirty=true}await listSlots();toast("Save deleted");render()}
+// Completing an iteration: the league is kept as a numbered, read-only record. It can still be opened to browse
+// history, records and cabinets, and its GOATs stay in the gallery tagged with the iteration number.
+const nextIter=()=>Math.max(0,...(slots||[]).filter(m=>m.done).map(m=>m.done.n||0))+1;
+function iterSummary(){
+  const by={};state.history.forEach(h=>{if(h.champion)by[h.champion.id]=(by[h.champion.id]||0)+1});
+  const top=Object.keys(by).sort((a,b)=>by[b]-by[a])[0],g=myGoats().find(x=>x.reign);
+  return{...state.done,seasons:state.history.length,top:top&&team(top)?team(top).name:"",topN:top?by[top]:0,goat:g?g.snap.name:""};
+}
+function tagGoats(n){const G=myGoats();G.forEach(g=>{if(n)g.iter=n;else delete g.iter});if(G.length)saveGoats(G)}
+async function retireSlot(id){
+  if(id!==slotId||!state){await loadSlot(id);if(slotId!==id)return}
+  if(state.done)return;
+  const n=prompt(`Mark "${state.name}" as a completed iteration? It becomes read only: you can still browse its history, records and trophies, and its GOATs stay in the gallery.\n\nIteration number:`,nextIter());
+  if(n===null)return;const num=Math.max(1,parseInt(n,10)||nextIter());
+  leagueId();state.done={n:num,at:Date.now(),season:state.season};tagGoats(num);persist();await saveNow(true);toast(`Iteration ${num} complete`);render();
+}
+async function reopenSlot(id){
+  if(id!==slotId||!state){await loadSlot(id);if(slotId!==id)return}
+  if(!state.done||!confirm(`Reopen iteration ${state.done.n}, ${state.name}, so you can keep playing it?`))return;
+  delete state.done;tagGoats(null);persist();await saveNow(true);toast("Iteration reopened");render();
+}
 async function exportText(name,text){
   if(window.showSaveFilePicker){try{const h=await window.showSaveFilePicker({suggestedName:name,types:[{description:"League save",accept:{"application/json":[".json"]}}]});const w=await h.createWritable();await w.write(text);await w.close();toast(`Exported to ${h.name}`);return}catch(e){if(e.name==="AbortError")return;console.warn(e)}}
   const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type:"application/json"}));a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),2000);toast("Save file downloaded");
@@ -2453,9 +2476,12 @@ const whenTxt=t=>{if(!t)return "";const s=(Date.now()-t)/1000;return s<60?"just 
 function slotCards(){
   if(slots===null)return `<p class="muted">Loading saves...</p>`;
   if(!slots.length)return `<div class="empty">No saves yet.</div>`;
-  return `<div class="slots">${slots.map(m=>{const cur=state&&m.id===slotId;return `<div class="slot ${cur?"cur":""}">${m.badge?badge(m.badge,44):""}<div class="grow"><b class="slotn">${esc(m.name)}</b>${cur?`<span class="eratag live">Open now</span>`:""}
-    <span class="muted">${m.name!==m.league?`${esc(m.league)}. `:""}Season ${m.season}, ${esc(m.where)}</span><span class="muted">${esc(m.fmt)}, ${m.clubs} clubs${m.champ?`. Last champions ${esc(m.champ)}`:""}</span><span class="muted">Saved ${whenTxt(m.saved)}${m.kb?`, ${m.kb} KB`:""}</span>
-    <div class="row"><button class="btn sm ${cur?"":"go"}" data-act="slot-load" data-id="${m.id}">${cur?"Reload":"Load"}</button><button class="btn sm" data-act="slot-ren" data-id="${m.id}">Rename</button><button class="btn sm" data-act="slot-exp" data-id="${m.id}">Export</button><button class="btn sm" data-act="slot-del" data-id="${m.id}">Delete</button></div></div></div>`}).join("")}</div>`;
+  const live=slots.filter(m=>!m.done),done=slots.filter(m=>m.done).sort((a,b)=>b.done.n-a.done.n);
+  const card=m=>{const cur=state&&m.id===slotId,d=m.done;return `<div class="slot ${cur?"cur":""}${d?" done":""}">${m.badge?badge(m.badge,44):""}<div class="grow">${d?`<span class="itern">Iteration ${d.n}</span>`:""}<b class="slotn">${esc(m.name)}</b>${cur?`<span class="eratag live">Open now</span>`:""}
+    ${d?`<span class="muted">${m.name!==m.league?`${esc(m.league)}. `:""}${pluralN(d.seasons,"season")} played. Completed ${new Date(d.at).toLocaleDateString([],{dateStyle:"medium"})}</span><span class="muted">${esc(m.fmt)}, ${m.clubs} clubs${d.top?`. Most titles ${esc(d.top)} (${d.topN})`:""}</span>${d.goat?`<span class="muted">GOAT ${esc(d.goat)}</span>`:""}`
+    :`<span class="muted">${m.name!==m.league?`${esc(m.league)}. `:""}Season ${m.season}, ${esc(m.where)}</span><span class="muted">${esc(m.fmt)}, ${m.clubs} clubs${m.champ?`. Last champions ${esc(m.champ)}`:""}</span><span class="muted">Saved ${whenTxt(m.saved)}${m.kb?`, ${m.kb} KB`:""}</span>`}
+    <div class="row"><button class="btn sm ${cur?"":"go"}" data-act="slot-load" data-id="${m.id}">${cur?"Reload":d?"View":"Load"}</button>${d?`<button class="btn sm" data-act="slot-reopen" data-id="${m.id}">Reopen</button>`:`<button class="btn sm" data-act="slot-retire" data-id="${m.id}">Complete iteration</button>`}<button class="btn sm" data-act="slot-ren" data-id="${m.id}">Rename</button><button class="btn sm" data-act="slot-exp" data-id="${m.id}">Export</button><button class="btn sm" data-act="slot-del" data-id="${m.id}">Delete</button></div></div></div>`};
+  return `${live.length?`<div class="slots">${live.map(card).join("")}</div>`:""}${done.length?`<h3 style="margin-top:22px">Completed iterations</h3><p class="muted">Finished leagues, kept as a record. Open one to browse its history, records and trophies. They are read only until you reopen them.</p><div class="slots">${done.map(card).join("")}</div>`:""}`;
 }
 function viewSaves(){
   const on=autosaveOn();
@@ -2466,6 +2492,8 @@ function viewSaves(){
   <p class="muted" style="margin-top:18px">${storeSafe?"Chrome has marked this app's storage as protected, so it is not cleared to free up space.":"Chrome may clear this app's storage if your disk runs very low, or if you clear site data for it."} Export a file now and then if you want a copy outside the app, for a backup or another computer.</p>`;
 }
 /* ---------- events ---------- */
+// Actions that move a completed iteration on are blocked
+const LOCKED=new Set(["sim-round","sim-season","end-season","draft-start","draft-pick","draft-auto","draft-auto-round","draft-auto-all","tb-do","trade-now","mgr-sack"]);
 document.addEventListener("click",async e=>{
   const b=e.target.closest("[data-act]");if(!b)return;
   const a=b.dataset.act,v=b.dataset.v,id=b.dataset.id;
@@ -2480,7 +2508,10 @@ document.addEventListener("click",async e=>{
   if(a==="slot-ren")return renameSlot(id);
   if(a==="slot-del")return deleteSlot(id);
   if(a==="slot-exp")return exportSlot(id);
+  if(a==="slot-retire")return retireSlot(id);
+  if(a==="slot-reopen")return reopenSlot(id);
   if(!state)return;
+  if(state.done&&LOCKED.has(a)){toast(`Iteration ${state.done.n} is complete, so it is read only. Reopen it on the Saves page to keep playing.`);return}
   const was=view;
   switch(a){
     case "nav":view=v;navStack=[];break;
