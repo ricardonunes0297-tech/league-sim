@@ -1694,24 +1694,26 @@ async function reviewCard(season){
   const img=u=>new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=u});
   const txt=(s,X,Y,size,col,font=HD,weight=700,maxW=0,align="left")=>{s=String(s);let z=size;do{x.font=`${weight} ${z}px ${font}`;z--}while(maxW&&x.measureText(s).width>maxW&&z>10);x.fillStyle=col;x.textAlign=align;x.fillText(s,X,Y)};
   const sprite=(im,X,Y,k)=>{if(im)x.drawImage(im,X,Y,im.naturalWidth*k,im.naturalHeight*k)};
+  // Trophies are scaled as if 23 px wide, whatever size they are drawn or uploaded at
+  const tsp=(im,X,Y,k)=>{if(im)sprite(im,X,Y,k*23/im.naturalWidth)};
   x.imageSmoothingEnabled=false;
   for(let y=0;y<H;y+=90){x.fillStyle=(y/90)%2?turf2:turf;x.fillRect(0,y,W,90)}
   x.strokeStyle=chalk;x.globalAlpha=.35;x.lineWidth=4;x.strokeRect(28,28,W-56,H-56);x.strokeRect(W/2-320,28,640,180);x.beginPath();x.arc(W/2,208,60,0,Math.PI);x.stroke();x.globalAlpha=1;
   txt(state.name.toUpperCase(),W/2,100,40,dim,HD,700,600,"center");txt(`SEASON ${h.season} REVIEW`,W/2,178,76,chalk,HD,700,600,"center");
   const [tro,bdg]=await Promise.all([img(pxTrophy("league")),team(h.champion.id)?img(pxBadge(team(h.champion.id))):null]);
-  sprite(tro,80,290,6);
+  tsp(tro,80,290,6);
   if(bdg){const k=Math.max(1,Math.floor(150/bdg.naturalHeight));sprite(bdg,240,320+(150-bdg.naturalHeight*k)/2,k)}
   const ch=h.table[0],gap=ch.pts-h.table[1].pts;
   txt("CHAMPIONS",420,340,36,acc);txt(h.champion.name,420,430,92,chalk,HD,700,W-420-70);
   txt(`${pluralN(ch.pts,"point")}. ${ch.w} won, ${ch.d} drawn, ${ch.l} lost`,420,480,30,dim,BD,500,W-490);
   txt(gap?`${pluralN(gap,"point")} clear of ${h.runnerUp.name}`:`Level on points with ${h.runnerUp.name}`,420,520,30,dim,BD,500,W-490);
   const aw=h.awards||[],lines=[...(h.cup?[["cup",`${h.cup.name.toUpperCase()}: ${h.cup.winner.name}`]]:[]),...(h.mos?[["mos",`MANAGER OF THE SEASON: ${h.mos.name}, ${h.mos.team}`]]:[])],cy=lines.length*54;
-  for(let i=0;i<lines.length;i++){const ci=await img(pxTrophy(lines[i][0],true));sprite(ci,420,548+i*54,2);txt(lines[i][1],476,585+i*54,30,acc,HD,700,W-476-70)}
+  for(let i=0;i<lines.length;i++){const ci=await img(pxTrophy(lines[i][0],true));tsp(ci,420,548+i*54,2);txt(lines[i][1],476,585+i*54,30,acc,HD,700,W-476-70)}
   if(aw.length){txt("AWARDS",80,610+cy,36,acc);const cw=(W-160-24)/2,chh=176;
     const ims=await Promise.all(aw.map(a=>img(pxTrophy(a.type))));
     aw.slice(0,4).forEach((a,i)=>{const X=80+(i%2)*(cw+24),Y=634+cy+Math.floor(i/2)*(chh+16);
       x.fillStyle="rgba(0,0,0,.2)";x.beginPath();x.roundRect?x.roundRect(X,Y,cw,chh,18):x.rect(X,Y,cw,chh);x.fill();
-      sprite(ims[i],X+24,Y+(chh-128)/2,4);
+      tsp(ims[i],X+24,Y+(chh-128)/2,4);
       txt(AWARDS[a.type].full.toUpperCase(),X+140,Y+44,26,acc,HD,700,cw-160);txt(a.name,X+140,Y+92,44,chalk,HD,700,cw-160);
       txt(a.team,X+140,Y+128,24,dim,BD,500,cw-160);txt(a.val||"",X+140,Y+158,26,chalk,HD,600,cw-160)})}
   const ly=(aw.length?634+Math.ceil(Math.min(4,aw.length)/2)*192+40:640)+cy;
@@ -2194,30 +2196,105 @@ function inPoly(x,y,pts){let c=false;for(let i=0,j=pts.length-1;i<pts.length;j=i
 const starArr=(cx,cy,R,r)=>starPts(cx,cy,R,r).split(" ").map(s=>s.split(",").map(Number));
 function mapSprite(rows,pal){const w=Math.max(...rows.map(r=>r.length)),g=Grid(w+2,rows.length+2);rows.forEach((r,y)=>[...r].forEach((ch,x)=>{if(pal[ch])g.set(x+1,y+1,pal[ch])}));return g}
 /* ---------- trophies: one engine for the league title and every award ---------- */
-const TRO_MAPS={title:[".........www.........","........wgggg........",".........ggg.........","..........g..........",".......ggggggg.......","......gdddddddg......","...ggggggggggggggg...","ggg.gwggggggggggg.ggg","g...gwggggggggggg...g","g...gdddddddddddg...g","g...gaaaaaaaaaaag...g","gg..gdddddddddddg..gg",".gg.gwggggggggggg.gg.",".agggwggggggggggggga.","aa...ggggggggggg...aa","a.a...ggggggggg...a.a","........ggggg........",".........ggg.........","........gdddg........",".........ggg.........","........ggggg........","......gwggggggg......",".....gdddddddddg.....","...ggggggggggggggg..."],grand:["......ggggggggg......",".....gdddddddddg.....",".ggggggggggggggggggg.","gg..gwggggggggggg..gg","gg..gwggggggggggg..gg","gg..gwggggggggggg..gg","gg...gwggggggggg...gg","gg...gaaaaaaaaag...gg","gg...gwggggggggg...gg",".gg...gwggggggg...gg.",".gg...gwggggggg...gg.","..gg...gwggggg...gg..","..ggg..gwggggg..ggg..","...ggggggggggggggg...",".....ggggggggggg.....",".......ggggggg.......","........ggggg........",".........ggg.........",".........ggg.........","........gdddg........",".........ggg.........",".......ggggggg.......","......gdddddddg......",".....ggggggggggg....."],champ:["......ggg......","....ggdddgg....","...ggggdgggg...","...dggdddggd...","...dgggdgggd...","...ggggggggg...","....ddgggdd....","......ggg......",".......g.......","..ggggggggggg..","...gdddddddg...","...ggggggggg...","....ggggggg....","....ggggggg....",".....ggggg.....","......ggg......","......ggg......","......ggg......",".....ggggg.....","....gaaaaag....","....ggggggg....","...ggggggggg...","...gdddddddg...","..ggggggggggg..","..ggggggggggg.."],cup:["........ggggg........","......ggggggggg......","....ggggggggggggg....","....gdddddddddddg....",".ggggggggggggggggggg.","gg.ggggggggggggggg.gg","g...ggggggggggggg...g","g...gaaaaaaaaaaag...g","g...ggggggggggggg...g","gg...ggggggggggg...gg",".gg..ggggggggggg..gg.","..ggg.ggggggggg.ggg..","......ggggggggg......",".......ggggggg.......","........ggggg........",".........ggg.........",".........ggg.........",".........ggg.........","........ggggg........",".......ggggggg.......","......gdddddddg......","......ggggggggg......",".....ggggggggggg.....",".....ggggggggggg....."],ball:["...gdddg...",".ggggdgggg.",".ggggggggg.","dgggdddgggd","ddggdddggdd","dggggdggggd","ggggggggggg",".gdgggggdg.",".dddgggddd.","..dgggggd..","...ggggg...","....ggg....",".....g.....","...ggggg...","..ggggggg.."],plate:["......ggggggg......",".....ggggggggg.....","...gggddaaaddggg...","...ggdaaaaaaadgg...","..ggdaagggggaadgg..",".ggdaagggggggaadgg.",".ggdaggggwggggadgg.",".ggaaggwwwwwggaagg.",".ggaagggwwwgggaagg.",".ggaagggwgwgggaagg.",".ggdagggggggggadgg.",".ggdaagggggggaadgg.","..ggdaagggggaadgg..","...ggdaaaaaaadgg...","...gggddaaaddggg...",".....ggggggggg.....","......ggggggg......","........ggg........","........ggg........",".......ggggg.......","......ggggggg......"],star:["........g........",".......ggg.......",".......ggg.......","......ggggg......","......ggggg......","ggggggggggggggggg",".ggggggggggggggg.","..ggggggwgggggg..","...ggggwwwgggg...","....ggggwgggg....","....ggggggggg....","...ggggg.ggggg...","...gggg...gggg...","..ggg.......ggg..","..gg.........gg..","........g........","........g........",".......ggg.......","......ggggg......",".....ggggggg....."],boot:["..gggggggg..........","..gddddddg..........","..gggggggg..........","..gggggggg..........","..ggggggggd.........","..gggggggggdg.......","..ggggggggggdgg.....","..gggggggggggdggg...","..gggggggggggggggggg",".ggggggggggggggggggg",".ggggggggggggggggggg",".kkkkkkkkkkkkkkkkkk.","..kk..kk....kk..kk..","........ggggg.......",".......ggggggg......"],glove:[".......gg.gg.....","....gg.gg.gg.gg..","....gg.gg.gg.gg..","....gg.gg.gg.gg..","....gg.gg.gg.gg..","....ggggggggggg..",".gg.ggggggggggg..",".ggggggggggggggg.","..gggggggggggggg.","...gggggggggggg..","....ggggggggggg..","....aaaaaaaaaaa..","....aaaaaaaaaaa..","....ggggggggggg..",".....ggggggggg...",".......ggggg.....","........ggg......","......ggggggg....",".....ggggggggg..."],medal:["aaa.........aaa","aaaa.......aaaa",".aaaa.....aaaa.","..aaaa...aaaa..","...aaaa.aaaa...","....aaaaaaa....",".....ggggg.....","...ggggggggg...","..ggdddddddgg..",".ggdgggggggdgg.",".gdggggwggggdg.",".gdgwwwwwwwgdg.",".gdgggwwwgggdg.",".gdggwgggwggdg.",".ggdgggggggdgg.","..ggdddddddgg..","...ggggggggg...",".....ggggg....."],kicker:["......gg..........",".....gggg.........","......gg..........",".....gggg.........","...ggggggg........","..gg.gggg.gg......",".gg..gggg..gg.....",".g...gggg...g.....",".....gggg.........",".....ggggg........","....ggg.ggg.......","....gg...ggg......","....gg....ggg.....","....gg.....ggg.ggg","....gg......gggggg","....gg.........ggg","...ggg............","..gggg............","..ggggggg.........",".ggggggggg........"],runner:["..g.........g...","..gg.......gg...","...gg.ggg.gg....","....gggggggg....",".....gggggg.....","......gggg......","......gggg......","......gggg......","......gggg......",".....gggggg.....",".....gg..gg.....",".....gg..gg.....",".....gg..gg.....",".....gg..gg.....",".....gg..gg.....","....ggg..ggg....","................","....gggggggg....","...gggggggggg..."],coach:["......gg.........",".....gggg........","......gg.........",".....gggg........","....ggggggggggggg","...ggggggggg.....","..gg.gggggg......","..g..gggggg......","..g..gggggg......","..gg.gggggg......",".....gggggg......",".....gg..gg......",".....gg..gg......",".....gg..gg......",".....gg..gg......",".....gg..gg......","....ggg..ggg.....",".................","....gggggggg.....","...gggggggggg...."],keeper:["................ww..","...........g...wwww.","..........ggg..wwww.","...........g.gg.ww..",".........gggggg.....","......gggggggg......","....ggggggg.........","..gggggg............",".ggg..gg............","gg.....gg...........",".......gg...........","........g...........","........gg..........",".......gggg.........","......gggggg........"]};
-TRO_MAPS.crown=["..a.......a.......a..",".aaa.....aaa.....aaa.","..g.......g.......g..","..gg.....ggg.....gg..","..gwg...ggggg...gwg..","..gwgg.ggggggg.ggwg..","..gwgggggggggggggwg..","..gwgggggggggggggwg..","..ggggggggggggggggg..","..ddddddddddddddddd..","..gaggaggagaggaggag..","..ddddddddddddddddd..","..ggggggggggggggggg..","...ggggggggggggggg...",".....ggggggggggg.....",".......ggggggg.......","........ggggg........",".........ggg.........","........gdddg........",".........ggg.........","........ggggg........","......gwggggggg......",".....gdddddddddg.....","...ggggggggggggggg..."];
-const TROPHY_DEF={league:{shape:"title",metal:"gold",base:"black",accent:"#C8102E"},cup:{shape:"grand",metal:"silver",base:"black",accent:"#1F6FD1"},tots:{shape:"medal",metal:"silver",base:"black",accent:"#1F6FD1"},hof:{shape:"star",metal:"gold",base:"wood",accent:"#C8102E"},mos:{shape:"coach",metal:"gold",base:"black",accent:"#1F6FD1"},mvp:{shape:"kicker",metal:"gold",base:"black",accent:"#C8102E"},boot:{shape:"boot",metal:"gold",base:"black",accent:"#C8102E"},glove:{shape:"glove",metal:"gold",base:"black",accent:"#1F6FD1"},rookie:{shape:"runner",metal:"gold",base:"black",accent:"#1F6FD1"},poty:{shape:"champ",metal:"rose",base:"marble",accent:"#7A3DC8"},goat:{shape:"crown",metal:"gold",base:"marble",accent:"#C8102E"}};
+const TROPHY_DEF={league:{shape:"title",metal:"silver",base:"black",accent:"#1F4FBF",plate:"star"},cup:{shape:"grand",metal:"silver",base:"black",accent:"#C8102E",plate:"ball"},tots:{shape:"shield",metal:"gold",base:"black",accent:"#1B2F6B",plate:"star"},hof:{shape:"laurel",metal:"gold",base:"black",accent:"#C8102E",plate:"none"},mos:{shape:"suit",metal:"gold",base:"black",accent:"#1B1B22",plate:"star"},mvp:{shape:"spire",metal:"silver",base:"black",accent:"#C8102E",plate:"text",text:"MVP"},boot:{shape:"boot",metal:"gold",base:"black",accent:"#C8102E",plate:"ball"},glove:{shape:"glove",metal:"gold",base:"black",accent:"#C8102E",plate:"glove"},rookie:{shape:"wings",metal:"gold",base:"black",accent:"#1F6FD1",plate:"kicker"},poty:{shape:"slim",metal:"rose",base:"marble",accent:"#7A3DC8",plate:"text",text:"POTY"},goat:{shape:"crown",metal:"gold",base:"marble",accent:"#C8102E",plate:"crown"}};
 const TROPHY_L={league:"League title",cup:"Cup",tots:"Team of the season",hof:"Hall of Fame",mos:"Manager",mvp:"MVP",boot:"Golden Boot",glove:"Golden Glove",rookie:"Young Player",poty:"Player of the Year",goat:"GOAT"};
-const TROPHY_OPTS={shape:[["title","Lidded cup"],["grand","Tall cup"],["champ","Ball top"],["cup","Big cup"],["plate","Plate"],["star","Star"],["ball","Ball"],["boot","Boot"],["glove","Glove"],["medal","Medal"],["kicker","Striker"],["runner","Celebration"],["keeper","Keeper"],["coach","Manager"],["crown","Crown"]],metal:[["gold","Gold"],["silver","Silver"],["rose","Rose gold"],["bronze","Bronze"],["black","Black"]],base:[["black","Black"],["wood","Wood"],["marble","Marble"],["none","None"]]};
+const TROPHY_OPTS={plate:[["none","None"],["star","Star"],["ball","Ball"],["kicker","Player"],["boot","Boot"],["glove","Glove"],["crown","Crown"],["text","Text"]],shape:[["wings","Winged ball"],["spire","Spire"],["slim","Slim cup"],["laurel","Laurel column"],["shield","Team shield"],["suit","Suit"],["title","Lidded cup"],["grand","Tall cup"],["champ","Ball top"],["cup","Big cup"],["plate","Plate"],["star","Star"],["ball","Ball"],["boot","Boot"],["glove","Glove"],["medal","Medal"],["kicker","Striker"],["runner","Celebration"],["keeper","Keeper"],["coach","Manager"],["crown","Crown"]],metal:[["gold","Gold"],["silver","Silver"],["rose","Rose gold"],["bronze","Bronze"],["black","Black"]],base:[["black","Black"],["wood","Wood"],["marble","Marble"],["none","None"]]};
 const BASES={black:["#3A322A","#1B1712","#0F0C09"],wood:["#A8724A","#7A4B2A","#4E2E18"],marble:["#FFFFFF","#E4E1DA","#B5B0A6"]};
 const trophySpec=k=>({...(TROPHY_DEF[k]||CA_LOOK),...(((state&&state.settings&&state.settings.trophies)||{})[k]||{})});
-// Hand-drawn sprites (TRO_MAPS): g metal, d engraving, w shine, a accent, k black. Metal is shaded per row, light on the left, dark on the right,
-// and one step darker along bottom edges so each piece reads as rounded. title (league) and grand (cup) are the competition trophies.
+/* Trophies are drawn at 46 x 64 from vector parts, then shaded pixel by pixel. Shown 23 px wide they are one device pixel per
+   art pixel on a retina screen, and 46, 69 and 92 px wide are whole steps there too, so they stay crisp at every size.
+   A part is {m: material, s: shading, d: SVG path (absolute M L C Q H V Z only), mir: also drawn mirrored, on: only over pixels
+   already drawn, ev: even-odd fill}. Materials: g trophy metal, t gold trim (name plate, bands, inner blades), a accent,
+   k black lacquer, w white, p plinth. Shading: c cylinder (shine left of centre, dark on the right), b bevel (lit top left),
+   r round (balls), or a number 0 to 4 for one tone. The body fills rows 0 to 49 and the plinth with its name plate rows 50 to 63. */
+const TW=46,TBODY=50;
+const TO=(cx,cy,rx,ry=rx)=>{const kx=rx*.5523,ky=ry*.5523;return `M${cx-rx} ${cy}C${cx-rx} ${cy-ky} ${cx-kx} ${cy-ry} ${cx} ${cy-ry}C${cx+kx} ${cy-ry} ${cx+rx} ${cy-ky} ${cx+rx} ${cy}C${cx+rx} ${cy+ky} ${cx+kx} ${cy+ry} ${cx} ${cy+ry}C${cx-kx} ${cy+ry} ${cx-rx} ${cy+ky} ${cx-rx} ${cy}Z`};
+const TR=(x,y,w,h)=>`M${x} ${y}H${x+w}V${y+h}H${x}Z`;
+const TP=(m,s,d,o={})=>({m,s,d,...o});
+const tPoly=pts=>pts.map(([x,y],i)=>`${i?"L":"M"}${x.toFixed(2)} ${y.toFixed(2)}`).join("")+"Z";
+const tStar=(cx,cy,R,r,rot=0)=>tPoly([...Array(10)].map((_,i)=>{const a=-Math.PI/2+rot+i*Math.PI/5,q=i%2?r:R;return[cx+q*Math.cos(a),cy+q*Math.sin(a)]}));
+const tLeaf=(cx,cy,rx,ry,deg)=>{const a=deg*Math.PI/180;return tPoly([...Array(12)].map((_,i)=>{const t=i*Math.PI/6,x=rx*Math.cos(t),y=ry*Math.sin(t);return[cx+x*Math.cos(a)-y*Math.sin(a),cy+x*Math.sin(a)+y*Math.cos(a)]}))};
+function tMir(d){return d.replace(/([MLCQHVZ])([^MLCQHVZ]*)/g,(m,c,a)=>{const n=a.trim()?a.trim().split(/[\s,]+/).map(Number):[];return c+n.map((v,i)=>c==="V"?v:(c==="H"||i%2===0)?+(TW-v).toFixed(2):v).join(" ")})}
+// A football: shaded sphere, a dark centre panel, seams out to the edge and part panels round the rim
+function tBall(cx,cy,r,m="g"){const A=i=>-Math.PI/2+i*2*Math.PI/5,pent=(x,y,q,o)=>tPoly([0,1,2,3,4].map(i=>[x+q*Math.cos(A(i)+o),y+q*Math.sin(A(i)+o)]));
+  return[TP(m,"r",TO(cx,cy,r)),TP(m,4,pent(cx,cy,r*.36,0),{on:1}),
+    ...[0,1,2,3,4].map(i=>{const a=A(i),c=Math.cos(a),sn=Math.sin(a),nx=-sn*.85,ny=c*.85,x1=cx+r*.36*c,y1=cy+r*.36*sn,x2=cx+r*.8*c,y2=cy+r*.8*sn;return TP(m,3,tPoly([[x1+nx,y1+ny],[x2+nx,y2+ny],[x2-nx,y2-ny],[x1-nx,y1-ny]]),{on:1})}),
+    ...[0,1,2,3,4].map(i=>{const a=A(i)+Math.PI/5;return TP(m,4,pent(cx+r*1.02*Math.cos(a),cy+r*1.02*Math.sin(a),r*.3,Math.PI/5),{on:1})})]}
+const tStem=(top,neck=4)=>[TP("g","c",`M${23-neck/2-1} ${top}L${23+neck/2+1} ${top}L${23+neck/2} ${top+5}L${23-neck/2} ${top+5}Z`),TP("g","c",TO(23,top+5.5,5,1.8)),TP("g","c",`M21 ${top+7}L25 ${top+7}L27 45L19 45Z`),TP("g","c","M15 50L31 50L29 45L17 45Z")];
+const tFig=base=>[TP("g","c",base||"M12 50L34 50L32 44L14 44Z")];
+const TSHAPES={
+  title:()=>[TP("g","c","M12 14L34 14C34 25 30 31 23 32C16 31 12 25 12 14Z"),TP("t",1,TR(12,18,22,2),{on:1}),TP("g","b",TR(10,12,26,3)),TP("g","c","M15 12C16 7 30 7 31 12Z"),TP("g","r",TO(23,5,2.6)),
+    TP("g","b","M12 15C4 14 3 27 14 27L14 24C8 24 8 18 12 18Z",{mir:1}),...tStem(32),TP("a","c","M6.5 17L10.5 17L10 42L8.5 39.5L7 42Z",{mir:1})],
+  grand:()=>[TP("g","r",TO(23,3,2.5)),TP("g","c","M15 11C15 5 31 5 31 11Z"),TP("g","b",TR(13,10,20,3)),TP("g","c","M14 13L32 13C33 23 30 30 26 33L20 33C16 30 13 23 14 13Z"),TP("t",1,TR(14,17,18,2),{on:1}),
+    TP("g","b","M14 14C5 12 4 26 14 29L15 26C8 24 8 17 14 17Z",{mir:1}),...tStem(33),TP("a","c","M3.5 21L7 21L6.5 43L5 40.5L3.5 43Z",{mir:1})],
+  champ:()=>[TP("g","c","M12 17L34 17C34 26 29 31 23 31C17 31 12 26 12 17Z"),TP("t",1,TR(12,21,22,2),{on:1}),TP("g","b",TR(11,15,24,3)),...tBall(23,9,7),...tStem(31)],
+  cup:()=>[TP("g","c","M9 7L37 7C37 21 31 28 23 29C15 28 9 21 9 7Z"),TP("a",2,TR(9,12,28,2),{on:1}),TP("g","b",TR(8,5,30,3)),TP("g","b","M9 8C1 8 1 22 11 24L12 21C5 20 5 11 9 11Z",{mir:1}),...tStem(29)],
+  plate:()=>[TP("g","c","M20 50L26 50L25 43L21 43Z"),TP("g","b",TO(23,23,21)),TP("a","b",TO(23,23,17)),TP("g","r",TO(23,23,14)),TP("g",3,tStar(23,23,8,3.4),{on:1})],
+  star:()=>[TP("g","c","M21 28L25 28L26 45L20 45Z"),TP("g","c","M15 50L31 50L29 45L17 45Z"),TP("g","b",tStar(23,17,17,7)),TP("t","b",tStar(23,17,8,3.4))],
+  ball:()=>[...tBall(23,17,14),TP("g","c","M13 28Q23 40 33 28L30 37L16 37Z"),TP("g","c","M21 37L25 37L26 45L20 45Z"),TP("g","c","M15 50L31 50L29 45L17 45Z")],
+  boot:()=>[TP("g","b","M4 44L4 32Q4 27 8 26L11 22Q17 20 23 22.5L24 26Q31 32 39 35Q45 37 44.5 41L43.5 44Z"),TP("g",4,TO(17,22.6,5.2,1.3),{on:1}),TP("g",0,"M8 31.5Q24 30 38 37L37.5 38Q24 32.5 8 33Z",{on:1}),
+    ...[[22.5,28],[25,30],[27.5,32]].map(([x,y])=>TP("g",4,`M${x} ${y}L${x+3} ${y-1.5}L${x+3.6} ${y-.3}L${x+.6} ${y+1.2}Z`,{on:1})),TP("g",3,"M8 41.5Q26 40.5 43 42L43 43Q26 41.5 8 42.5Z",{on:1}),
+    TP("t","b","M3 44L45 44L44 46.5L4.5 46.5Z"),...[7,13,28,34,39].map(x=>TP("t","b",TR(x,46.5,3,3.5)))],
+  glove:()=>[TP("g","c","M16 50L30 50L28 45L18 45Z"),TP("a","b",TR(14,39,18,6)),TP("g","b","M12 19L34 19L34 33Q34 39 28 40L18 40Q12 39 12 33Z"),
+    ...[[12,6],[17.5,2],[23,3],[28.5,7]].map(([x,y])=>TP("g","b",`M${x} ${y+2.75}Q${x} ${y} ${x+2.75} ${y}Q${x+5.5} ${y} ${x+5.5} ${y+2.75}L${x+5.5} 21L${x} 21Z`)),
+    TP("g","b","M13 25L6.5 17.5Q4 14 6.5 12Q9.5 10.5 11.5 13.5L16 21Z"),TP("g",3,"M15 30Q23 33 31 30L31 31Q23 34 15 31Z",{on:1})],
+  medal:()=>[TP("a","b","M11 0L18 0L26 22L19 22Z",{mir:1}),TP("g","c","M21 50L25 50L25 42L21 42Z"),TP("g","r",TO(23,31,12)),TP("g",3,TO(23,31,9.5)+TO(23,31,8.4),{on:1,ev:1}),TP("t","b",tStar(23,31,6,2.6))],
+  kicker:()=>[...tFig("M11 50L33 50L31 44L13 44Z"),TP("g","b",TR(13,40,7,4)),TP("g","b","M15 24L19 24L18 40L15 40Z"),TP("g","b","M19 23L23 22L34 33L31 36Z"),TP("g","b","M14 10L22 10L23 24L15 24Z"),
+    TP("g","b","M14 11L9 19L11 20L15 14Z"),TP("g","b","M22 11L29 16L28 18L22 15Z"),TP("g","r",TO(18,6,3.6)),TP("t","r",TO(37,39,4))],
+  runner:()=>[...tFig(),TP("g","b","M20 27L23 27L22 44L18 44Z",{mir:1}),TP("g","b","M19 11L27 11L26 27L20 27Z"),TP("g","b","M19 12L21 14L14 3L12 5Z",{mir:1}),TP("g","r",TO(23,7,3.6))],
+  keeper:()=>[...tFig(),TP("g","c","M20 30L24 28L25 44L21 44Z"),TP("g","b","M10 30L3 33L5 37L13 34Z"),TP("g","b","M9 31L28 15L32 19L13 35Z"),TP("g","b","M29 14L38 7L40 10L32 17Z"),TP("g","r",TO(33,12,3.6)),TP("t","r",TO(41,5,3.5))],
+  coach:()=>[...tFig(),TP("g","b","M15 30L20 30L20 44L16 44Z"),TP("g","b","M22 30L27 30L26 44L22 44Z"),TP("g","b","M15 10L27 10L28 30L14 30Z"),TP("g","b","M26 11L37 7L38 10L27 15Z"),TP("g","b","M15 11L12 22L14 23L17 14Z"),TP("g","r",TO(21,6,3.6))],
+  crown:()=>[TP("g","c","M13 19L33 19C32 28 28 32 23 32C18 32 14 28 13 19Z"),...tStem(32),TP("g","b","M8 16L8 5L15 11L23 2L31 11L38 5L38 16Z"),TP("t","b",TR(8,14,30,5)),
+    ...[[8,4.5,2.2],[23,2,2.4],[38,4.5,2.2]].map(([x,y,r])=>TP("a","r",TO(x,y,r))),...[[15,16.5,1.7],[23,16.5,2],[31,16.5,1.7]].map(([x,y,r])=>TP("a","r",TO(x,y,r)))],
+  wings:()=>[TP("g","c","M22 46C14 38 7 28 9 13C12 22 17 27 22 30Z",{mir:1}),TP("g","c","M20 29L26 29L25 45L21 45Z"),TP("g","c","M15 50L31 50L29 45L17 45Z"),...tBall(23,12,10)],
+  spire:()=>[TP("g","c","M13 50L33 50L31 45L15 45Z"),TP("g","c","M15 45L31 45L27 36L19 36Z"),TP("t","b",TR(18,35,10,2)),TP("g","c","M21 22L25 22L24 36L22 36Z"),
+    TP("g","b","M22 36L8 5L13 5L21 24Z",{mir:1}),TP("t","b","M22 31L14 11L16.5 11L22 25Z",{mir:1}),TP("t","c","M17 17Q23 23 29 17L27 22L19 22Z"),...tBall(23,10,8)],
+  slim:()=>[TP("g","c","M15 50L31 50L29 41L17 41Z"),TP("t",1,TR(16,46,14,1),{on:1}),TP("g","c","M20.5 29L25.5 29L25 41L21 41Z"),TP("t","b",TR(20,33,6,2)),
+    TP("g","c","M15 3L31 3L29.5 17Q28 25 25.5 29L20.5 29Q18 25 16.5 17Z"),TP("t",2,TO(23,12,4.2)+TO(23,12,2.6),{on:1,ev:1}),TP("g","b",TR(14,2,18,2)),TP("g","c","M15 5Q7 18 20 33L21.5 31Q11 19 17 5Z",{mir:1})],
+  laurel:()=>[TP("k","b","M14 22L32 22L30 50L16 50Z"),TP("t","b",TR(13,21,20,2)),
+    TP("g","c","M22 21Q13 20 11 8L12 8Q14 18 22.5 20Z",{mir:1}),
+    ...[[112,11],[136,12.5],[160,13],[184,12.5],[206,11]].map(([a,r])=>{const q=a*Math.PI/180;return TP("g","b",tLeaf(23+r*Math.cos(q),13+r*Math.sin(q),3.2,1.4,a+65),{mir:1})}),...tBall(23,11,8)],
+  shield:()=>[TP("g","c","M20 50L26 50L26 44L20 44Z"),TP("g","b","M6 1L40 1L40 27Q40 39 23 47Q6 39 6 27Z"),TP("a","b","M9 4L37 4L37 27Q37 37 23 44Q9 37 9 27Z"),TP("a",1,TR(10,24,26,1),{on:1}),TP("a",1,TO(23,24.5,4.5)+TO(23,24.5,3.5),{on:1,ev:1}),TP("a",1,"M16 4L16 9L30 9L30 4L29 4L29 8L17 8L17 4Z",{on:1}),TP("a",1,"M17 43L17 38L29 38L29 43L28 43L28 39L18 39L18 43Z",{on:1})],
+  suit:()=>[TP("k","b","M8 50L8 32Q9 24 16 21L19 18L27 18L30 21Q37 24 38 32L38 50Z"),TP("k",4,"M13 30L14 30L14 47L13 47Z",{on:1,mir:1}),TP("w","b","M18 15L28 15L28 18L23 32L18 18Z"),TP("k",4,TO(23,15.5,3.4,1.4),{on:1}),TP("w","b","M18 17L21.5 17.5L22 23Z",{mir:1}),
+    TP("a","b","M22 19L24 19L25.5 30L23 33L20.5 30Z"),TP("k","b","M19 18L23 32L19 37L16 22Z",{mir:1}),TP("g","b",TR(8,47,30,3))]
+};
+// Tiny engraved icons for the name plate (5 wide)
+const PLATE_ICONS={star:["..1..",".111.","11111",".111.",".1.1."],ball:[".111.","1.1.1","11.11","1.1.1",".111."],kicker:["..1..",".111.","1.1.1",".1.1.","1...1"],
+  boot:["11...","11...","1111.","11111","1.1.1"],glove:["1.1.1","1.1.1","11111","11111",".111."],crown:["1.1.1","11111","11111","11111","....."]};
+// Five tones per metal, shine to deep shadow
+const TRAMP={gold:["#FFF3B0","#F2C94C","#D49A1F","#9C6A0E","#5E3D06"],silver:["#FFFFFF","#DCE1E8","#A9B2BF","#6F7987","#3E4652"],rose:["#FFE3D6","#EBA98C","#C37658","#8A4A33","#57291A"],bronze:["#FFDDB0","#D9995A","#A86A33","#73441C","#45260E"],black:["#8A8A94","#55555E","#34343B","#202026","#101013"]};
 function pxTrophy(k,icon){
-  const T=trophySpec(k);if(T.img)return T.img;const key=["tr",icon?1:0,T.shape,T.metal,T.base,T.accent].join("|");if(PXC.cache.has(key))return PXC.cache.get(key);
-  const rows=TRO_MAPS[T.shape]||TRO_MAPS.champ,W=23,OH=25,noBase=icon||T.base==="none",g=Grid(W,noBase?OH:32);
-  const G=METALS[T.metal]||METALS.gold,A=T.accent||"#C8102E",AS=[lit(A,.35),A,drk(A,.3),drk(A,.45)],ox=(W-rows[0].length)>>1,oy=OH-rows.length;
-  rows.forEach((r,y)=>{for(let x=0;x<r.length;x++){const c=r[x];if(c===".")continue;let col;
-    if(c==="g"||c==="a"){const f=c==="g"?v=>v==="g"||v==="d"||v==="w":v=>v==="a";let x0=x,x1=x;while(x0>0&&f(r[x0-1]))x0--;while(x1<r.length-1&&f(r[x1+1]))x1++;
-      const n=x1-x0+1,t=(x-x0)/Math.max(1,n-1);let i=n===1?1:n===2?(x===x0?0:2):t<=.2?0:t<.6?1:t<.9?2:3;
-      if((y===0||rows[y-1][x]===".")&&n>2&&(i===1||i===2))i--;else if(i<3&&(y===rows.length-1||rows[y+1][x]==="."))i++;col=(c==="g"?G:AS)[i]}
-    else col=c==="d"?G[3]:c==="w"?mix(G[0],"#ffffff",.6):"#1B1712";
-    g.set(ox+x,oy+y,col)}});
-  if(!noBase){const BS=BASES[T.base]||BASES.black;for(let y=0;y<7;y++){const w=y?13:11,x0=(W-w)>>1;for(let x=x0;x<x0+w;x++)g.set(x,OH+y,y===0?BS[0]:y===6?BS[2]:T.base==="marble"&&(x*2+y*3)%7===0?BS[2]:BS[1])}for(let x=8;x<15;x++){g.set(x,OH+3,G[1]);g.set(x,OH+4,G[2])}}
+  const T=trophySpec(k);if(T.img)return T.img;
+  const fmt=T.shape==="shield"?state.format:0,key=["tr2",icon?1:0,T.shape,T.metal,T.base,T.accent,T.plate,T.text,fmt].join("|");if(PXC.cache.has(key))return PXC.cache.get(key);
+  const noBase=icon||T.base==="none",H=noBase?TBODY+1:64,A=T.accent||"#C8102E",BS=BASES[T.base]||BASES.black;
+  const M={g:TRAMP[T.metal]||TRAMP.gold,t:TRAMP.gold,a:[lit(A,.45),lit(A,.18),A,drk(A,.3),drk(A,.5)],
+    k:["#5A5A64","#3A3A42","#26262C","#18181C","#0E0E11"],w:["#FFFFFF","#F4F2EC","#DAD6CC","#B8B3A7","#8E897E"],p:[lit(BS[0],.18),BS[0],BS[1],mix(BS[1],BS[2],.5),BS[2]]};
+  const parts=(TSHAPES[T.shape]||TSHAPES.champ)();
+  if(!noBase)parts.push(TP("p","b",TR(12,50,22,2)),TP("t",1,TR(11,52,24,1)),TP("p","b",TR(11,53,24,7)),TP("t","b",TR(14,53,18,7)),TP("t",2,TR(11,60,24,1)),TP("p","b",TR(8,61,30,2)));
+  // Rasterise: later parts paint over earlier ones, each half of a mirrored part is shaded as its own piece
+  const ctx=pxCtx(),cell=new Array(TW*H).fill(null);
+  parts.forEach((P,pi)=>(P.mir?[P.d,tMir(P.d)]:[P.d]).forEach((d,j)=>{const path=new Path2D(d),id=pi*2+j;
+    for(let y=0;y<H;y++)for(let x=0;x<TW;x++){const i=y*TW+x;if(P.on&&!cell[i])continue;if(P.ev?ctx.isPointInPath(path,x+.5,y+.5,"evenodd"):ctx.isPointInPath(path,x+.5,y+.5))cell[i]={m:P.m,s:P.s,id}}}));
+  const C=(x,y)=>x<0||y<0||x>=TW||y>=H?null:cell[y*TW+x],same=(x,y,id)=>{const c=C(x,y);return!!c&&c.id===id},bb={};
+  cell.forEach((c,i)=>{if(!c)return;const x=i%TW,y=(i/TW)|0,b=bb[c.id]||(bb[c.id]={x0:x,x1:x,y0:y,y1:y});if(x<b.x0)b.x0=x;if(x>b.x1)b.x1=x;if(y<b.y0)b.y0=y;if(y>b.y1)b.y1=y});
+  const g=Grid(TW,H);
+  for(let y=0;y<H;y++)for(let x=0;x<TW;x++){const c=C(x,y);if(!c)continue;let i=2;const s=c.s;
+    if(typeof s==="number")i=s;
+    else if(s==="c"){let x0=x,x1=x;while(same(x0-1,y,c.id))x0--;while(same(x1+1,y,c.id))x1++;const n=x1-x0+1,t=(x-x0+.5)/n;i=n<=2?(x===x0?1:3):t<.12?1:t<.32?0:t<.52?1:t<.76?2:t<.9?3:4;if(!same(x,y-1,c.id))i=Math.max(0,i-1);else if(!same(x,y+1,c.id))i=Math.min(4,i+1)}
+    else if(s==="r"){const b=bb[c.id],R=Math.max(b.x1-b.x0+1,b.y1-b.y0+1)/2,cx=(b.x0+b.x1+1)/2,cy=(b.y0+b.y1+1)/2,d=Math.hypot((x+.5-(cx-.38*R))/R,(y+.5-(cy-.42*R))/R);i=d<.24?0:d<.6?1:d<1?2:d<1.3?3:4}
+    else if(s==="b"){const t=!same(x,y-1,c.id),l=!same(x-1,y,c.id),bo=!same(x,y+1,c.id),r=!same(x+1,y,c.id);i=t&&l?0:t||l?1:bo&&r?4:bo||r?3:2}
+    g.set(x,y,M[c.m][i])}
+  // Details drawn straight onto the pixels: the team of the season formation, the Hall of Fame column text, the name plate
+  if(T.shape==="shield"){const lu=FORMATS[state.format].lineup,rows=[["FW",10],["MF",17],["DF",27],["GK",34]],shirt=["11.11","11111",".111.",".111."];
+    rows.forEach(([pos,y])=>{const n=lu[pos]||0,w=n*6-1,x0=23-Math.ceil(w/2);for(let j=0;j<n;j++)shirt.forEach((r,dy)=>[...r].forEach((ch,dx)=>{if(ch==="1")g.set(x0+j*6+dx,y+dy,dy?M.w[1]:M.w[0])}))})}
+  if(T.shape==="laurel")["HALL","OF","FAME"].forEach((w,r)=>drawText(g,w,23-Math.ceil(textW(w)/2),27+r*7,M.t[1]));
+  if(!noBase&&T.plate&&T.plate!=="none"){const ink=M.t[4];
+    if(T.plate==="text"){const w=(T.text||"").toUpperCase().slice(0,4);if(w)drawText(g,w,23-Math.ceil(textW(w)/2),54,ink)}
+    else{const ic=PLATE_ICONS[T.plate];if(ic)ic.forEach((r,dy)=>[...r].forEach((ch,dx)=>{if(ch==="1")g.set(21+dx,54+dy,ink)}))}}
   outlineG(g,"#0D0A06");const url=gridURL(g);PXC.cache.set(key,url);return url;
 }
 /* ---------- custom awards ---------- */
-const CA_LOOK={shape:"ball",metal:"silver",base:"black",accent:"#1F6FD1"};
+const CA_LOOK={shape:"ball",metal:"silver",base:"black",accent:"#1F6FD1",plate:"star"};
 const CA_STATS={ga:["Goals plus assists",s=>s.goals+s.assists,["goal or assist","goals and assists"]],goals:["League goals",s=>s.goals,["goal","goals"]],allg:["Goals in all competitions",s=>s.goals+(s.cgoals||0),["goal","goals"]],assists:["Assists",s=>s.assists,["assist","assists"]],cs:["Clean sheets",s=>s.cs,["clean sheet","clean sheets"]],ht:["Hat-tricks",s=>s.ht||0,["hat-trick","hat-tricks"]],cupg:["Cup goals",s=>s.cgoals||0,["cup goal","cup goals"]],apps:["Appearances",s=>s.apps,["appearance","appearances"]],avg:["Average rating",null,"average"]};
 const CA_AGE={"":"Any age","21":"21 and under","23":"23 and under","30":"30 and over"};
 const caKey=c=>"x"+c.id;
@@ -2241,7 +2318,7 @@ function customAwardsCard(){
   ${L.some(c=>c.off)?`<p class="muted">Removed awards that were already won stay in the record books but are not given out any more.</p>`:""}
   <div class="toolbar"><button class="btn" data-act="ca-add">Add an award</button></div></section>`;
 }
-const APP_VERSION="2.103";
+const APP_VERSION="2.104";
 async function checkUpdates(){try{if(window.caches)for(const k of await caches.keys())await caches.delete(k);if(navigator.serviceWorker)for(const r of await navigator.serviceWorker.getRegistrations())await r.unregister()}catch(e){}location.reload()}
 let trophyTab="league";
 function trophyCard(){
@@ -2250,9 +2327,9 @@ function trophyCard(){
   return `<section class="card"><h3>Trophy room</h3><p class="muted" style="margin-top:0">Design the league trophy and each award. Changes show everywhere straight away.</p>
   <div class="chips" style="margin-bottom:12px">${Object.keys(TROPHY_DEF).filter(x=>!x.startsWith("x")||(state.settings.customAwards||[]).some(c=>caKey(c)===x)).map(x=>`<button class="chip ${k===x?"on":""}" data-act="trophy-tab" data-v="${x}">${TROPHY_L[x]}</button>`).join("")}</div>
   ${pxCtx()?`<div class="ringprev"><img class="px" src="${pxTrophy(k)}" width="92" alt="${esc(TROPHY_L[k])} trophy preview"><img class="px" src="${pxTrophy(k)}" width="23" alt=""><img class="px" src="${pxTrophy(k,true)}" width="23" alt=""></div>`:""}
-  <p class="muted" style="margin:10px 0 4px">Shape</p>${seg("shape")}<p class="muted" style="margin:6px 0 4px">Metal</p>${seg("metal")}<p class="muted" style="margin:6px 0 4px">Plinth</p>${seg("base")}
+  <p class="muted" style="margin:10px 0 4px">Shape</p>${seg("shape")}<p class="muted" style="margin:6px 0 4px">Metal</p>${seg("metal")}<p class="muted" style="margin:6px 0 4px">Plinth</p>${seg("base")}<p class="muted" style="margin:6px 0 4px">Name plate</p>${seg("plate")}${T.plate==="text"?`<label class="f">Plate text, up to 4 letters<input type="text" data-tro="text" value="${esc(T.text||"")}" maxlength="4"></label>`:""}
   <label class="f" style="margin-top:6px">Accent colour<input type="color" data-tro="accent" value="${esc(T.accent)}"></label><small class="muted">Used for ribbons, bands and stones.</small>
-  <p class="muted" style="margin:14px 0 4px">Your own image</p><div class="toolbar" style="margin-top:0"><label class="btn sm" style="display:inline-flex;align-items:center">Upload image<input type="file" accept="image/png,image/jpeg,image/webp,image/gif" data-troimg style="display:none"></label>${T.img?`<button class="btn sm" data-act="trophy-img-clear">Use the drawn trophy</button>`:""}</div><small class="muted">${T.img?"Your image is in use, so the shape, metal and plinth above are not shown. ":""}A PNG with a transparent background, upright at 23 by 32. 69 × 96 pixels is exactly the size it shows in cabinets; bigger images are shrunk to fit. Pixel art made at 23 × 32 is scaled up and stays sharp.</small>
+  <p class="muted" style="margin:14px 0 4px">Your own image</p><div class="toolbar" style="margin-top:0"><label class="btn sm" style="display:inline-flex;align-items:center">Upload image<input type="file" accept="image/png,image/jpeg,image/webp,image/gif" data-troimg style="display:none"></label>${T.img?`<button class="btn sm" data-act="trophy-img-clear">Use the drawn trophy</button>`:""}</div><small class="muted">${T.img?"Your image is in use, so the shape, metal and plinth above are not shown. ":""}A PNG with a transparent background, upright at 23 by 32 in shape. 69 × 96 pixels is exactly the size it shows in cabinets; bigger images are shrunk to fit. Pixel art made at 23 × 32 or 46 × 64 is scaled up and stays sharp.</small>
   ${custom?`<div class="toolbar"><button class="btn" data-act="trophy-reset">Reset ${esc(TROPHY_L[k])} to default</button></div>`:""}</section>`;
 }
 function awardsOf(p){return (p.awards||[]).slice().sort((a,b)=>a.season-b.season)}
@@ -2873,7 +2950,7 @@ document.addEventListener("change",e=>{
   if(el.dataset.traitAdd){const p=pl(el.dataset.traitAdd);if(p&&el.value&&traitOk(p,el.value,p.tr||[])&&(p.tr||[]).length<2)p.tr=[...(p.tr||[]),el.value];persist();render();return}
   if(el.dataset.rvname){const r=(state.rivals||[]).find(x=>x.k===el.dataset.rvname);if(r&&el.value.trim())r.name=el.value.trim().slice(0,30);persist();render();return}
   if(el.dataset.cupset){const c=state.settings.cup;if(el.dataset.cupset==="on")c.on=el.checked;else c.name=el.value.trim();persist();render();return}
-  if(el.dataset.tro){const TS=state.settings.trophies=state.settings.trophies||{};TS[trophyTab]={...trophySpec(trophyTab),accent:el.value};persist();render();return}
+  if(el.dataset.tro){const TS=state.settings.trophies=state.settings.trophies||{};TS[trophyTab]={...trophySpec(trophyTab),[el.dataset.tro]:el.dataset.tro==="text"?el.value.toUpperCase().replace(/[^A-Z0-9 ]/g,"").slice(0,4):el.value};persist();render();return}
   if(el.dataset.ring){const R2=state.settings.ring;if(el.dataset.ring==="size")R2.size=clamp(+el.value,18,60);else R2.text=el.value.toUpperCase().replace(/[^A-Z0-9 ]/g,"").slice(0,10);persist();render();return}
   if(el.dataset.h2h){h2h[el.dataset.h2h]=el.value;render();return}
   if(el.dataset.gsel){gsel[el.dataset.gsel]=el.value;render();return}
