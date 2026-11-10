@@ -911,7 +911,8 @@ const CPAT_D={stripes:[4,12,20,28,36].map(c=>`M${c-2} 0h4v46h-4z`).join(""),halv
 const circ=(x,y,r)=>`M${x-r} ${y}a${r} ${r} 0 1 0 ${2*r} 0a${r} ${r} 0 1 0 ${-2*r} 0Z`;
 function emblemParts(e){switch(e){
   case "star":return[{d:"M"+starPts(20,27,8.6,3.8).split(" ").join("L")+"Z",c:3}];
-  case "ball":return[{d:"M12.5 27a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0Z",c:3},{d:"M20 23.4L23.4 26L22.1 30H17.9L16.6 26Z",c:1}];
+  case "ball":{const A=i=>(-90+72*i)*Math.PI/180,pg=(x,y,r,o)=>"M"+[0,1,2,3,4].map(i=>`${(x+r*Math.cos(A(i)+o)).toFixed(2)} ${(y+r*Math.sin(A(i)+o)).toFixed(2)}`).join("L")+"Z";
+    return[{d:"M12.5 27a7.5 7.5 0 1 0 15 0a7.5 7.5 0 1 0 -15 0Z",c:3},{d:pg(20,27,2.5,0),c:0},{d:[0,1,2,3,4].map(i=>pg(20+5.5*Math.cos(A(i)+Math.PI/5),27+5.5*Math.sin(A(i)+Math.PI/5),1.7,Math.PI/5)).join(""),c:0}]}
   case "crown":return[{d:"M12 33L12 22L16 26L20 19L24 26L28 22L28 33Z",c:3}];
   case "bolt":return[{d:"M23 17L14 29H19L17 38L27 25H22L25 17Z",c:3}];
   case "tower":return[{d:"M13 37V23H15.5V20H18V23H22V20H24.5V23H27V37Z",c:3},{d:"M18.4 31h3.2v6h-3.2z",c:1}];
@@ -932,7 +933,9 @@ function emblemParts(e){switch(e){
   case "rose":return[{d:[0,1,2,3,4].map(i=>{const a=(-90+72*i)*Math.PI/180;return circ(+(20+4.2*Math.cos(a)).toFixed(2),+(25.5+4.2*Math.sin(a)).toFixed(2),3.4)}).join(""),c:3},{d:circ(20,25.5,1.8),c:1},{d:"M20 31V38",c:3,stroke:1.8}];
   case "clover":return[{d:circ(20,21.5,3.8)+circ(15.8,27,3.8)+circ(24.2,27,3.8),c:3},{d:"M20 28Q20.5 34 23.5 37.5",c:3,stroke:2}];
   case "heart":return[{d:"M20 36C14 31 11 28 11 24C11 21 13 19 15.5 19C17.5 19 19 20.5 20 22C21 20.5 22.5 19 24.5 19C27 19 29 21 29 24C29 28 26 31 20 36Z",c:3}];
-  case "moon":return[{d:"M23 17A10 10 0 1 0 23 37A8 8 0 1 1 23 17Z",c:3}];
+  case "moon":return[{d:circ(20,27,9.5),c:3},{d:circ(24.5,24.5,8),c:1}];
+  case "rampant":return[{d:"M15 17L18 15.5L20.5 16.5L21 19L23 18L24.5 20.5L24 23L26.5 26L27 29L28.5 28L30 24.5L29.5 21.5L31.5 22L32 25.5L30 30L29 33L31 36L28 36.5L25.5 34L23.5 35L23 38L20 38L20.5 34L19.5 31L18 29L15.5 30L12.5 30.5L13 29L16 27.5L17 25L13 24L11 22.5L12 21.5L16 22.5L17 21L14.5 20.5L13.5 19Z",c:3},{d:circ(17.6,18.3,.8),c:1}];
+  case "fleur":return[{d:"M20 15C23 19 23 24 20 29C17 24 17 19 20 15ZM19 28C15 28 11 26 12 21C13 24 15 25 17 24C15 27 17 28 19 28ZM21 28C25 28 29 26 28 21C27 24 25 25 23 24C25 27 23 28 21 28ZM14 28H26V30.6H14ZM18 30.6L22 30.6L23 36L20 33.5L17 36Z",c:3}];
   case "sun":return[{d:circ(20,27,4.6),c:3},{d:"M20 16.5V19.5M20 34.5V37.5M9.5 27H12.5M27.5 27H30.5M12.6 19.6L14.7 21.7M25.3 32.3L27.4 34.4M27.4 19.6L25.3 21.7M14.7 32.3L12.6 34.4",c:3,stroke:2}];
   case "mountain":return[{d:"M9 36L16.5 22L20 27.5L23.5 19.5L31 36Z",c:3},{d:"M21.9 23.2L23.5 19.5L25.1 23.2L23.5 24.5Z",c:1}];
   case "ship":return[{d:"M19.5 15.5V30.5H11.5Z",c:3},{d:"M21.5 18L28 30.5H21.5Z",c:3},{d:"M10 32.5H30L27 37H13Z",c:3}];
@@ -940,41 +943,76 @@ function emblemParts(e){switch(e){
   case "gem":return[{d:"M14 20H26L30 25.5L20 37L10 25.5Z",c:3},{d:"M10 25.5H30",c:1,stroke:1.2}];
   case "trident":return[{d:"M20 16V38M14 18V23Q14 27 20 27Q26 27 26 23V18",c:3,stroke:2.2},{d:"M20 14L22 17.5H18ZM14 16L15.6 19H12.4ZM26 16L27.6 19H24.4Z",c:3}];
   default:return[]}}
-const badgeKey=t=>{const c=t.crest||{};return ["b",c.shape,c.pattern,c.emblem,c.text,c.c3,t.c1,t.c2,t.short,c.stars||0,c.est||""].join("|")};
+const badgeKey=t=>{const c=t.crest||{};return ["b2",c.shape,c.pattern,c.emblem,c.text,c.c3,t.c1,t.c2,t.short,c.stars||0,c.est||"",c.trim||"",c.top||"",c.laurel||""].join("|")};
 // Pixel badge: shape and pattern, emblem, optional stars along the top and a founding year ribbon, then the initials
 // (Auto keeps the old placement: top when there is an emblem, centre when not).
+// Badges are drawn at 52 x 60 (twice the old 26 x 30) so they show one device pixel per art pixel at 26 px on a retina screen.
+// Layers: shape and pattern, a shaded trim ring (c.trim: auto uses the trim colour, gold, silver, white, double, none),
+// laurels (c.laurel), the emblem with light on its top and left edges, stars, initials in the pixel font at double size,
+// the founding year ribbon, and a crown or star on top (c.top). Shapes, patterns and emblems use the 40 x 46 badge space.
+const BTRIM={auto:"Trim colour",gold:"Gold",silver:"Silver",white:"White",double:"Double",none:"None"},BTOP={none:"None",crown:"Crown",star:"Star"};
+const tone5=c=>[lit(c,.45),lit(c,.2),c,drk(c,.25),drk(c,.45)];
+// The pixel font at double size, with a one pixel edge in sh where clip allows
+function drawText2(g,str,x0,y0,col,sh,clip){const P=new Set();let cx=x0;
+  for(const ch of str){const f=FONTW[ch],w=f?5:3,src=f||FONT[ch];if(src)for(let k=0;k<w*5;k++)if(src[k]==="1"){const px=cx+(k%w)*2,py=y0+Math.floor(k/w)*2;for(let a=0;a<2;a++)for(let b=0;b<2;b++)P.add((px+a)+","+(py+b))}cx+=(w+1)*2}
+  if(sh)P.forEach(q=>{const [x,y]=q.split(",").map(Number);for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++){const a=x+dx,b=y+dy;if(!P.has(a+","+b)&&(!clip||clip(a,b)))g.set(a,b,sh)}});
+  P.forEach(q=>{const [x,y]=q.split(",").map(Number);g.set(x,y,(P.has(x+","+(y-1)))?col:lit(col,.25))})}
+const textW2=str=>textW(str)*2;
 function pxBadge(t){
   const c=t.crest||{},key=badgeKey(t);
   if(PXC.cache.has(key))return PXC.cache.get(key);
-  const ctx=pxCtx(),W=26,H=30,sx=40/24,sy=46/28,g=Grid(W,H),X=x=>(x-.5)*sx,Y=y=>(y-.5)*sy;
+  const ctx=pxCtx(),W=52,H=60,g=Grid(W,H),top=BTOP[c.top]&&c.top!=="none"?c.top:null;
+  // Shape space to pixels: full height, or a little smaller under a crown or star
+  const S=top?46/48:46/56,ox=top?26-20/S:2,oy=top?10:2,X=x=>(x+.5-ox)*S,Y=y=>(y+.5-oy)*S;
   const shape=P2(SHAPES[c.shape]||SHAPES.shield),pin=c.pattern==="pinstripes",pat=!pin&&CPAT_D[c.pattern]?P2(CPAT_D[c.pattern]):null,c1=t.c1,c2=t.c2,c3=c.c3||t.c2;
-  const IN=[];for(let y=0;y<H;y++)for(let x=0;x<W;x++)IN[y*W+x]=x>=1&&y>=1&&x<=24&&y<=28&&ctx.isPointInPath(shape,X(x),Y(y));
-  const I=(x,y)=>x>=0&&y>=0&&x<W&&y<H&&IN[y*W+x];
-  const edge=(x,y)=>!I(x+1,y)||!I(x-1,y)||!I(x,y+1)||!I(x,y-1),ok=(x,y)=>I(x,y)&&!edge(x,y);
-  for(let y=0;y<H;y++)for(let x=0;x<W;x++){if(!I(x,y))continue;if(edge(x,y)){g.set(x,y,(x+y)%5===0?lit(c3,.35):c3);continue}
-    let col=(pin?x%3===1:pat&&ctx.isPointInPath(pat,X(x),Y(y)))?c2:c1;
-    if(!I(x-1,y-1)||!I(x,y-2)||!I(x-2,y))col=lit(col,.22);else if(!I(x+1,y+1)||!I(x,y+2)||!I(x+2,y))col=drk(col,.24);g.set(x,y,col)}
-  const em=new Set(),hasEm=!!(c.emblem&&c.emblem!=="none");
-  for(const pt of emblemParts(c.emblem)){const p=P2(pt.d);if(pt.stroke){ctx.lineWidth=pt.stroke;ctx.lineCap="round"}
-    for(let y=0;y<H;y++)for(let x=0;x<W;x++){if(!ok(x,y))continue;if(pt.stroke?ctx.isPointInStroke(p,X(x),Y(y)):ctx.isPointInPath(p,X(x),Y(y))){g.set(x,y,pt.c===3?c3:c1);em.add(y*W+x)}}}
-  const ns=clamp(+c.stars||0,0,5);let sTop=-1;
-  if(ns){const sw=ns*4-1,x0=1+Math.floor((24-sw)/2);for(let y=2;y<12&&sTop<0;y++){let f=true;for(let r=-1;r<4&&f;r++)for(let x=x0-1;x<=x0+sw;x++)if(!ok(x,y+r)){f=false;break}if(f)sTop=y}
-    if(sTop>=0)for(let i=0;i<ns;i++){const bx=x0+i*4;[[1,0],[0,1],[1,1],[2,1],[1,2]].forEach(([dx,dy])=>{g.set(bx+dx,sTop+dy,c3);em.add((sTop+dy)*W+bx+dx)})}}
-  em.forEach(i=>{const x=i%W,y=(i-x)/W,col=g.get(x,y);if(!em.has(i-W))g.set(x,y,lit(col,.3));else if(!em.has(i+W))g.set(x,y,drk(col,.25))});
-  const dark=lum(c3)>.3?mix(drk(c1,.6),"#000",.3):lit(c1,.55);
-  const eo=new Set();em.forEach(i=>{const x=i%W,y=(i-x)/W;for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const j=(y+dy)*W+x+dx;if(!em.has(j)&&ok(x+dx,y+dy))eo.add(j)}});eo.forEach(j=>{const x=j%W;g.set(x,(j-x)/W,dark)});
+  const IN=new Uint8Array(W*H);for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++)IN[y*W+x]=ctx.isPointInPath(shape,X(x),Y(y))?1:0;
+  // Distance from the outside edge, for the trim rings
+  const D=new Uint8Array(W*H);let q=[];for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x;if(!IN[i])continue;if(!IN[i-1]||!IN[i+1]||!IN[i-W]||!IN[i+W]){D[i]=1;q.push(i)}}
+  for(let d=1;q.length&&d<9;d++){const n=[];for(const i of q)for(const j of [i-1,i+1,i-W,i+W])if(IN[j]&&!D[j]){D[j]=d+1;n.push(j)}q=n}for(let i=0;i<W*H;i++)if(IN[i]&&!D[i])D[i]=99;
+  const trim=BTRIM[c.trim]?c.trim:"auto",TR5={gold:TRAMP.gold,silver:TRAMP.silver,white:["#FFFFFF","#F4F2EC","#DAD6CC","#B8B3A7","#8E897E"]},line=mix(drk(c1,.6),"#000",.35);
+  const rings=trim==="none"?[line]:trim==="double"?[TR5.white,TR5.white,tone5(c3),tone5(c3),line]:[TR5[trim]||tone5(c3),TR5[trim]||tone5(c3),line],FD=rings.length+1;
+  const I=(x,y)=>x>=0&&y>=0&&x<W&&y<H&&!!IN[y*W+x],ok=(x,y)=>I(x,y)&&D[y*W+x]>=FD;
+  let bx0=W,bx1=0,by0=H,by1=0;for(let i=0;i<W*H;i++)if(IN[i]){const x=i%W,y=(i/W)|0;bx0=Math.min(bx0,x);bx1=Math.max(bx1,x);by0=Math.min(by0,y);by1=Math.max(by1,y)}
+  const cx=(bx0+bx1)/2,cy=(by0+by1)/2,hw=(bx1-bx0)/2||1,hh=(by1-by0)/2||1;
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x;if(!IN[i])continue;const d=D[i];
+    if(d<FD){const r=rings[d-1];if(typeof r==="string"){g.set(x,y,r);continue}
+      const v=-((x-cx)/hw+(y-cy)/hh);let k=v>.55?0:v>.15?1:v>-.25?2:v>-.65?3:4;if(rings[d]&&rings[d]===r&&d<FD-1)k=Math.max(0,k-1);else k=Math.min(4,k+(d>1&&rings[d-2]===r?1:0));g.set(x,y,r[k]);continue}
+    let col=(pin?(x-2)%6===3:pat&&ctx.isPointInPath(pat,X(x),Y(y)))?c2:c1;
+    if(d<=FD+1&&(!ok(x-2,y)||!ok(x,y-2)))col=lit(col,.18);else if(d<=FD+1&&(!ok(x+2,y)||!ok(x,y+2)))col=drk(col,.22);g.set(x,y,col)}
+  // Emblem and laurels: pixels go into em with their colour, then get light and shadow edges and a dark outline
+  const em=new Map(),hasEm=!!(c.emblem&&c.emblem!=="none");
+  const paint=(parts,colOf,k=1,ey=27)=>{const EX=x=>20+(X(x)-20)/k,EY=y=>27+(Y(y)-ey)/k;for(const pt of parts){const p=P2(pt.d);if(pt.stroke){ctx.lineWidth=pt.stroke;ctx.lineCap="round"}
+    for(let y=0;y<H;y++)for(let x=0;x<W;x++){if(!ok(x,y))continue;if(pt.stroke?ctx.isPointInStroke(p,EX(x),EY(y)):ctx.isPointInPath(p,EX(x),EY(y))){const col=colOf(pt);if(col)em.set(y*W+x,col);else em.delete(y*W+x),g.set(x,y,c1)}}}};
+  if(c.laurel==="1"){const L=[];[[104,15.2],[120,15.6],[136,15.4],[152,14.8],[168,13.8]].forEach(([a,r])=>{const q2=a*Math.PI/180,lx=20+r*Math.cos(q2),ly=24+r*Math.sin(q2),rot=(a+68)*Math.PI/180,pts=[...Array(10)].map((_,k)=>{const tt=k*Math.PI/5,ex=2.7*Math.cos(tt),ey=1.1*Math.sin(tt);return[lx+ex*Math.cos(rot)-ey*Math.sin(rot),ly+ex*Math.sin(rot)+ey*Math.cos(rot)]});
+      const d=pts.map(([x,y],k)=>`${k?"L":"M"}${x.toFixed(2)} ${y.toFixed(2)}`).join("")+"Z";L.push({d},{d:pts.map(([x,y],k)=>`${k?"L":"M"}${(40-x).toFixed(2)} ${y.toFixed(2)}`).join("")+"Z"})});
+    paint(L,()=>"#E2AD2E")}
+  // Emblems fill more of the badge than they did at the old size, and a little less when lettering shares the space
+  const tp=c.text||"initials",withTxt=tp!=="none"&&!!String(t.short||"").trim(),eBig=withTxt?(tp==="initials"||tp==="top"?1.12:1.08):1.3;
+  paint(emblemParts(c.emblem),pt=>pt.c===3?c3:pt.c===0?mix(drk(c3,.75),"#000",.4):null,eBig,withTxt?(tp==="bottom"?23.5:29):(c.est?22.5:25));
+  const ns=clamp(+c.stars||0,0,5),star=["..1..",".111.","11111",".111.",".1.1."];let sTop=-1;
+  if(ns){const sw=ns*7-2,x0=26-Math.ceil(sw/2);for(let y=3;y<24&&sTop<0;y++){let f=true;for(let r=-1;r<6&&f;r++)for(let x=x0-1;x<=x0+sw;x++)if(!ok(x,y+r)){f=false;break}if(f)sTop=y}
+    if(sTop>=0)for(let k=0;k<ns;k++)star.forEach((r,dy)=>[...r].forEach((ch,dx)=>{if(ch==="1")em.set((sTop+dy)*W+x0+k*7+dx,c3)}))}
+  em.forEach((col,i)=>{const x=i%W,y=(i-x)/W,up=!em.has(i-W),lf=!em.has(i-1),dn=!em.has(i+W),rt=!em.has(i+1);g.set(x,y,up?lit(col,.38):lf?lit(col,.16):dn?drk(col,.28):rt?drk(col,.12):col)});
+  const dark=lum(c3)>.3?line:lit(c1,.55);
+  em.forEach((col,i)=>{const x=i%W,y=(i-x)/W;for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const j=(y+dy)*W+x+dx;if(!em.has(j)&&ok(x+dx,y+dy))g.set(x+dx,y+dy,dark)}});
+  // Founding year ribbon across the lower badge, wider than narrow shapes
   const est=String(c.est||"").replace(/\D/g,"").slice(0,4);let bTop=99;
-  if(est){bTop=21;const tw=textW(est);for(let r=0;r<7;r++)for(let x=1;x<=24;x++){if((x<3||x>22)&&(r===0||r===6))continue;g.set(x,bTop+r,x<3||x>22?drk(c3,.35):r===0?lit(c3,.25):r===6?drk(c3,.3):c3)}
-    drawText(g,est,1+Math.floor((24-tw)/2),bTop+1,lum(c3)>.4?"#1A1A1A":"#FFFFFF")}
-  const tp=c.text||"initials";
-  if(tp!=="none"){const s=String(t.short||"").toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,3);
-    if(s){const wd=textW(s),x0=1+Math.floor((24-wd)/2),lo=sTop>=0?sTop+4:1,hi=Math.min(bTop-6,22);
-      const fits=y=>{if(y<lo||y>hi)return false;for(let r=-1;r<6;r++)for(let x=x0-1;x<=x0+wd;x++)if(!ok(x,y+r))return false;return true};
-      const near=p=>{for(let d=0;d<12;d++){if(fits(p+d))return p+d;if(fits(p-d))return p-d}return null};
-      let y0;if(tp==="initials"){if(hasEm){y0=Math.max(3,lo);while(y0<11&&!fits(y0))y0++}else y0=near(12)??12}
-      else y0=near(tp==="top"?3:tp==="bottom"?20:12)??12;
-      drawText(g,s,x0,y0,c3,lum(c3)>.3?mix(drk(c1,.6),"#000",.3):"#F2F2EE",ok,false,true)}}
-  outlineG(g);PXC.grids.set(key,g);const url=gridURL(g);PXC.cache.set(key,url);return url;
+  if(est){bTop=42;for(let r=0;r<14;r++)for(let x=1;x<=50;x++){const end=x<5||x>46;if(end&&(r<2||r>11))continue;if(end&&(x===1||x===50)&&(r===6||r===7))continue;g.set(x,bTop+r,end?drk(c3,.35):r===0?lit(c3,.3):r===13?drk(c3,.32):r>10?drk(c3,.12):c3)}
+    drawText2(g,est,26-Math.ceil(textW2(est)/2),bTop+2,lum(c3)>.4?"#1A1A1A":"#FFFFFF")}
+  if(tp!=="none"){const s2=String(t.short||"").toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,3);
+    if(s2){const wd=textW2(s2),x0=26-Math.ceil(wd/2),lo=sTop>=0?sTop+7:2,hi=Math.min(bTop-12,46);
+      const fits=y=>{if(y<lo||y>hi)return false;for(let r=-1;r<11;r++)for(let x=x0-1;x<=x0+wd;x++)if(!ok(x,y+r))return false;return true};
+      const near=p=>{for(let d=0;d<24;d++){if(fits(p+d))return p+d;if(fits(p-d))return p-d}return null};
+      let y0;if(tp==="initials"){if(hasEm){y0=Math.max(6,lo);while(y0<22&&!fits(y0))y0++}else y0=near(24)??24}
+      else y0=near(tp==="top"?6:tp==="bottom"?40:24)??24;
+      drawText2(g,s2,x0,y0,c3,lum(c3)>.3?line:"#F2F2EE",ok)}}
+  // A crown or star standing on top
+  if(top){const parts=top==="crown"?["M15 10L15 3L20 7L26 1L32 7L37 3L37 10Z","M14 9H38V12H14Z"]:["M26 0L27.6 4.6L32.5 4.7L28.6 7.6L30 12.3L26 9.5L22 12.3L23.4 7.6L19.5 4.7L24.4 4.6Z"],G5=TRAMP.gold,cr=new Set();
+    parts.forEach(d=>{const p=new Path2D(d);for(let y=0;y<14;y++)for(let x=0;x<W;x++)if(ctx.isPointInPath(p,x+.5,y+.5))cr.add(y*W+x)});
+    cr.forEach(i=>{const x=i%W,y=(i-x)/W,up=!cr.has(i-W),lf=!cr.has(i-1),dn=!cr.has(i+W),rt=!cr.has(i+1);g.set(x,y,G5[up&&lf?0:up||lf?1:dn&&rt?4:dn||rt?3:2])});
+    if(top==="crown")[[15,2.5],[26,0.5],[37,2.5]].forEach(([x,y])=>{g.set(x-1,y|0,"#C8102E");g.set(x,y|0,lit("#C8102E",.3))});
+    if(top==="crown")[[20,10],[26,10],[32,10]].forEach(([x,y])=>{g.set(x,y,"#C8102E");g.set(x+1,y,drk("#C8102E",.2))})}
+  outlineG(g,"#0E0C0A");PXC.grids.set(key,g);const url=gridURL(g);PXC.cache.set(key,url);return url;
 }
 const KPAT_D={stripes:[26,38,50,62,74].map(c=>`M${c-3.5} 0h7v100h-7z`).join(""),hoops:[14,32,50,68,86].map(c=>`M0 ${c-4.5}h100v9h-100z`).join(""),halves:"M50 0h50v100h-50z",sash:"M22 8L36 2L80 84L66 92Z",chevron:"M20 22L50 42L80 22V34L50 54L20 34Z",quarters:"M50 0h50v48h-50zM0 48h50v52h-50z"};
 function pxKit(k,full){
@@ -1029,7 +1067,7 @@ function pxRing(col,season,teamId){
 const SHAPES={shield:"M20 1.5 L38 6.5 V22 C38 34 30 41 20 44.5 C10 41 2 34 2 22 V6.5 Z",heater:"M3 3 H37 V20 C37 33 28 40 20 44.5 C12 40 3 33 3 20 Z",round:"M1 23 a19 19 0 1 0 38 0 a19 19 0 1 0 -38 0 Z",square:"M5 3 H35 Q38 3 38 6 V40 Q38 43 35 43 H5 Q2 43 2 40 V6 Q2 3 5 3 Z",hex:"M20 1.5 L38 11.5 V34.5 L20 44.5 L2 34.5 V11.5 Z",diamond:"M20 1.5 L38.5 23 L20 44.5 L1.5 23 Z",oval:"M20 1.5C31 1.5 38.5 11 38.5 23C38.5 35 31 44.5 20 44.5C9 44.5 1.5 35 1.5 23C1.5 11 9 1.5 20 1.5Z",octagon:"M12 1.5H28L38.5 12V34L28 44.5H12L1.5 34V12Z",pennant:"M2 2H38V16L20 44.5L2 16Z",banner:"M3 2H37V44.5L20 36L3 44.5Z",crowned:"M2 10L8 3L14 8L20 1.5L26 8L32 3L38 10V24C38 35 30 41 20 44.5C10 41 2 35 2 24Z",classic:"M2 4Q20 10 38 4V24C38 35 30 41 20 44.5C10 41 2 35 2 24Z"};
 const SHAPE_L={shield:"Shield",heater:"Heater",round:"Round",square:"Square",hex:"Hexagon",diamond:"Diamond",oval:"Oval",octagon:"Octagon",pennant:"Pennant",banner:"Banner",crowned:"Crown top",classic:"Classic"};
 const CPAT={plain:"Plain",stripes:"Stripes",halves:"Halves",band:"Band",sash:"Sash",quarters:"Quarters",chevron:"Chevron",hoops:"Hoops",cross:"Cross",saltire:"Saltire",checks:"Checks",diagonal:"Diagonal",pinstripes:"Pinstripes",pale:"Centre stripe"};
-const EMB={none:"None",star:"Star",ball:"Ball",crown:"Crown",bolt:"Bolt",tower:"Tower",wave:"Waves",lion:"Lion",eagle:"Eagle",bird:"Swallow",wolf:"Wolf",bull:"Bull",horse:"Horse",fish:"Fish",anchor:"Anchor",ship:"Ship",castle:"Castle",sword:"Sword",trident:"Trident",key:"Key",wheel:"Wheel",tree:"Tree",rose:"Rose",clover:"Clover",mountain:"Mountain",sun:"Sun",moon:"Moon",flame:"Flame",heart:"Heart",gem:"Gem"};
+const EMB={none:"None",star:"Star",ball:"Ball",crown:"Crown",bolt:"Bolt",tower:"Tower",wave:"Waves",lion:"Lion",rampant:"Lion rampant",fleur:"Fleur-de-lis",eagle:"Eagle",bird:"Swallow",wolf:"Wolf",bull:"Bull",horse:"Horse",fish:"Fish",anchor:"Anchor",ship:"Ship",castle:"Castle",sword:"Sword",trident:"Trident",key:"Key",wheel:"Wheel",tree:"Tree",rose:"Rose",clover:"Clover",mountain:"Mountain",sun:"Sun",moon:"Moon",flame:"Flame",heart:"Heart",gem:"Gem"};
 function crestPattern(p,c){switch(p){
   case "stripes":return [4,12,20,28,36].map(x=>`<rect x="${x-2}" y="0" width="4" height="46" fill="${c}"/>`).join("");
   case "halves":return `<rect x="20" y="0" width="20" height="46" fill="${c}"/>`;
@@ -1092,7 +1130,7 @@ function pitchSvg(g,players,kit,w){
 }
 function xiOnPitch(t){const lu=lineup(t,false),Y={GK:96,DF:77,MF:56,FW:32},rows={};lu.forEach(x=>(rows[x.role]=rows[x.role]||[]).push(x));
   const out=[];for(const r in rows)rows[r].forEach((x,i)=>out.push({x:68*(i+1)/(rows[r].length+1),y:Y[r],name:x.p.name.split(" ").slice(-1)[0]}));return out}
-function randomCrest(c2){const em=rand()<.15?"none":pick(Object.keys(EMB).filter(k=>k!=="none"));return{shape:pick(Object.keys(SHAPES)),pattern:rand()<.35?"plain":pick(Object.keys(CPAT)),emblem:em,text:em==="none"||rand()<.6?"initials":"none",c3:pick(["#FFFFFF","#F2C200","#1A1A1A",c2]),stars:rand()<.15?pick([1,2,3]):0,est:rand()<.3?String(1860+Math.floor(rand()*140)):""}}
+function randomCrest(c2){const em=rand()<.15?"none":pick(Object.keys(EMB).filter(k=>k!=="none"));return{shape:pick(Object.keys(SHAPES)),pattern:rand()<.35?"plain":pick(Object.keys(CPAT)),emblem:em,text:em==="none"||rand()<.6?"initials":"none",c3:pick(["#FFFFFF","#F2C200","#1A1A1A",c2]),stars:rand()<.15?pick([1,2,3]):0,est:rand()<.3?String(1860+Math.floor(rand()*140)):"",trim:wpick(Object.keys(BTRIM),x=>({auto:5,gold:3,silver:1,white:2,double:1,none:1})[x]),top:rand()<.12?pick(["crown","star"]):"none",laurel:rand()<.15?"1":"0"}}
 function randomKit(c1,c2){const alt=pick(["#FFFFFF","#1A1A1A","#F2C200","#87CEEB","#E86A10","#6A1B9A","#0B6E3C"].filter(c=>c.toLowerCase()!==String(c1).toLowerCase()));
   return{home:{style:rand()<.4?"plain":pick(Object.keys(KSTY)),a:c1,b:c2,sleeves:rand()<.75?c1:c2,trim:c2,shorts:rand()<.5?c2:(rand()<.5?"#FFFFFF":c1),socks:rand()<.5?c1:c2},
     away:{style:rand()<.5?"plain":pick(Object.keys(KSTY)),a:alt,b:c1,sleeves:alt,trim:c1,shorts:rand()<.5?alt:c1,socks:alt}}}
@@ -1288,9 +1326,12 @@ function badgeEditor(t){const c={...t.crest,img:null};const hasImg=!!t.crest.img
   <h4>Shape</h4><div class="opts">${Object.keys(SHAPES).map(v=>opt(t,"crest","shape",v,SHAPE_L[v],badge({...t,crest:{...c,shape:v}},34),c.shape===v)).join("")}</div>
   <h4>Pattern</h4><div class="opts">${Object.keys(CPAT).map(v=>opt(t,"crest","pattern",v,CPAT[v],badge({...t,crest:{...c,pattern:v}},34),c.pattern===v)).join("")}</div>
   <h4>Emblem</h4><div class="opts">${Object.keys(EMB).map(v=>opt(t,"crest","emblem",v,EMB[v],badge({...t,crest:{...c,emblem:v}},34),c.emblem===v)).join("")}</div>
+  <h4>Trim</h4><div class="opts">${Object.keys(BTRIM).map(v=>opt(t,"crest","trim",v,BTRIM[v],badge({...t,crest:{...c,trim:v}},34),(c.trim||"auto")===v)).join("")}</div>
+  <h4>On top</h4><div class="opts">${Object.keys(BTOP).map(v=>opt(t,"crest","top",v,BTOP[v],badge({...t,crest:{...c,top:v}},34),(c.top||"none")===v)).join("")}</div>
+  <h4>Laurels</h4><div class="opts">${[["0","None"],["1","Laurels"]].map(([v,l])=>opt(t,"crest","laurel",v,l,badge({...t,crest:{...c,laurel:v}},34),(c.laurel||"0")===v)).join("")}</div>
   <h4>Lettering</h4><div class="opts">${[["initials","Auto"],["top","Top"],["middle","Middle"],["bottom","Bottom"],["none","None"]].map(([v,l])=>opt(t,"crest","text",v,l,badge({...t,crest:{...c,text:v}},34),(c.text||"initials")===v)).join("")}</div>
   <h4>Extras</h4><div class="fields"><label class="f">Stars on top<select data-cf="stars" data-id="${t.id}">${[0,1,2,3,4,5].map(n=>`<option value="${n}" ${(+c.stars||0)===n?"selected":""}>${n?n:"None"}</option>`).join("")}</select></label><label class="f">Founded, on a ribbon<input type="text" inputmode="numeric" data-cf="est" data-id="${t.id}" value="${esc(c.est||"")}" maxlength="4" placeholder="Year" style="width:90px"></label></div>
-  <div class="toolbar"><button class="btn" data-act="rand-crest" data-id="${t.id}">Randomise badge</button><label class="btn" style="display:inline-flex;align-items:center">Upload image<input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" data-upload="${t.id}" style="display:none"></label>${hasImg?`<button class="btn" data-act="crest-img-clear" data-id="${t.id}">Remove image</button>`:""}</div>${hasImg?`<p class="muted">Your uploaded image is in use. Remove it to go back to the badge builder.</p>`:`<p class="muted">Your own badge: a PNG with a transparent background, square, ideally 256 × 256 pixels. Bigger images are shrunk to keep saves small. Pixel art made at 26 × 30 is scaled up and stays sharp.</p>`}</div></div>`;
+  <div class="toolbar"><button class="btn" data-act="rand-crest" data-id="${t.id}">Randomise badge</button><label class="btn" style="display:inline-flex;align-items:center">Upload image<input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" data-upload="${t.id}" style="display:none"></label>${hasImg?`<button class="btn" data-act="crest-img-clear" data-id="${t.id}">Remove image</button>`:""}</div>${hasImg?`<p class="muted">Your uploaded image is in use. Remove it to go back to the badge builder.</p>`:`<p class="muted">Your own badge: a PNG with a transparent background, square, ideally 256 × 256 pixels. Bigger images are shrunk to keep saves small. Pixel art made at 26 × 30 or 52 × 60 is scaled up and stays sharp.</p>`}</div></div>`;
 }
 function kitEditor(t){const k=t.kit[kitSide];
   const col=(f,l)=>`<label class="f">${l}<input type="color" data-kf="${f}" data-id="${t.id}" value="${esc(k[f])}"></label>`;
@@ -1702,7 +1743,7 @@ async function reviewCard(season){
   txt(state.name.toUpperCase(),W/2,100,40,dim,HD,700,600,"center");txt(`SEASON ${h.season} REVIEW`,W/2,178,76,chalk,HD,700,600,"center");
   const [tro,bdg]=await Promise.all([img(pxTrophy("league")),team(h.champion.id)?img(pxBadge(team(h.champion.id))):null]);
   tsp(tro,80,290,6);
-  if(bdg){const k=Math.max(1,Math.floor(150/bdg.naturalHeight));sprite(bdg,240,320+(150-bdg.naturalHeight*k)/2,k)}
+  if(bdg){const k=Math.max(1,Math.floor(150/bdg.naturalHeight*2)/2);sprite(bdg,240,320+(150-bdg.naturalHeight*k)/2,k)}
   const ch=h.table[0],gap=ch.pts-h.table[1].pts;
   txt("CHAMPIONS",420,340,36,acc);txt(h.champion.name,420,430,92,chalk,HD,700,W-420-70);
   txt(`${pluralN(ch.pts,"point")}. ${ch.w} won, ${ch.d} drawn, ${ch.l} lost`,420,480,30,dim,BD,500,W-490);
@@ -2318,7 +2359,7 @@ function customAwardsCard(){
   ${L.some(c=>c.off)?`<p class="muted">Removed awards that were already won stay in the record books but are not given out any more.</p>`:""}
   <div class="toolbar"><button class="btn" data-act="ca-add">Add an award</button></div></section>`;
 }
-const APP_VERSION="2.104";
+const APP_VERSION="2.105";
 async function checkUpdates(){try{if(window.caches)for(const k of await caches.keys())await caches.delete(k);if(navigator.serviceWorker)for(const r of await navigator.serviceWorker.getRegistrations())await r.unregister()}catch(e){}location.reload()}
 let trophyTab="league";
 function trophyCard(){

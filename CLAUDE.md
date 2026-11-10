@@ -147,7 +147,8 @@ A pure-simulation football league game. The user sets up clubs and players, then
 
 ## Badges
 
-- 12 shapes, 14 patterns (`CPAT_D` drives pixel and smooth; pinstripes are every third pixel column in pixel mode), 29 emblems (`emblemParts`, `circ()` helper; the smooth SVG builds new ones from the same parts).
+- 12 shapes, 14 patterns (`CPAT_D` drives pixel and smooth; pinstripes are a one pixel stripe every sixth column in pixel mode), 31 emblems (`emblemParts`, `circ()` helper; the smooth SVG builds new ones from the same parts). Emblem parts take `c:3` (trim colour), `c:1` (cut back to the field) or `c:0` (dark ink, the football panels). `rampant` (lion rampant) and `fleur` were added with the 52 x 60 redraw, and `moon` was fixed (it used to draw nothing).
+- `pxBadge` draws at 52 x 60 (shown at 26 px that is one device pixel per art pixel on retina). Layers: shape and pattern, a shaded trim ring from distance to the edge (`crest.trim`: auto uses the trim colour, gold, silver, white, double, none; `BTRIM`), laurels (`crest.laurel` "1", gold leaves round the lower field), the emblem scaled up 1.3x (less when lettering shares the space) with light top and left edges and a dark outline, stars, initials and the year in the pixel font at double size (`drawText2`), and a gold crown or star standing on top (`crest.top`, `BTOP`; the shape shrinks a little to make room). The style came from a reference sheet the user made; real club crests in it were not copied. Badges with no new fields draw with trim auto, nothing on top and no laurels.
 - `crest.text`: initials (Auto, the old placement), top, middle, bottom, none. `crest.stars` (0 to 5, along the top) and `crest.est` (founding year on a ribbon across the lower badge, wider than narrow shapes like a crest scroll). The pixel cache key is `badgeKey(t)`.
 
 ## Hidden potential
